@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お客様アンケート - 焼肉 新宿本店</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans JP', sans-serif; }
+        body { background-color: #F7FAFC; color: #2D3748; line-height: 1.6; }
+        .mobile-container { max-width: 480px; margin: 0 auto; background-color: #FFFFFF; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .header-img { width: 100%; height: 150px; background: linear-gradient(135deg, #2B3674, #4285F4); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 700; }
+        .content { padding: 25px 20px; flex: 1; }
+        .welcome-text { text-align: center; margin-bottom: 25px; font-size: 14px; color: #4A5568; }
+        
+        .question-block { margin-bottom: 30px; background: #F8FAFC; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; }
+        .question-title { font-weight: 700; font-size: 15px; margin-bottom: 15px; color: #2B3674; line-height: 1.4; }
+
+        .stars { display: flex; justify-content: center; flex-direction: row-reverse; gap: 10px; }
+        .stars input { display: none; }
+        .stars label { font-size: 35px; color: #E2E8F0; cursor: pointer; transition: 0.2s; }
+        .stars input:checked ~ label, .stars label:hover, .stars label:hover ~ label { color: #FBBC05; }
+
+        input[type="text"], textarea { width: 100%; padding: 12px; border: 1px solid #CBD5E0; border-radius: 8px; font-size: 15px; outline: none; transition: 0.2s; }
+        input[type="text"]:focus, textarea:focus { border-color: #4285F4; box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2); }
+        textarea { resize: vertical; min-height: 80px; }
+
+        .radio-group label { display: flex; align-items: center; padding: 10px 0; font-size: 15px; cursor: pointer; }
+        .radio-group input[type="radio"] { width: 18px; height: 18px; margin-right: 10px; accent-color: #4285F4; }
+
+        .btn-submit { width: 100%; background: #4285F4; color: white; border: none; padding: 16px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3); transition: 0.2s; }
+        .btn-submit:hover { transform: translateY(-2px); }
+
+        #step2 { display: none; text-align: center; padding-top: 50px; }
+        .spinner { font-size: 40px; color: #4285F4; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        #step3 { display: none; }
+        .success-box { background: #E6F4EA; border: 1px solid #34A853; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 25px; color: #137333; font-weight: 700; font-size: 16px; line-height: 1.5; }
+        .ai-result { background: white; border: 2px solid #E2E8F0; padding: 20px; border-radius: 12px; font-size: 15px; margin-bottom: 25px; position: relative; margin-top: 10px; }
+        .ai-badge { position: absolute; top: -12px; left: 15px; background: #4285F4; color: white; font-size: 12px; font-weight: bold; padding: 4px 12px; border-radius: 20px; }
+        .btn-google { width: 100%; background: #EA4335; color: white; border: none; padding: 16px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(234, 67, 53, 0.3); display: flex; align-items: center; justify-content: center; gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <header class="header-img">焼肉 新宿本店</header>
+        <div class="content" id="step1">
+            <p class="welcome-text">本日はご来店ありがとうございました！<br>よろしければ簡単なアンケートにご協力ください。</p>
+            <div id="dynamicSurveyContainer"></div>
+            <button class="btn-submit" onclick="submitSurvey()">回答を完了する</button>
+        </div>
+        <div class="content" id="step2">
+            <i class="fa-solid fa-spinner spinner"></i>
+            <h3 style="color:#2B3674; margin-bottom:10px;">回答ありがとうございます！</h3>
+            <p style="font-size:14px; color:#718096;">送信処理を行っています...<br>（約3秒）</p>
+        </div>
+        <div class="content" id="step3">
+            <div class="success-box">
+                <i class="fa-solid fa-check-circle" style="display:block; font-size:30px; margin-bottom:10px;"></i>
+                こちらコピーして<br>Googleへの口コミに協力お願いします！
+            </div>
+            <div class="ai-result">
+                <div class="ai-badge">3秒で口コミへ反映できます！</div>
+                <div id="generatedText" style="line-height: 1.8; color:#2D3748; padding-top: 5px;"></div>
+            </div>
+            <button class="btn-google" onclick="copyAndJump()">
+                <i class="fa-brands fa-google"></i> コピーしてGoogleを開く
+            </button>
+            <p style="text-align:center; font-size:11px; color:#A0AEC0; margin-top:15px;">※次の画面で「ペースト（貼り付け）」をするだけです！</p>
+        </div>
+    </div>
+
+    <script>
+        let savedKeywords = [];
+        let questionsData = [];
+
+        window.onload = function() {
+            const rawConfig = localStorage.getItem('msmSurveyConfig');
+            const container = document.getElementById('dynamicSurveyContainer');
+            
+            if (rawConfig) {
+                const config = JSON.parse(rawConfig);
+                questionsData = config.questions || [];
+                savedKeywords = config.keywords || [];
+                
+                let htmlStr = '';
+                questionsData.forEach(q => {
+                    let inputHtml = '';
+                    if (q.type === 'stars') {
+                        inputHtml = `
+                        <div class="stars survey-input-group" data-qid="${q.id}" data-type="stars">
+                            <input type="radio" id="star5_${q.id}" name="q${q.id}" value="5星"><label for="star5_${q.id}">★</label>
+                            <input type="radio" id="star4_${q.id}" name="q${q.id}" value="4星"><label for="star4_${q.id}">★</label>
+                            <input type="radio" id="star3_${q.id}" name="q${q.id}" value="3星"><label for="star3_${q.id}">★</label>
+                            <input type="radio" id="star2_${q.id}" name="q${q.id}" value="2星"><label for="star2_${q.id}">★</label>
+                            <input type="radio" id="star1_${q.id}" name="q${q.id}" value="1星"><label for="star1_${q.id}">★</label>
+                        </div>`;
+                    } else if (q.type === 'text') {
+                        inputHtml = `<textarea class="survey-input-group" data-qid="${q.id}" data-type="text" placeholder="自由にご記入ください"></textarea>`;
+                    } else if (q.type === 'radio') {
+                        const opts = q.options.split(',').map(s => s.trim()).filter(s => s);
+                        inputHtml = `<div class="radio-group survey-input-group" data-qid="${q.id}" data-type="radio" style="display:flex; flex-direction:column; gap:10px;">`;
+                        opts.forEach((o, i) => {
+                            inputHtml += `<label><input type="radio" name="q${q.id}" value="${o}"> ${o}</label>`;
+                        });
+                        inputHtml += `</div>`;
+                    }
+                    htmlStr += `
+                    <div class="question-block">
+                        <div class="question-title">${q.id}. ${q.title}</div>
+                        ${inputHtml}
+                    </div>`;
+                });
+                if(htmlStr !== '') container.innerHTML = htmlStr;
+                else renderDefaults(container);
+            } else {
+                savedKeywords = ['新宿', '焼肉', '個室'];
+                renderDefaults(container);
+            }
+        };
+
+        function renderDefaults(container) {
+            container.innerHTML = `
+                <div class="question-block">
+                    <div class="question-title">1. 本日の料理のお味はいかがでしたか？</div>
+                    <div class="stars survey-input-group" data-qid="1" data-type="stars">
+                        <input type="radio" id="s5" name="q1" value="5星"><label for="s5">★</label>
+                        <input type="radio" id="s4" name="q1" value="4星"><label for="s4">★</label>
+                        <input type="radio" id="s3" name="q1" value="3星"><label for="s3">★</label>
+                        <input type="radio" id="s2" name="q1" value="2星"><label for="s2">★</label>
+                        <input type="radio" id="s1" name="q1" value="1星"><label for="s1">★</label>
+                    </div>
+                </div>
+            `;
+        }
+
+        function submitSurvey() {
+            const groups = document.querySelectorAll('.survey-input-group');
+            let gatheredAnswers = [];
+            let answersObj = {};
+            
+            groups.forEach(g => {
+                const qid = g.dataset.qid; // ★タイトルではなくIDに紐付けます！
+                const type = g.dataset.type;
+                let val = '';
+                
+                if (type === 'text') {
+                    val = g.value;
+                } else if (type === 'radio' || type === 'stars') {
+                    const checked = g.querySelector('input[type="radio"]:checked');
+                    if(checked) val = checked.value;
+                }
+                
+                if(val && qid) {
+                    gatheredAnswers.push(val);
+                    answersObj[qid] = val; // IDベースで保存
+                }
+            });
+
+            // 回答日時を生成
+            const now = new Date();
+            const dateStr = now.getFullYear() + '/' + 
+                            String(now.getMonth() + 1).padStart(2, '0') + '/' + 
+                            String(now.getDate()).padStart(2, '0') + ' ' + 
+                            String(now.getHours()).padStart(2, '0') + ':' + 
+                            String(now.getMinutes()).padStart(2, '0');
+
+            // LocalStorageに保存
+            const newAnswerId = Date.now();
+            window.currentAnswerId = newAnswerId;
+            const currentConfig = JSON.parse(localStorage.getItem('msmSurveyConfig') || '{"questions":[]}');
+            
+            const newAnswerData = {
+                id: newAnswerId,
+                date: dateStr,
+                answers: answersObj,
+                status: '未投稿（離脱）',
+                surveyTitle: currentConfig.title || '無題のアンケート',
+                configSnapshot: currentConfig // 回答時の質問フォーマットを凍結保存
+            };
+            
+            let storedAnswers = JSON.parse(localStorage.getItem('msmSurveyAnswers') || '[]');
+            storedAnswers.unshift(newAnswerData);
+            localStorage.setItem('msmSurveyAnswers', JSON.stringify(storedAnswers));
+
+            // AIの文章生成演出
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+
+            setTimeout(() => {
+                const baseContext = gatheredAnswers.join("・");
+                const meoWordString = savedKeywords.length > 0 ? `なんとなく${savedKeywords.join("や")}を探して来たのですが、大正解でした！` : '';
+                const aiText = `【本日の体験】${baseContext}\n\n${meoWordString}\n料理の質も接客も大変素晴らしく、お値段以上の価値を感じました。また近くに来た際は絶対に利用したいと思います。おすすめです！`;
+                
+                document.getElementById('generatedText').innerText = aiText;
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+            }, 2000);
+        }
+
+        function copyAndJump() {
+            const textToCopy = document.getElementById('generatedText').innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                
+                // コピーされたらステータスを更新
+                if(window.currentAnswerId) {
+                    let storedAnswers = JSON.parse(localStorage.getItem('msmSurveyAnswers') || '[]');
+                    const target = storedAnswers.find(a => a.id === window.currentAnswerId);
+                    if(target) {
+                        target.status = '連携・投稿済み';
+                        localStorage.setItem('msmSurveyAnswers', JSON.stringify(storedAnswers));
+                    }
+                }
+
+                alert("【クリップボードにコピーしました！】\n\nここから先は実際のシステムではGoogleマップの口コミ投稿画面に自動でジャンプします。\n（ジャンプした先で「ペースト」を押すだけになります）\n\n※ダッシュボードの回答データタブを見ると即時反映されています！");
+            }).catch(err => {
+                alert("コピーに失敗しました。");
+            });
+        }
+    </script>
+</body>
+</html>

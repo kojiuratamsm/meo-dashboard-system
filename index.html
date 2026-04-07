@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEOダッシュボード - MSM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #F4F7FE;
+            --card-bg: #FFFFFF;
+            --primary-blue: #4285F4;
+            --primary-green: #34A853;
+            --text-main: #2B3674;
+            --text-muted: #A3AED0;
+            --border-color: #E2E8F0;
+            --shadow: 0px 18px 40px rgba(112, 144, 176, 0.12);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        .sidebar { width: 260px; background-color: var(--card-bg); padding: 30px 20px; display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
+        .logo-area { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 40px; padding: 10px; }
+        .msm-logo { font-weight: 800; font-size: 36px; color: var(--primary-blue); letter-spacing: 2px; line-height: 1; }
+        .msm-sub { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 5px; letter-spacing: 1px; }
+
+        .nav-item { display: flex; align-items: center; padding: 15px; margin-bottom: 10px; border-radius: 12px; color: var(--text-muted); text-decoration: none; font-weight: 600; transition: all 0.3s ease; cursor: pointer; }
+        .nav-item i { margin-right: 12px; font-size: 1.2rem; width: 20px; text-align: center; }
+        .nav-item.active { background-color: var(--primary-blue); color: white; box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3); }
+        .nav-item:hover:not(.active) { background-color: var(--bg-color); color: var(--primary-blue); }
+        .logout-btn { margin-top: auto; }
+
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; position: relative; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { font-size: 28px; font-weight: 700; }
+        .header p { color: var(--text-muted); margin-top: 5px; font-size: 14px; }
+        .user-profile { display: flex; align-items: center; gap: 15px; background: var(--card-bg); padding: 10px 20px; border-radius: 30px; box-shadow: var(--shadow); font-weight: 600; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        .card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .card-title { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 20px; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { display: flex; align-items: center; gap: 20px; }
+        .kpi-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .icon-blue { background: #E8F0FE; color: var(--primary-blue); }
+        .icon-green { background: #E6F4EA; color: var(--primary-green); }
+        .icon-yellow { background: #FEF7E0; color: #FBBC04; }
+        .kpi-info h3 { color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 5px; }
+        .kpi-info .value { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .trend-up { font-size: 12px; color: var(--primary-green); display: flex; align-items: center; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .chart-wrapper { height: 350px; width: 100%; }
+        .month-selector { padding: 8px 12px; border-radius: 8px; border: 2px solid var(--border-color); background-color: white; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text-main); }
+
+        .form-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; animation: fadeIn 0.3s ease; }
+        .form-group label { font-size: 14px; font-weight: 600; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+        .form-control { padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 14px; color: var(--text-main); outline: none; transition: 0.3s; width: 100%; }
+        .form-control:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1); }
+
+        .btn-outline { background: transparent; border: 1px dashed var(--primary-blue); color: var(--primary-blue); padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-outline:hover { background: rgba(66, 133, 244, 0.05); }
+
+        .btn-primary { background: linear-gradient(135deg, var(--primary-blue), #60A5FA); border: none; color: white; padding: 15px 30px; border-radius: 30px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(66, 133, 244, 0.3); width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(66, 133, 244, 0.4); }
+
+        .keyword-tags, .options-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag.deletable { background-color: #E8F0FE; color: var(--primary-blue); padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; animation: fadeIn 0.3s ease; border: 1px solid rgba(66, 133, 244, 0.2); }
+        .tag.deletable:hover { background-color: #D2E3FC; }
+
+        .qr-area { position: relative; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #E2E8F0; border-radius: 15px; background: #F8FAFC; }
+        .qr-content { opacity: 0.1; filter: blur(4px); transition: all 0.5s ease; text-align: center; }
+        .qr-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-weight: 600; color: var(--text-muted); transition: all 0.5s ease; }
+
+        .qr-area.active { border: 2px solid var(--primary-blue); background: #FFFFFF; box-shadow: 0 10px 30px rgba(66,133,244,0.1); }
+        .qr-area.active .qr-content { opacity: 1; filter: blur(0); }
+        .qr-area.active .qr-overlay { opacity: 0; pointer-events: none; }
+
+        .view-section { display: none; animation: fadeIn 0.4s ease forwards; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .metric-tabs { display: flex; gap: 10px; background-color: #F4F7FE; padding: 5px; border-radius: 12px; width: fit-content; margin-bottom: 20px; }
+        .metric-tab { border: none; background: transparent; padding: 10px 20px; border-radius: 8px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+        .metric-tab.active-tab { background: var(--card-bg); color: var(--primary-blue); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .data-table th { text-align: left; padding: 15px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid #F4F7FE; }
+        .data-table td { padding: 15px; border-bottom: 1px solid #F4F7FE; vertical-align: middle; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .status-success { background: #E6F4EA; color: var(--primary-green); }
+        .status-pending { background: #FEECEB; color: #EA4335; }
+
+        .preview-link { display: inline-block; margin-top: 15px; color: var(--primary-blue); text-decoration: none; font-weight: 600; font-size: 14px; }
+        .preview-link:hover { text-decoration: underline; }
+
+        .ai-card { background: linear-gradient(145deg, #ffffff, #f8faff); border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(66, 133, 244, 0.15); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="logo-area">
+            <div class="msm-logo">MSM</div>
+            <div class="msm-sub">MEO DASHBOARD</div>
+        </div>
+
+        <a class="nav-item active" onclick="switchMainView('dashboard', this)">
+            <i class="fa-solid fa-chart-pie"></i> ダッシュボード
+        </a>
+        <a class="nav-item" onclick="switchMainView('reviews', this)" style="position: relative;">
+            <i class="fa-solid fa-star"></i> 口コミ管理
+            <span style="position:absolute; right:15px; background:#EA4335; color:white; font-size:10px; padding:2px 6px; border-radius:10px;">HOT</span>
+        </a>
+        <a class="nav-item" onclick="switchMainView('competitors', this)">
+            <i class="fa-solid fa-chess-knight"></i> 競合分析
+        </a>
+        <a class="nav-item" onclick="switchMainView('settings', this)">
+            <i class="fa-solid fa-gear"></i> 設定
+        </a>
+        <a href="#" class="nav-item logout-btn">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="view-section active">
+            <header class="header">
+                <div>
+                    <h1>焼肉 新宿本店 様</h1>
+                    <p>Googleビジネスプロフィール パフォーマンスレポート</p>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar">店</div> 管理者
+                </div>
+            </header>
+
+            <div class="kpi-grid">
+                <div class="card kpi-card">
+                    <div class="kpi-icon icon-blue"><i class="fa-regular fa-eye"></i></div>
+                    <div class="kpi-info"><h3>合計表示回数</h3><div class="value">12,485 <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 12.5%</span></div></div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon icon-green"><i class="fa-solid fa-route"></i></div>
+                    <div class="kpi-info"><h3>ルート検索数</h3><div class="value">842 <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 5.2%</span></div></div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon icon-yellow"><i class="fa-solid fa-globe"></i></div>
+                    <div class="kpi-info"><h3>サイトアクセス</h3><div class="value">315 <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 8.4%</span></div></div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card chart-card">
+                    <div style="display: flex; justify-content: space-between; align-items:center; margin-bottom:15px;">
+                        <h2 class="card-title" style="margin:0;">パフォーマンス推移</h2>
+                        <select id="monthSelector" class="month-selector">
+                            <option value="6months">過去半年（デフォルト）</option>
+                            <option value="daily">2026年 3月</option>
+                        </select>
+                    </div>
+                    <div class="metric-tabs" id="chart-tabs">
+                        <button class="metric-tab active-tab" data-metric="overview">概要</button>
+                        <button class="metric-tab" data-metric="route">ルート検索</button>
+                        <button class="metric-tab" data-metric="call">通話</button>
+                        <button class="metric-tab" data-metric="website">サイト</button>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+                <div class="right-column">
+                    <div class="ai-card">
+                        <h2 class="card-title" style="color:var(--primary-blue); margin-bottom:15px;"><i class="fa-solid fa-wand-magic-sparkles"></i> MEO対策チャンネル改善アドバイス</h2>
+                        <p style="font-size:14px; line-height:1.6; margin-bottom: 10px;"><b>【ポジティブな分析】</b><br>昨年同月比で「合計表示回数」が+125%と大幅増加しています。</p>
+                        <p style="font-size:14px; line-height:1.6;"><b>【今月の改善アクション】</b><br>口コミ数が前月と比較して増加していない傾向にあります。左メニューの<b>「口コミ管理」</b>からアンケートを稼働させましょう。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVIEWS VIEW -->
+        <div id="view-reviews" class="view-section">
+            <header class="header">
+                <div>
+                    <h1>🌟 アンケート＆口コミ管理</h1>
+                    <p>お客様の回答からMEOに強い口コミをAI作成し、Googleへの投稿を促します。</p>
+                </div>
+            </header>
+
+            <div class="metric-tabs">
+                <button class="metric-tab active-tab" id="tab-btn-settings" onclick="switchReviewSubView('settings')">アンケート設定・QR発行</button>
+                <button class="metric-tab" id="tab-btn-data" onclick="switchReviewSubView('data')">アンケート回答データ一覧</button>
+            </div>
+
+            <!-- サブ：設定 -->
+            <div id="subview-settings" style="display: block;">
+                <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start;">
+                    <div class="card">
+                        <!-- 履歴UI -->
+                        <div style="display:flex; gap:15px; margin-bottom:25px;">
+                            <!-- 過去に作成したアンケート（履歴呼び出し） => 下書き -->
+                            <div style="flex:1; background:#F8FAFC; border:1px solid #CBD5E0; border-radius:12px; padding:15px; border-left:4px solid #A0AEC0;">
+                                <h3 style="font-size:13px; color:#4A5568; margin-bottom:10px;"><i class="fa-solid fa-folder-open"></i> 過去に作成したアンケート<br>（下書き履歴呼び出し）</h3>
+                                    <select id="draftHistorySelect" class="form-control" style="font-size:12px; padding:8px; margin-bottom:5px;">
+                                        <option value="">履歴データを選択してください...</option>
+                                    </select>
+                                    <button class="btn-outline" style="width:100%; font-size:12px; padding:8px; border:1px solid #718096; color:#718096;" onclick="loadSurveyHistory('draft')">読み込む</button>
+                            </div>
+                            
+                            <!-- 過去に発行したアンケート（履歴呼び出し） => 本番 -->
+                            <div style="flex:1; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:12px; padding:15px; border-left:4px solid var(--primary-green);">
+                                <h3 style="font-size:13px; color:#166534; margin-bottom:10px;"><i class="fa-solid fa-rocket"></i> 過去に発行したアンケート<br>（本番の履歴呼び出し）</h3>
+                                    <select id="publishHistorySelect" class="form-control" style="font-size:12px; padding:8px; margin-bottom:5px; border-color:#BBF7D0; color:#166534;">
+                                        <option value="">履歴データを選択してください...</option>
+                                    </select>
+                                    <button class="btn-outline" style="width:100%; font-size:12px; padding:8px; border:1px solid var(--primary-green); color:var(--primary-green); background:white;" onclick="loadSurveyHistory('publish')">読み込む</button>
+                            </div>
+                        </div>
+
+                        <!-- 管理者用タイトル -->
+                        <div style="margin-bottom:20px; background:#F4F7FE; padding:15px; border-radius:10px;">
+                            <label style="font-size:14px; font-weight:700; color:var(--text-main); margin-bottom:8px; display:block;">【管理者用】アンケート管理タイトル（お客様には非公開）</label>
+                            <input type="text" id="adminSurveyTitle" class="form-control" placeholder="例: 2026年4月 お花見キャンペーン用..." style="border:2px solid #E2E8F0;">
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #F4F7FE; padding-bottom:15px; margin-bottom: 20px;">
+                            <h2 class="card-title" style="margin:0;"><span style="color:var(--primary-blue)">STEP 1</span> お客様のアンケート質問</h2>
+                            <span style="font-size: 12px; color: var(--primary-green); font-weight:bold;"><i class="fa-solid fa-rotate"></i> 何度でも編集・更新可能</span>
+                        </div>
+                        
+                        <div id="questionsContainer">
+                            <!-- デフォルト構成1 (星) -->
+                            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                    <span style="font-weight:bold; color:var(--primary-blue);">質問1</span>
+                                    <button class="btn-outline" style="padding:2px 6px; font-size:10px; border:none; color:#EA4335;" onclick="this.closest('.question-block-admin').remove()"><i class="fa-solid fa-trash"></i> 削除</button>
+                                </div>
+                                <div class="form-group">
+                                    <label>質問タイトル</label>
+                                    <input type="text" class="form-control question-title" value="本日の料理のお味はいかがでしたか？">
+                                </div>
+                                <div class="form-group">
+                                    <label>回答フォーマット</label>
+                                    <select class="form-control question-type" onchange="handleTypeChange(this)">
+                                        <option value="stars" selected>5段階評価（星）</option>
+                                        <option value="radio">選択式（推奨）</option>
+                                        <option value="text">記述式</option>
+                                    </select>
+                                </div>
+                                <div class="form-group options-container" style="display:none;">
+                                    <label>選択肢を追加</label>
+                                    <div class="options-tags" style="margin-bottom:10px;"></div>
+                                    <div style="display:flex; gap:10px;">
+                                        <input type="text" class="form-control new-option-input" placeholder="新しい選択肢を入力..." onkeydown="if(event.key==='Enter') addOption(this)">
+                                        <button class="btn-outline" style="border: 1px solid var(--border-color); color:var(--text-main);" onclick="addOption(this)">追加</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- デフォルト構成2 (ラジオ - タグUI対応) -->
+                            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                    <span style="font-weight:bold; color:var(--primary-blue);">質問2</span>
+                                    <button class="btn-outline" style="padding:2px 6px; font-size:10px; border:none; color:#EA4335;" onclick="this.closest('.question-block-admin').remove()"><i class="fa-solid fa-trash"></i> 削除</button>
+                                </div>
+                                <div class="form-group">
+                                    <label>質問タイトル</label>
+                                    <input type="text" class="form-control question-title" value="本日はどのようなシーンですか？">
+                                </div>
+                                <div class="form-group">
+                                    <label>回答フォーマット</label>
+                                    <select class="form-control question-type" onchange="handleTypeChange(this)">
+                                        <option value="stars">5段階評価（星）</option>
+                                        <option value="radio" selected>選択式（推奨）</option>
+                                        <option value="text">記述式</option>
+                                    </select>
+                                </div>
+                                <div class="form-group options-container" style="display:block;">
+                                    <label>選択肢を追加</label>
+                                    <div class="options-tags" style="margin-bottom:10px;">
+                                        <span class="tag deletable" onclick="this.remove()">デート <i class="fa-solid fa-xmark"></i></span>
+                                        <span class="tag deletable" onclick="this.remove()">宴会 <i class="fa-solid fa-xmark"></i></span>
+                                        <span class="tag deletable" onclick="this.remove()">接待 <i class="fa-solid fa-xmark"></i></span>
+                                    </div>
+                                    <div style="display:flex; gap:10px;">
+                                        <input type="text" class="form-control new-option-input" placeholder="新しい選択肢を入力..." onkeydown="if(event.key==='Enter') addOption(this)">
+                                        <button class="btn-outline" style="border: 1px solid var(--border-color); color:var(--text-main);" onclick="addOption(this)">追加</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- デフォルト構成3 (テキスト) -->
+                            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                                    <span style="font-weight:bold; color:var(--primary-blue);">質問3</span>
+                                    <button class="btn-outline" style="padding:2px 6px; font-size:10px; border:none; color:#EA4335;" onclick="this.closest('.question-block-admin').remove()"><i class="fa-solid fa-trash"></i> 削除</button>
+                                </div>
+                                <div class="form-group">
+                                    <label>質問タイトル</label>
+                                    <input type="text" class="form-control question-title" value="スタッフの接客で良かった点などあれば教えてください">
+                                </div>
+                                <div class="form-group">
+                                    <label>回答フォーマット</label>
+                                    <select class="form-control question-type" onchange="handleTypeChange(this)">
+                                        <option value="stars">5段階評価（星）</option>
+                                        <option value="radio">選択式（推奨）</option>
+                                        <option value="text" selected>記述式</option>
+                                    </select>
+                                </div>
+                                <div class="form-group options-container" style="display:none;">
+                                    <label>選択肢を追加</label>
+                                    <div class="options-tags" style="margin-bottom:10px;"></div>
+                                    <div style="display:flex; gap:10px;">
+                                        <input type="text" class="form-control new-option-input" placeholder="新しい選択肢を入力..." onkeydown="if(event.key==='Enter') addOption(this)">
+                                        <button class="btn-outline" style="border: 1px solid var(--border-color); color:var(--text-main);" onclick="addOption(this)">追加</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn-outline" onclick="addQuestion()"><i class="fa-solid fa-plus"></i> 新しい質問を追加する</button>
+
+                        <h2 class="card-title" style="border-bottom: 2px solid #F4F7FE; padding-bottom:15px; margin-top: 40px;"><span style="color:var(--primary-blue)">STEP 2</span> 口コミに含める「MEOキーワード」</h2>
+                        <div class="keyword-tags" id="keywordsContainer" style="margin-bottom: 15px;">
+                            <span class="tag deletable" onclick="this.remove()">新宿 焼肉 <i class="fa-solid fa-xmark"></i></span>
+                            <span class="tag deletable" onclick="this.remove()">個室 ディナー <i class="fa-solid fa-xmark"></i></span>
+                            <span class="tag deletable" onclick="this.remove()">接待 <i class="fa-solid fa-xmark"></i></span>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="newKeywordInput" class="form-control" placeholder="新しいキーワードを入力..." style="flex:1;" onkeydown="if(event.key==='Enter') addKeyword()">
+                            <button class="btn-outline" style="border: 1px solid var(--border-color); color:var(--text-main);" onclick="addKeyword()">追加</button>
+                        </div>
+
+                        <div style="margin-top: 30px; display:flex; gap:15px;">
+                            <button class="btn-primary" style="flex:1; background:#A0AEC0; box-shadow:none; border-radius:10px;" onclick="saveSurveyAsDraft()">
+                                <i class="fa-solid fa-floppy-disk"></i> 保存する（下書き）
+                            </button>
+                            <button class="btn-primary" style="flex:2;" onclick="generateQR()">
+                                <i class="fa-solid fa-rocket"></i> 発行する（公開・更新）
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 右側QR -->
+                    <div class="card" style="text-align: center; position: sticky; top: 40px;">
+                        <h2 class="card-title">発行されたアンケート（お渡し用）</h2>
+                        <div class="qr-area" id="qrArea">
+                            <div class="qr-overlay" id="qrOverlay">
+                                <i class="fa-solid fa-qrcode" style="font-size: 40px; color:#A3AED0; margin-bottom:10px;"></i>
+                                <br>「設定を保存...」ボタンを押すと<br>最新のQRコードが生成されます
+                            </div>
+                            <div class="qr-content" id="qrContent">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://msm-meo.com/survey/aj8sX9q" alt="QR Code" style="border-radius: 10px; margin-bottom: 10px;">
+                                <div style="background:#F4F7FE; padding:12px; border-radius:8px; font-family:monospace; color:var(--primary-blue); font-size:12px; margin-bottom:10px;">https://msm-meo.com/survey/aj8sX9q</div>
+                                <div style="border-top:1px dashed #E2E8F0; padding-top:15px;">
+                                    <a href="survey-mockup.html" target="_blank" class="preview-link"><i class="fa-solid fa-mobile-screen-button"></i> お客様が見るアンケート画面（プレビュー）を開く</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- サブ：データ -->
+            <div id="subview-data" style="display: none;">
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div style="padding: 25px; border-bottom: 1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+                        <h2 class="card-title" style="margin:0;">お客様の回答データ（店舗へのリアルな声）</h2>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <label style="font-size:12px; font-weight:bold;">対象のアンケートを確認:</label>
+                            <select id="dataSurveyFilter" class="form-control" style="width:250px; font-size:13px; padding:8px; border-color:var(--border-color);" onchange="renderAnswersTable()">
+                                <option value="">読み込み中...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" style="white-space: nowrap;">
+                            <tbody>
+                                <tr><td colspan="10" style="text-align:center; padding:30px; color:#A3AED0;">データを読み込んでいます...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPETITORS VIEW -->
+        <div id="view-competitors" class="view-section">
+            <header class="header">
+                <div>
+                    <h1>⚔️ 競合分析・ベンチマーク</h1>
+                    <p>ライバル店舗のURLを登録して、自店との口コミの差を一目で確認しましょう。</p>
+                </div>
+            </header>
+
+            <div class="card" style="margin-bottom:30px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="font-size:16px; margin:0; color:var(--text-main);"><i class="fa-solid fa-plus-circle"></i> 新しいベンチマーク（競合）を追加</h3>
+                    <button class="btn-outline" style="padding:6px 15px; font-size:12px; border-color:#4285F4; color:#4285F4; background:#E8F0FE; border:none; font-weight:bold; border-radius:20px;" onclick="openHelpModal()"><i class="fa-regular fa-circle-question"></i> URLの取得方法</button>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="competitorUrlInput" class="form-control" placeholder="競合店舗のGoogleマップ共有URLを貼り付けてください (例: https://g.page/...)" style="flex:1;">
+                    <button class="btn-primary" style="padding:10px 25px; border-radius:10px; width:auto; font-size:14px;" onclick="addCompetitor()"><i class="fa-solid fa-magnifying-glass"></i> URLからデータ取得・追加</button>
+                </div>
+            </div>
+
+            <div class="kpi-grid" id="competitorsGrid">
+                <!-- 自店舗 -->
+                <div class="card" style="border: 2px solid var(--primary-blue); background:#F8FAFC;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span style="background:var(--primary-blue); color:white; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">自店舗（目標）</span>
+                    </div>
+                    <h3 style="font-size:18px; color:var(--text-main); margin-bottom:5px;">焼肉 新宿本店</h3>
+                    <div style="font-size:32px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:10px;">
+                        4.2 <span style="font-size:18px; color:#FBBC05;">★★★★☆</span>
+                    </div>
+                    <div style="font-size:14px; color:var(--text-muted); margin-top:5px;">
+                        <i class="fa-solid fa-comment-dots"></i> 口コミ数: <b style="color:var(--text-main)">124件</b>
+                    </div>
+                </div>
+
+                <!-- ライバル1 -->
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span style="background:#EA4335; color:white; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">ライバル 1位</span>
+                        <button style="border:none; background:none; color:#A3AED0; cursor:pointer;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <h3 style="font-size:16px; color:var(--text-main); margin-bottom:5px;">炭火焼肉 キングス 新宿</h3>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:10px;">
+                        4.5 <span style="font-size:14px; color:#FBBC05;">★★★★☆</span>
+                    </div>
+                    <div style="font-size:14px; color:var(--text-muted); margin-top:5px;">
+                        <i class="fa-solid fa-comment-dots"></i> 口コミ数: <b style="color:var(--text-main)">158件</b>
+                    </div>
+                    <div style="margin-top:15px; padding:10px; background:#FEECEB; border-radius:8px; font-size:12px; color:#EA4335; font-weight:bold;">
+                        <i class="fa-solid fa-fire"></i> 追いつくまであと「34件」の口コミが必要！
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS VIEW -->
+        <div id="view-settings" class="view-section">
+            <header class="header">
+                <div>
+                    <h1>⚙️ 連携と設定</h1>
+                    <p>Googleビジネスプロフィールとの連携や店舗の基本情報を管理します。</p>
+                </div>
+            </header>
+            
+            <div class="card" style="margin-bottom:20px;">
+                <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">Googleアカウント連携（API）</h3>
+                <div style="display:flex; align-items:center; gap:15px; padding:20px; border:1px solid var(--border-color); border-radius:12px; background:#F8FAFC;">
+                    <div style="width:40px; height:40px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
+                        <i class="fa-brands fa-google" style="color:#EA4335; font-size:20px;"></i>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-weight:600; color:var(--text-main);">現在連携中のアカウント: msm-yakiniku@gmail.com</div>
+                        <div style="font-size:12px; color:var(--primary-green);"><i class="fa-solid fa-check-circle"></i> 正常に連携されています</div>
+                    </div>
+                    <button class="btn-outline" style="border-color:#EA4335; color:#EA4335; font-size:13px; padding:6px 15px;">連携を解除する</button>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:20px;">
+                <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">低評価アラート（通知設定）</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">星3以下の口コミが入った場合、担当者へ即座にメールまたはLINEで通知します。</p>
+                <div class="form-group">
+                    <label>通知先メールアドレス</label>
+                    <input type="text" class="form-control" value="tenchou@yakiniku-shinjuku.com">
+                </div>
+                <button class="btn-primary" style="width:auto; padding:10px 20px; font-size:14px;"><i class="fa-solid fa-save"></i> 設定を保存</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- HELP MODAL (共有URLの取得方法) -->
+    <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
+        <div class="card" style="max-width:550px; width:90%; position:relative; padding:30px;">
+            <button style="position:absolute; top:20px; right:20px; background:none; border:none; font-size:20px; color:#A3AED0; cursor:pointer;" onclick="closeHelpModal()"><i class="fa-solid fa-xmark"></i></button>
+            <h2 style="font-size:18px; color:var(--text-main); margin-bottom:15px; border-bottom:1px solid #E2E8F0; padding-bottom:15px;"><i class="fa-solid fa-share-nodes" style="color:var(--primary-blue)"></i> 共有URL（リンク）の取得方法</h2>
+            
+            <p style="font-size:14px; margin-bottom:20px; line-height:1.8; color:#4A5568;">
+                1. Googleマップで対象のライバル店舗を検索します。<br>
+                2. 店舗情報の中にある<b style="color:var(--primary-blue); background:#E8F0FE; padding:2px 6px; border-radius:4px; margin:0 3px;">「共有」</b>ボタン（または矢印アイコン）をクリック。<br>
+                3. 出てきた画面の<b style="color:var(--primary-blue); background:#E8F0FE; padding:2px 6px; border-radius:4px; margin:0 3px;">「リンクをコピー」</b>を押して、先ほどの入力欄に貼り付けてください。
+            </p>
+            
+            <div style="text-align:center; padding:20px; background:#F8FAFC; border-radius:15px; border:2px dashed #E2E8F0;">
+                <svg viewBox="0 0 400 220" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:320px;">
+                  <rect width="400" height="220" fill="#F4F7FE" rx="10"/>
+                  <rect x="100" y="20" width="200" height="280" rx="15" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="4"/>
+                  <rect x="100" y="20" width="200" height="70" fill="#E8F0FE" rx="15" style="border-bottom-left-radius:0; border-bottom-right-radius:0;"/>
+                  <rect x="115" y="105" width="120" height="10" fill="#2B3674" rx="5"/>
+                  <rect x="115" y="125" width="80" height="6" fill="#FBBC05" rx="3"/>
+                  <rect x="200" y="125" width="30" height="6" fill="#A3AED0" rx="3"/>
+                  <circle cx="130" cy="165" r="16" fill="#E8F0FE"/>
+                  <circle cx="176" cy="165" r="16" fill="#E8F0FE"/>
+                  <circle cx="223" cy="165" r="16" fill="#E8F0FE"/>
+                  <circle cx="270" cy="165" r="16" fill="#4285F4" stroke="#D2E3FC" stroke-width="4"/>
+                  <text x="130" y="195" font-size="9" fill="#A3AED0" font-family="sans-serif" text-anchor="middle">経路</text>
+                  <text x="176" y="195" font-size="9" fill="#A3AED0" font-family="sans-serif" text-anchor="middle">通話</text>
+                  <text x="223" y="195" font-size="9" fill="#A3AED0" font-family="sans-serif" text-anchor="middle">保存</text>
+                  <text x="270" y="195" font-size="9" fill="#4285F4" font-family="sans-serif" font-weight="bold" text-anchor="middle">共有</text>
+                  <path d="M272 160 L275 163 L272 166 M274 163 L265 163 C265 168 268 170 270 170" stroke="#FFFFFF" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M315 120 Q290 125 282 150" fill="none" stroke="#EA4335" stroke-width="3" stroke-linecap="round"/>
+                  <polygon points="282,150 288,143 290,153" fill="#EA4335"/>
+                  <rect x="248" y="140" width="44" height="60" fill="none" stroke="#EA4335" stroke-width="2" stroke-dasharray="4,4" rx="5"/>
+                </svg>
+                <p style="font-size:12px; color:#718096; margin-top:10px; font-weight:600;">※スマートフォンの場合は、こちらの「共有」アイコンを探してください。</p>
+            </div>
+            
+            <button class="btn-primary" style="margin-top:20px; box-shadow:none;" onclick="closeHelpModal()">閉じる</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 画面切替 ---
+        function switchMainView(viewId, element) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+        }
+
+        function switchReviewSubView(tabId) {
+            document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active-tab'));
+            document.getElementById('tab-btn-' + tabId).classList.add('active-tab');
+            document.getElementById('subview-settings').style.display = 'none';
+            document.getElementById('subview-data').style.display = 'none';
+            
+            if (tabId === 'data') {
+                renderAnswersTable();
+            }
+            
+            const target = document.getElementById('subview-' + tabId);
+            target.style.opacity = 0; target.style.display = 'block';
+            setTimeout(() => target.style.opacity = 1, 50);
+        }
+
+        // --- 回答データをLocalStorageからリアルタイム描画 ---
+        function renderAnswersTable() {
+            const dataContainer = document.querySelector('#subview-data .data-table');
+            let answers = JSON.parse(localStorage.getItem('msmSurveyAnswers') || '[]');
+            
+            if (answers.length === 0) {
+                dataContainer.innerHTML = '<tbody><tr><td colspan="10" style="text-align:center; padding:30px; color:#A3AED0;"><i class="fa-solid fa-clipboard" style="font-size:24px; margin-bottom:10px; display:block;"></i>まだ回答データはありません。</td></tr></tbody>';
+                const filter = document.getElementById('dataSurveyFilter');
+                if(filter) filter.innerHTML = '<option value="">データなし</option>';
+                return;
+            }
+
+            // プルダウンのリスト生成 (重複排除)
+            const filterSelect = document.getElementById('dataSurveyFilter');
+            const uniqueTitles = [...new Set(answers.map(a => a.surveyTitle || '無題のアンケート'))];
+            
+            let currentSelection = filterSelect.value;
+            if(!currentSelection || currentSelection === "") {
+                currentSelection = answers[0].surveyTitle || '無題のアンケート';
+            }
+
+            filterSelect.innerHTML = '';
+            uniqueTitles.forEach(t => {
+                const selected = (t === currentSelection) ? 'selected' : '';
+                filterSelect.insertAdjacentHTML('beforeend', `<option value="${t}" ${selected}>回答実績: ${t}</option>`);
+            });
+            currentSelection = filterSelect.value;
+
+            // 選択されたアンケートの回答のみに絞り込む
+            const filteredAnswers = answers.filter(a => (a.surveyTitle || '無題のアンケート') === currentSelection);
+
+            if(filteredAnswers.length === 0) {
+                 dataContainer.innerHTML = '<tbody><tr><td colspan="10" style="text-align:center; padding:30px; color:#A3AED0;">このアンケートにはまだ回答がありません。</td></tr></tbody>';
+                 return;
+            }
+
+            // ヘッダーの生成 (フィルター後の最初の回答が持つ設定スナップショットをベースにする)
+            let baseConfig = filteredAnswers[0].configSnapshot || JSON.parse(localStorage.getItem('msmSurveyConfig') || '{"questions":[]}');
+
+            let headersHTML = `<thead><tr><th style="min-width:140px;">回答日時</th>`;
+            baseConfig.questions.forEach(q => {
+                headersHTML += `<th style="min-width:120px;">${q.title}</th>`;
+            });
+            headersHTML += `<th style="min-width:150px;">Google投稿状況</th></tr></thead>`;
+            
+            // 行生成
+            let tbodyHTML = '<tbody>';
+            filteredAnswers.forEach(ans => {
+                tbodyHTML += `<tr><td>${ans.date}</td>`;
+                baseConfig.questions.forEach(q => {
+                    let text = ans.answers[q.id] || '-';
+                    if (text === '-' && ans.answers[q.title]) text = ans.answers[q.title];
+                    
+                    if (text && text.includes('星')) {
+                        const num = parseInt(text);
+                        text = `<span style="color:#FBBC05; font-size:16px;">` + '★'.repeat(num) + `</span>`;
+                    }
+                    tbodyHTML += `<td>${text}</td>`;
+                });
+                if (ans.status === '連携・投稿済み') {
+                    tbodyHTML += `<td><span class="status-badge status-success">連携・投稿済み</span></td></tr>`;
+                } else {
+                    tbodyHTML += `<td><span class="status-badge status-pending">未投稿（離脱）</span></td></tr>`;
+                }
+            });
+            tbodyHTML += '</tbody>';
+            
+            dataContainer.innerHTML = headersHTML + tbodyHTML;
+        }
+
+        // --- アンケートのフォーマット変更（警告） ---
+        function handleTypeChange(select) {
+            const val = select.value;
+            const container = select.closest('.question-block-admin').querySelector('.options-container');
+            if (val === 'text') {
+                const ok = confirm("【記述式に関する推奨アラート】\n\n記述式はお客様の入力負担が大きく、アンケートの途中で離脱される（回答率が大きく低下する）原因となります。\nユーザーに負担をかけないよう、システムでは「選択式」を推奨しております。\n\nそれでも記述式に変更してよろしいでしょうか？");
+                if (!ok) {
+                    select.value = 'radio';
+                    container.style.display = 'block';
+                    return;
+                }
+                container.style.display = 'none';
+            } else if (val === 'radio') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        // --- 選択肢（タグ）の追加・削除用 ---
+        function addOption(btnElement) {
+            const container = btnElement.closest('.options-container');
+            const input = container.querySelector('.new-option-input');
+            const val = input.value.trim();
+            if(!val) return;
+            
+            const tagsBox = container.querySelector('.options-tags');
+            // 重複チェック
+            const existings = Array.from(tagsBox.querySelectorAll('.tag')).map(t => t.innerText.trim());
+            if(existings.includes(val)) {
+                alert("既に同じ選択肢が追加されています。内容を変更してください。");
+                return;
+            }
+            
+            const html = `<span class="tag deletable" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
+            tagsBox.insertAdjacentHTML('beforeend', html);
+            input.value = '';
+        }
+
+        // --- 質問ブロック自体の追加 ---
+        function addQuestion() {
+            const container = document.getElementById('questionsContainer');
+            const count = container.querySelectorAll('.question-block-admin').length + 1;
+            const html = `
+            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px; animation:fadeIn 0.3s;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span style="font-weight:bold; color:var(--primary-blue);">質問${count}</span>
+                    <button class="btn-outline" style="padding:2px 6px; font-size:10px; border:none; color:#EA4335;" onclick="this.closest('.question-block-admin').remove()"><i class="fa-solid fa-trash"></i> 削除</button>
+                </div>
+                <div class="form-group">
+                    <label>質問タイトル</label>
+                    <input type="text" class="form-control question-title" placeholder="（例）本日はどういったシーンでのご利用ですか？">
+                </div>
+                <div class="form-group">
+                    <label>回答フォーマット</label>
+                    <select class="form-control question-type" onchange="handleTypeChange(this)">
+                        <option value="stars">5段階評価（星）</option>
+                        <option value="radio" selected>選択式（推奨）</option>
+                        <option value="text">記述式</option>
+                    </select>
+                </div>
+                <div class="form-group options-container" style="display:block;">
+                    <label>選択肢を追加</label>
+                    <div class="options-tags" style="margin-bottom:10px;">
+                        <span class="tag deletable" onclick="this.remove()">とても良い <i class="fa-solid fa-xmark"></i></span>
+                        <span class="tag deletable" onclick="this.remove()">普通 <i class="fa-solid fa-xmark"></i></span>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" class="form-control new-option-input" placeholder="新しい選択肢を入力..." onkeydown="if(event.key==='Enter') addOption(this)">
+                        <button class="btn-outline" style="border: 1px solid var(--border-color); color:var(--text-main);" onclick="addOption(this)">追加</button>
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        // --- キーワードの追加 ---
+        function addKeyword() {
+            const input = document.getElementById('newKeywordInput');
+            const val = input.value.trim();
+            if(!val) return;
+            const container = document.getElementById('keywordsContainer');
+            // 重複チェック
+            const existings = Array.from(container.querySelectorAll('.tag')).map(t => t.innerText.trim());
+            if(existings.includes(val)) {
+                alert("既に同じMEOキーワードが追加されています。別の言葉を選んでください。");
+                return;
+            }
+            const html = `<span class="tag deletable" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
+            container.insertAdjacentHTML('beforeend', html);
+            input.value = ''; 
+        }
+
+        // --- QR発行＆連携用データ保存 ---
+        function collectSurveyConfig() {
+            const blocks = document.querySelectorAll('.question-block-admin');
+            const surveyQuestions = [];
+            
+            blocks.forEach((b, idx) => {
+                const qType = b.querySelector('.question-type').value;
+                const optsBox = b.querySelector('.options-container');
+                let optionsString = '';
+                if (qType === 'radio' && optsBox) {
+                    const tags = optsBox.querySelectorAll('.options-tags .tag');
+                    optionsString = Array.from(tags).map(t => t.innerText.trim()).join(',');
+                }
+                surveyQuestions.push({
+                    id: idx + 1,
+                    title: b.querySelector('.question-title').value,
+                    type: qType,
+                    options: optionsString
+                });
+            });
+
+            const keywords = Array.from(document.querySelectorAll('#keywordsContainer .tag')).map(t => t.innerText.trim());
+            const adminTitle = document.getElementById('adminSurveyTitle').value.trim() || '名称未設定のアンケート';
+            
+            return { title: adminTitle, questions: surveyQuestions, keywords: keywords };
+        }
+
+        function saveSurveyAsDraft() {
+            const configObj = collectSurveyConfig();
+            
+            let draftHistory = JSON.parse(localStorage.getItem('msmSurveyDraftHistory') || '[]');
+            const now = new Date();
+            const dateStr = now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+            
+            draftHistory.unshift({ date: dateStr, config: configObj });
+            localStorage.setItem('msmSurveyDraftHistory', JSON.stringify(draftHistory));
+            
+            updateHistoryDropdowns();
+            alert("下書きとして保存しました！\n（発行はされていないため、お客様には見えません。後で呼び出せます）");
+        }
+
+        function generateQR() {
+            const configObj = collectSurveyConfig();
+
+            // 本番設定として保存 (survey-mockup が同期する先)
+            localStorage.setItem('msmSurveyConfig', JSON.stringify(configObj));
+
+            // 本番発行履歴へ追加
+            let pubHistory = JSON.parse(localStorage.getItem('msmSurveyPublishHistory') || '[]');
+            const now = new Date();
+            const dateStr = now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+            
+            pubHistory.unshift({ date: dateStr, config: configObj });
+            localStorage.setItem('msmSurveyPublishHistory', JSON.stringify(pubHistory));
+            
+            updateHistoryDropdowns();
+
+            // UI演出
+            const btn = document.querySelector('.btn-primary:nth-child(2)');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 発行処理中...';
+            setTimeout(() => {
+                document.getElementById('qrArea').classList.add('active');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> 発行・更新されました！';
+                btn.style.background = 'var(--primary-green)';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 3000);
+            }, 800);
+        }
+
+        // --- グラフ用ロジック ---
+        let myChart;
+        const chartCanvas = document.getElementById('performanceChart');
+        if (chartCanvas) {
+            const chartCtx = chartCanvas.getContext('2d');
+            let currentPeriod = '6months';
+            let currentMetric = 'overview';
+            
+            const dataConfig = {
+                '6months': { labels: ['10月', '11月', '12月', '1月', '2月', '3月'], overview: [85000, 92000, 110000, 105000, 98000, 125000], route: [250, 320, 480, 400, 350, 420], call: [45, 60, 80, 70, 50, 95], website: [120, 140, 200, 180, 160, 210] },
+                'daily': { labels: Array.from({length: 31}, (_, i) => `${i + 1}日`), overview: Array.from({length: 31}, () => Math.floor(Math.random() * 3000) + 2000), route: Array.from({length: 31}, () => Math.floor(Math.random() * 15) + 5), call: Array.from({length: 31}, () => Math.floor(Math.random() * 8)), website: Array.from({length: 31}, () => Math.floor(Math.random() * 10) + 2) }
+            };
+
+            const metricConfig = {
+                'overview': { color: '#4285F4', bg: 'rgba(66, 133, 244, 0.1)' },
+                'route': { color: '#34A853', bg: 'rgba(52, 168, 83, 0.1)' },
+                'call': { color: '#EA4335', bg: 'rgba(234, 67, 53, 0.1)' },
+                'website': { color: '#FBBC05', bg: 'rgba(251, 188, 5, 0.1)' }
+            };
+
+            const renderChart = () => {
+                if (myChart) myChart.destroy();
+                const d = dataConfig[currentPeriod];
+                const m = metricConfig[currentMetric];
+                myChart = new Chart(chartCtx, {
+                    type: 'line',
+                    data: { labels: d.labels, datasets: [{ data: d[currentMetric], borderColor: m.color, backgroundColor: m.bg, fill: true, tension: 0.3, pointBackgroundColor: '#FFF', borderWidth: 3 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5, 5] }, border: { display: false } } } }
+                });
+            }
+
+            renderChart();
+
+            document.getElementById('monthSelector').addEventListener('change', e => { currentPeriod = e.target.value; renderChart(); });
+            document.querySelectorAll('#chart-tabs .metric-tab').forEach(t => {
+                t.addEventListener('click', function() {
+                    document.querySelectorAll('#chart-tabs .metric-tab').forEach(bt => bt.classList.remove('active-tab'));
+                    this.classList.add('active-tab');
+                    currentMetric = this.dataset.metric; renderChart();
+                });
+            });
+        }
+        // --- 履歴読み込みとUI反映 ---
+        function updateHistoryDropdowns() {
+            const draftHistory = JSON.parse(localStorage.getItem('msmSurveyDraftHistory') || '[]');
+            const pubHistory = JSON.parse(localStorage.getItem('msmSurveyPublishHistory') || '[]');
+            
+            const selDraft = document.getElementById('draftHistorySelect');
+            if(selDraft) {
+                selDraft.innerHTML = '<option value="">下書きデータを選択...</option>';
+                draftHistory.forEach((h, idx) => {
+                    selDraft.insertAdjacentHTML('beforeend', `<option value="${idx}">${h.date} - ${h.config.title}</option>`);
+                });
+            }
+            
+            const selPub = document.getElementById('publishHistorySelect');
+            if(selPub) {
+                selPub.innerHTML = '<option value="">本番発行データを選択...</option>';
+                pubHistory.forEach((h, idx) => {
+                    selPub.insertAdjacentHTML('beforeend', `<option value="${idx}">${h.date} - ${h.config.title}</option>`);
+                });
+            }
+        }
+
+        function loadSurveyHistory(type) {
+            let dataList, selId;
+            if(type === 'draft') {
+                dataList = JSON.parse(localStorage.getItem('msmSurveyDraftHistory') || '[]');
+                selId = 'draftHistorySelect';
+            } else {
+                dataList = JSON.parse(localStorage.getItem('msmSurveyPublishHistory') || '[]');
+                selId = 'publishHistorySelect';
+            }
+            
+            const sel = document.getElementById(selId);
+            if(!sel || sel.value === '') { alert("復元する履歴を選択してください。"); return; }
+            
+            const data = dataList[sel.value];
+            if(!data) return;
+
+            // タイトルの復元
+            document.getElementById('adminSurveyTitle').value = data.config.title || '';
+
+            // 質問の再描画
+            const qBox = document.getElementById('questionsContainer');
+            qBox.innerHTML = '';
+            
+            data.config.questions.forEach((q, idx) => {
+                let optionsHtml = '';
+                if(q.type === 'radio' && q.options) {
+                    const tags = q.options.split(',');
+                    tags.forEach(t => {
+                        if(t.trim()) { optionsHtml += `<span class="tag deletable" onclick="this.remove()">${t} <i class="fa-solid fa-xmark"></i></span>`; }
+                    });
+                }
+                
+                const showOpts = q.type === 'radio' ? 'block' : 'none';
+                
+                const html = `
+                <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px; animation:fadeIn 0.3s;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span style="font-weight:bold; color:var(--primary-blue);">質問${q.id}</span>
+                        <button class="btn-outline" style="padding:2px 6px; font-size:10px; border:none; color:#EA4335;" onclick="this.closest('.question-block-admin').remove()"><i class="fa-solid fa-trash"></i> 削除</button>
+                    </div>
+                    <div class="form-group">
+                        <label>質問タイトル</label>
+                        <input type="text" class="form-control question-title" value="${q.title}">
+                    </div>
+                    <div class="form-group">
+                        <label>回答フォーマット</label>
+                        <select class="form-control question-type" onchange="handleTypeChange(this)">
+                            <option value="stars" ${q.type==='stars'?'selected':''}>5段階評価（星）</option>
+                            <option value="radio" ${q.type==='radio'?'selected':''}>選択式（推奨）</option>
+                            <option value="text" ${q.type==='text'?'selected':''}>記述式</option>
+                        </select>
+                    </div>
+                    <div class="form-group options-container" style="display:${showOpts};">
+                        <label>選択肢を追加</label>
+                        <div class="options-tags" style="margin-bottom:10px;">${optionsHtml}</div>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" class="form-control new-option-input" placeholder="新しい選択肢を入力..." onkeydown="if(event.key==='Enter') addOption(this)">
+                            <button class="btn-outline" style="border: 1px solid var(--border-color); color:var(--text-main);" onclick="addOption(this)">追加</button>
+                        </div>
+                    </div>
+                </div>`;
+                qBox.insertAdjacentHTML('beforeend', html);
+            });
+
+            // キーワードの再描画
+            const kBox = document.getElementById('keywordsContainer');
+            kBox.innerHTML = '';
+            data.config.keywords.forEach(k => {
+                kBox.insertAdjacentHTML('beforeend', `<span class="tag deletable" onclick="this.remove()">${k} <i class="fa-solid fa-xmark"></i></span>`);
+            });
+
+            alert(`【${data.config.title}】を復元しました！\n反映する場合は必ず「保存する」や「発行する」ボタンを押してください。`);
+        }
+
+        // --- 競合分析ダミー取得ロジック ---
+        function addCompetitor() {
+            const input = document.getElementById('competitorUrlInput');
+            const url = input.value.trim();
+            if(!url) {
+                alert("競合店舗のGoogleマップURLを入力してください。");
+                return;
+            }
+            
+            const btn = input.nextElementSibling;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> URLからデータ取得中...';
+            
+            setTimeout(() => {
+                const grid = document.getElementById('competitorsGrid');
+                // テスト用のランダムな数値（自分の124件に対するもの）
+                const mockCount = Math.floor(Math.random() * 80) + 100; // 100~180件
+                let diffHtml = '';
+                
+                if (mockCount > 124) {
+                    diffHtml = `<div style="margin-top:15px; padding:10px; background:#FEECEB; border-radius:8px; font-size:12px; color:#EA4335; font-weight:bold;">
+                        <i class="fa-solid fa-fire"></i> 追いつくまであと「${mockCount - 124}件」の口コミが必要！
+                    </div>`;
+                } else {
+                    diffHtml = `<div style="margin-top:15px; padding:10px; background:#E6F4EA; border-radius:8px; font-size:12px; color:#34A853; font-weight:bold;">
+                        <i class="fa-solid fa-crown"></i> 自店舗が勝っています！（差: ${124 - mockCount}件）
+                    </div>`;
+                }
+                
+                const newCard = `
+                <div class="card" style="animation: fadeIn 0.4s ease;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span style="background:#4A5568; color:white; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">新規ライバル（テスト）</span>
+                        <button style="border:none; background:none; color:#A3AED0; cursor:pointer;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <h3 style="font-size:16px; color:var(--text-main); margin-bottom:5px;">外部ベンチマーク店舗</h3>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:10px;">
+                        4.1 <span style="font-size:14px; color:#FBBC05;">★★★★☆</span>
+                    </div>
+                    <div style="font-size:14px; color:var(--text-muted); margin-top:5px;">
+                        <i class="fa-solid fa-comment-dots"></i> 口コミ数: <b style="color:var(--text-main)">${mockCount}件</b>
+                    </div>
+                    ${diffHtml}
+                </div>`;
+                
+                grid.insertAdjacentHTML('beforeend', newCard);
+                btn.innerHTML = originalHtml;
+                input.value = '';
+            }, 1200);
+        }
+
+        // モーダルの開閉
+        function openHelpModal() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+        function closeHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+
+        // ページ読み込み時に履歴リストを構成
+        updateHistoryDropdowns();
+    </script>
+</body>
+</html>
