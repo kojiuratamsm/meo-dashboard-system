@@ -103,42 +103,53 @@
 
         /* --- レスポンシブ用（スマホ・タブレット向け） --- */
         .mobile-only-header { display: none; }
+        .mobile-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 9998; backdrop-filter: blur(2px); }
+        .mobile-overlay.active { display: block; animation: fadeIn 0.3s ease; }
+
         @media (max-width: 768px) {
-            body { flex-direction: column; padding-bottom: 80px; } /* ボトムナビの余白確保 */
+            body { flex-direction: column; padding-bottom: 20px; } 
             
-            /* サイドバーをボトムナビゲーションに変換 */
-            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; flex-direction: row; padding: 5px 10px; z-index: 1000; border-right: none; border-top: 1px solid var(--border-color); box-shadow: 0 -5px 15px rgba(0,0,0,0.05); gap: 5px; }
-            .sidebar .logo-area, .sidebar .logout-btn { display: none; } /* ボトムではロゴとログアウトを隠す */
-            .nav-item { flex: 1; flex-direction: column; justify-content: center; margin-bottom: 0; padding: 5px; border-radius: 8px; font-size: 10px; }
-            .nav-item i { margin-right: 0; margin-bottom: 5px; font-size: 1.2rem; display: block; text-align: center; }
-            .nav-item span { right: 5px !important; top: -5px !important; } /* HOTバッジ位置調整 */
+            /* サイドバーを右側からのスライドメニューに変更 */
+            .sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; flex-direction: column; padding: 30px 20px; z-index: 9999; border-left: 1px solid var(--border-color); border-right: none; border-top: none; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); justify-content: flex-start; }
+            .sidebar.active { right: 0; }
+            .sidebar .logo-area, .sidebar .logout-btn { display: flex; } /* ロゴとログアウトを復活 */
+            .nav-item { flex: none; flex-direction: row; justify-content: flex-start; margin-bottom: 10px; padding: 15px; border-radius: 12px; font-size: 14px; }
+            .nav-item i { margin-right: 12px; margin-bottom: 0; font-size: 1.2rem; display: inline-block; }
+            .nav-item span { right: 15px !important; top: 50% !important; transform: translateY(-50%) !important; }
 
             /* メインコンテンツ上部の調整 */
-            .main-content { padding: 15px; }
-            .mobile-only-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 10px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+            .main-content { padding: 15px; overflow-x: hidden; }
+            .mobile-only-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px 20px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
             .header { flex-direction: column; align-items: flex-start; gap: 15px; margin-bottom: 20px; }
             .header h1 { font-size: 20px; line-height: 1.4; }
             .user-profile { align-self: flex-start; font-size: 13px; padding: 5px 15px; }
             
-            /* グリッドを1列に */
+            /* グリッドとカードのレイアウト崩れ補正 */
             .kpi-grid, .dashboard-grid { grid-template-columns: 1fr; gap: 15px; }
+            .kpi-card { flex-wrap: wrap; justify-content: center; text-align: center; padding: 20px; }
+            .kpi-icon { margin-bottom: 5px; }
             .chart-wrapper { height: 250px; }
+            .ai-card { font-size: 13px; padding: 20px; }
             
             /* 競合分析等のフォーム調整 */
             #view-competitors .card [style*="display:flex; gap:10px;"] { flex-direction: column; }
-            #view-competitors .btn-primary { width: 100% !important; }
+            #view-competitors .btn-primary { width: 100% !important; margin-top: 5px; }
+            #competitorsGrid { grid-template-columns: 1fr; }
             
             /* サブメニューの縦並び化 */
-            .metric-tabs { flex-direction: column; width: 100%; }
-            .metric-tab { width: 100%; text-align: center; }
+            .metric-tabs { flex-direction: column; width: 100%; align-items: stretch; }
+            .metric-tab { width: 100%; text-align: center; padding: 12px; }
             
             /* アンケート設定画面のグリッド */
             #subview-settings [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
             #subview-settings .qr-area { min-height: 200px; margin-top: 15px; }
+            .question-block-admin .options-container [style*="display:flex; gap:10px;"] { flex-direction: column; }
+            .question-block-admin .form-control { width: 100%; }
         }
     </style>
 </head>
 <body>
+    <div class="mobile-overlay" id="mobileOverlay" onclick="toggleMobileMenu()"></div>
 
     <!-- Sidebar -->
     <nav class="sidebar">
@@ -171,7 +182,7 @@
         <!-- モバイル専用ヘッダー -->
         <div class="mobile-only-header">
             <div class="msm-logo" style="font-size:24px; margin:0;">MSM <span style="font-size:10px; color:var(--text-muted); font-weight:600;">MEO</span></div>
-            <a href="login.html" style="color:#EA4335; font-size:11px; text-decoration:none; font-weight:700; padding:6px 12px; border-radius:8px; background:#FEECEB;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
+            <button onclick="toggleMobileMenu()" style="background:none; border:none; font-size:26px; color:var(--text-main); cursor:pointer;"><i class="fa-solid fa-bars"></i></button>
         </div>
 
         <!-- DASHBOARD VIEW -->
@@ -501,22 +512,21 @@
             </header>
             
             <div class="card" style="margin-bottom:20px;">
-                <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">Googleアカウント連携（API）</h3>
+                <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">店舗基本情報（連携済）</h3>
                 <div style="display:flex; align-items:center; gap:15px; padding:20px; border:1px solid var(--border-color); border-radius:12px; background:#F8FAFC;">
                     <div style="width:40px; height:40px; background:white; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(0,0,0,0.1);">
-                        <i class="fa-brands fa-google" style="color:#EA4335; font-size:20px;"></i>
+                        <i class="fa-solid fa-store" style="color:var(--primary-blue); font-size:18px;"></i>
                     </div>
                     <div style="flex:1;">
-                        <div style="font-weight:600; color:var(--text-main);">現在連携中のアカウント: msm-yakiniku@gmail.com</div>
-                        <div style="font-size:12px; color:var(--primary-green);"><i class="fa-solid fa-check-circle"></i> 正常に連携されています</div>
+                        <div style="font-weight:600; color:var(--text-main);">連携中の店舗: 焼肉 新宿本店</div>
+                        <div style="font-size:12px; color:var(--primary-green); margin-top:3px;"><i class="fa-solid fa-check-circle"></i> 正常に連携されています</div>
                     </div>
-                    <button class="btn-outline" style="border-color:#EA4335; color:#EA4335; font-size:13px; padding:6px 15px;">連携を解除する</button>
                 </div>
             </div>
 
             <div class="card" style="margin-bottom:20px;">
                 <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">低評価アラート（通知設定）</h3>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">星3以下の口コミが入った場合、担当者へ即座にメールまたはLINEで通知します。</p>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">星1・星2の口コミが入った場合、担当者へ即座にメールまたはLINEで通知します。</p>
                 <div class="form-group">
                     <label>通知先メールアドレス</label>
                     <input type="text" class="form-control" value="tenchou@yakiniku-shinjuku.com">
@@ -585,12 +595,23 @@
     </div>
 
     <script>
+        // --- モバイルメニュー操作 ---
+        function toggleMobileMenu() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.getElementById('mobileOverlay').classList.toggle('active');
+        }
+
         // --- 画面切替 ---
         function switchMainView(viewId, element) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + viewId).classList.add('active');
+            
+            // モバイルなどでメニューが開いていたら閉じる
+            if(document.querySelector('.sidebar').classList.contains('active')){
+                toggleMobileMenu();
+            }
         }
 
         function switchReviewSubView(tabId) {
@@ -981,8 +1002,8 @@
             alert(`【${data.config.title}】を復元しました！\n反映する場合は必ず「保存する」や「発行する」ボタンを押してください。`);
         }
 
-        // --- 競合分析ダミー取得ロジック ---
-        function addCompetitor() {
+        // --- 競合分析の自動取得ロジック（バックエンドAPI通信） ---
+        async function addCompetitor() {
             const input = document.getElementById('competitorUrlInput');
             const url = input.value.trim();
             if(!url) {
@@ -992,44 +1013,63 @@
             
             const btn = input.nextElementSibling;
             const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> URLからデータ取得中...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> API経由で自動取得中...';
             
-            setTimeout(() => {
+            try {
+                // Vercelバックエンド（サーバーレス関数）に向かって通信を行う
+                const response = await fetch('/api/fetchCompetitor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '情報の取得に失敗しました。');
+                }
+
                 const grid = document.getElementById('competitorsGrid');
-                // テスト用のランダムな数値（自分の124件に対するもの）
-                const mockCount = Math.floor(Math.random() * 80) + 100; // 100~180件
-                let diffHtml = '';
+                const storeName = data.name;
+                const rating = data.rating;
+                const reviewCount = data.userRatingCount;
                 
-                if (mockCount > 124) {
+                let diffHtml = '';
+                if (reviewCount > 124) { // 自店舗の124件と比較
                     diffHtml = `<div style="margin-top:15px; padding:10px; background:#FEECEB; border-radius:8px; font-size:12px; color:#EA4335; font-weight:bold;">
-                        <i class="fa-solid fa-fire"></i> 追いつくまであと「${mockCount - 124}件」の口コミが必要！
+                        <i class="fa-solid fa-fire"></i> 追いつくまであと「${reviewCount - 124}件」の口コミが必要！
                     </div>`;
                 } else {
                     diffHtml = `<div style="margin-top:15px; padding:10px; background:#E6F4EA; border-radius:8px; font-size:12px; color:#34A853; font-weight:bold;">
-                        <i class="fa-solid fa-crown"></i> 自店舗が勝っています！（差: ${124 - mockCount}件）
+                        <i class="fa-solid fa-crown"></i> 自店舗が勝っています！（差: ${124 - reviewCount}件）
                     </div>`;
                 }
                 
                 const newCard = `
                 <div class="card" style="animation: fadeIn 0.4s ease;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                        <span style="background:#4A5568; color:white; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">新規ライバル（テスト）</span>
+                        <span style="background:#4A5568; color:white; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">ベンチマーク店舗</span>
                         <button style="border:none; background:none; color:#A3AED0; cursor:pointer;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <h3 style="font-size:16px; color:var(--text-main); margin-bottom:5px;">外部ベンチマーク店舗</h3>
+                    <h3 style="font-size:16px; color:var(--text-main); margin-bottom:5px;">${storeName}</h3>
                     <div style="font-size:24px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:10px;">
-                        4.1 <span style="font-size:14px; color:#FBBC05;">★★★★☆</span>
+                        ${rating} <span style="font-size:14px; color:#FBBC05;">★★★★☆</span>
                     </div>
                     <div style="font-size:14px; color:var(--text-muted); margin-top:5px;">
-                        <i class="fa-solid fa-comment-dots"></i> 口コミ数: <b style="color:var(--text-main)">${mockCount}件</b>
+                        <i class="fa-solid fa-comment-dots"></i> 口コミ数: <b style="color:var(--text-main)">${reviewCount}件</b>
                     </div>
                     ${diffHtml}
                 </div>`;
                 
                 grid.insertAdjacentHTML('beforeend', newCard);
-                btn.innerHTML = originalHtml;
                 input.value = '';
-            }, 1200);
+
+            } catch (error) {
+                console.error(error);
+                alert("エラーが発生しました: " + error.message + "\n※ローカルPCから開いている場合、Vercel上（ネット上）でのみ動作します。");
+            } finally {
+                btn.innerHTML = originalHtml;
+            }
         }
 
         // モーダルの開閉
