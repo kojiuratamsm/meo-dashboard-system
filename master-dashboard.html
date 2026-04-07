@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マスター管理 - MSM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #F4F7FE;
+            --card-bg: #FFFFFF;
+            --primary-blue: #4285F4;
+            --text-main: #2B3674;
+            --border-color: #E2E8F0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        .sidebar { width: 260px; background-color: #1A202C; padding: 30px 20px; display: flex; flex-direction: column; color: white; }
+        .logo-area { text-align: center; margin-bottom: 40px; }
+        .msm-logo { font-weight: 800; font-size: 30px; letter-spacing: 2px; }
+        
+        .nav-item { padding: 15px; margin-bottom: 10px; border-radius: 12px; color: #A0AEC0; text-decoration: none; font-weight: 600; display: block; }
+        .nav-item.active { background-color: #2D3748; color: white; }
+
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 30px; }
+
+        .card { background: var(--card-bg); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 30px; }
+        
+        .client-table { width: 100%; border-collapse: collapse; }
+        .client-table th { padding: 15px; text-align: left; background: #F8FAFC; border-bottom: 2px solid var(--border-color); color:#4A5568; font-size:14px; }
+        .client-table td { padding: 15px; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size:15px; font-weight:500; }
+        
+        .btn-action { background: var(--primary-blue); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; text-decoration:none; display:inline-block; }
+        .btn-action:hover { opacity: 0.9; }
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; background:#E6F4EA; color:#34A853; font-weight:bold; }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="logo-area">
+            <div class="msm-logo">MSM</div>
+            <div style="font-size:11px; color:#A0AEC0; margin-top:5px;">MASTER DASHBOARD</div>
+        </div>
+        <a href="#" class="nav-item active"><i class="fa-solid fa-users"></i> 全クライアント一覧</a>
+        <a href="login.html" class="nav-item" style="margin-top:auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
+    </nav>
+
+    <main class="main-content">
+        <header class="header">
+            <h1>本部（マスター）管理パネル</h1>
+        </header>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+                <h2>契約クライアント一覧</h2>
+                <button style="background:#4A5568; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold;"><i class="fa-solid fa-plus"></i> 新規クライアント追加</button>
+            </div>
+
+            <table class="client-table">
+                <thead>
+                    <tr>
+                        <th>店舗名 / 法人名</th>
+                        <th>メールアドレス</th>
+                        <th>口コミ収集数</th>
+                        <th>ステータス</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><i class="fa-solid fa-shop" style="color:var(--text-muted);"></i> 焼肉 新宿本店</td>
+                        <td>tenchou@yakiniku.com</td>
+                        <td>124件</td>
+                        <td><span class="status-badge">稼働中</span></td>
+                        <td><a href="index.html" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa-solid fa-shop" style="color:var(--text-muted);"></i> 美容室 渋谷サロン</td>
+                        <td>info@shibuya-salon.jp</td>
+                        <td>45件</td>
+                        <td><span class="status-badge">稼働中</span></td>
+                        <td><a href="index.html" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a></td>
+                    </tr>
+                    <tr>
+                        <td><i class="fa-solid fa-shop" style="color:var(--text-muted);"></i> 居酒屋 えびす</td>
+                        <td>ebisu_store@izakaya.co.jp</td>
+                        <td>-</td>
+                        <td><span class="status-badge" style="background:#FEECEB; color:#EA4335;">一時停止</span></td>
+                        <td><a href="index.html" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</body>
+</html>

@@ -124,7 +124,7 @@
         <a class="nav-item" onclick="switchMainView('settings', this)">
             <i class="fa-solid fa-gear"></i> 設定
         </a>
-        <a href="#" class="nav-item logout-btn">
+        <a href="login.html" class="nav-item logout-btn">
             <i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト
         </a>
     </nav>
@@ -480,6 +480,23 @@
                     <input type="text" class="form-control" value="tenchou@yakiniku-shinjuku.com">
                 </div>
                 <button class="btn-primary" style="width:auto; padding:10px 20px; font-size:14px;"><i class="fa-solid fa-save"></i> 設定を保存</button>
+            </div>
+
+            <!-- パスワード変更ブロック追加 -->
+            <div class="card" style="margin-bottom:20px;">
+                <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">ログインパスワードの変更</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">セキュリティのため、定期的なパスワードの変更を推奨します。</p>
+                <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px;">
+                    <div class="form-group" style="flex:1; min-width:200px; margin-bottom:0;">
+                        <label>現在のパスワード</label>
+                        <input type="password" class="form-control" placeholder="現在使用中のパスワード">
+                    </div>
+                    <div class="form-group" style="flex:1; min-width:200px; margin-bottom:0;">
+                        <label>新しいパスワード</label>
+                        <input type="password" class="form-control" placeholder="お好きなパスワード">
+                    </div>
+                </div>
+                <button class="btn-primary" style="width:auto; padding:10px 20px; font-size:14px; background:linear-gradient(135deg, #A0AEC0, #718096);" onclick="alert('パスワードを変更しました！次回から新しいパスワードでログインできます。')"><i class="fa-solid fa-lock"></i> パスワードを変更する</button>
             </div>
         </div>
 
