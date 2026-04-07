@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マスター専用ログイン - MSM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #1A202C; /* マスターログインは背景を暗くして特別感を演出 */
+            --card-bg: #FFFFFF;
+            --primary-blue: #4285F4;
+            --text-main: #2B3674;
+            --text-muted: #A3AED0;
+            --border-color: #E2E8F0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+        body { background-color: var(--bg-color); height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+        .login-container { width: 100%; max-width: 450px; background: var(--card-bg); border-radius: 20px; box-shadow: 0px 30px 60px rgba(0, 0, 0, 0.4); padding: 40px; }
+        .logo-area { text-align: center; margin-bottom: 30px; }
+        .logo-area h1 { font-size: 32px; color: var(--text-main); letter-spacing: 2px; margin-bottom: 5px; }
+        .logo-area p { font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 1px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid var(--border-color); outline: none; transition: 0.3s; font-size: 14px; }
+        .form-control:focus { border-color: var(--text-main); box-shadow: 0 0 0 3px rgba(43,54,116,0.1); }
+
+        .btn-primary { width: 100%; background: linear-gradient(135deg, #2D3748, #1A202C); border: none; color: white; padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="logo-area">
+            <h1>MSM MASTER</h1>
+            <p style="color:#EA4335; font-weight:bold;"><i class="fa-solid fa-lock"></i> SYSTEM ADMINISTRATION</p>
+        </div>
+
+        <div class="form-group">
+            <label>管理用メールアドレス</label>
+            <input type="email" id="masterEmail" class="form-control" placeholder="urata@msm-jap.com">
+        </div>
+        <div class="form-group">
+            <label>マスターパスワード</label>
+            <input type="password" id="masterPass" class="form-control" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" onclick="masterLogin()">認証してマスターパネルへ行く</button>
+    </div>
+
+    <script>
+        function masterLogin() {
+            const email = document.getElementById('masterEmail').value;
+            const pass = document.getElementById('masterPass').value;
+
+            if (email === 'urata@msm-jap.com' && pass === 'Koji2819') {
+                alert('認証成功！マスターダッシュボードへ移動します。');
+                window.location.href = 'master-dashboard.html';
+            } else {
+                alert('権限がありません。メールアドレスまたはパスワードが間違っています。');
+            }
+        }
+    </script>
+</body>
+</html>
