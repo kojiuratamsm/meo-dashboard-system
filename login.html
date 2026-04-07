@@ -127,7 +127,12 @@
             if (email === 'urata@msm-jap.com' && pass === 'Koji2819') {
                 window.location.href = 'master-dashboard.html';
             } 
-            // それ以外はすべてクライアント用ダッシュボードへリダイレクト
+            // デモ用アカウント・お客様テスト用
+            else if (email === 'demo@msm-fund.com' && pass === 'demo1234') {
+                alert('【テスト案内】デモアカウントで認証しました。\nダッシュボード画面（クライアント様が見る画面）へ移動します。');
+                window.location.href = 'index.html';
+            }
+            // 新規発行テストなどで作られたパスワード用（モックアップなので基本は通します）
             else {
                 window.location.href = 'index.html';
             }
