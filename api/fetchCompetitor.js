@@ -24,25 +24,43 @@ export default async function handler(req, res) {
     const mapResponse = await fetch(url, { redirect: 'follow' });
     const finalUrl = mapResponse.url;
 
-    // 2. 最終URLから店舗名を抽出する
-    // URLパターンの例: https://www.google.com/maps/place/焼肉+新宿本店/...
+    // 2. 最終URLやHTMLボディから店舗名を抽出する
     let storeName = "";
-    const match = finalUrl.match(/\/place\/([^\/]+)/);
     
-    if (match && match[1]) {
-      // URLエンコードを解除し、+ をスペースに変換
-      storeName = decodeURIComponent(match[1]).replace(/\+/g, ' ');
+    // パターンA: /place/店舗名/
+    const placeMatch = finalUrl.match(/\/place\/([^\/?]+)/);
+    // パターンB: ?q=店舗名
+    const queryMatchUrl = finalUrl.match(/[\?&]q=([^&]+)/);
+    
+    if (placeMatch && placeMatch[1]) {
+      storeName = decodeURIComponent(placeMatch[1]).replace(/\+/g, ' ');
+    } else if (queryMatchUrl && queryMatchUrl[1]) {
+      storeName = decodeURIComponent(queryMatchUrl[1]).replace(/\+/g, ' ');
     } else {
-      // URLから抽出できなかった場合はページの<title>から抽出を試みる
+      // URLから抽出できなかった場合はページのHTML本文から抽出を試みる
       const text = await mapResponse.text();
-      const titleMatch = text.match(/<title>([^<]+)<\/title>/);
-      if (titleMatch && titleMatch[1]) {
-        storeName = titleMatch[1].replace(' - Google マップ', '').replace(' - Google Maps', '').trim();
+      
+      // share.googleのような短縮URLが挟まる場合、HTML内の /search?q=店舗名 を探す
+      const queryMatchBody = text.match(/[\?&]q=([^&"]+)/);
+      if (queryMatchBody && queryMatchBody[1]) {
+        storeName = decodeURIComponent(queryMatchBody[1]).replace(/\+/g, ' ');
+      } else {
+        // 最終手段: titleタグ
+        const titleMatch = text.match(/<title>([^<]+)<\/title>/);
+        if (titleMatch && titleMatch[1]) {
+          let rawTitle = titleMatch[1].replace(' - Google マップ', '').replace(' - Google Maps', '').trim();
+          // "Google Search" のような無関係なタイトルの場合は採用しない
+          if (rawTitle !== 'Google Search' && rawTitle !== 'Google' && rawTitle !== 'Google マップ' && rawTitle !== 'Google Maps') {
+            storeName = rawTitle;
+          }
+        }
       }
     }
 
     // ノイズ除去（座標情報などが混ざった場合の応急処置）
-    storeName = storeName.split('@')[0];
+    if(storeName) {
+        storeName = storeName.split('@')[0].trim();
+    }
 
     if (!storeName || storeName === 'Google Maps' || storeName === 'Google マップ') {
       return res.status(400).json({ error: 'URLから店舗名を割り出せませんでした。正しいGoogleマップの共有リンクをお使いください。' });
