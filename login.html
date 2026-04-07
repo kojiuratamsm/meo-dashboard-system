@@ -18,14 +18,10 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Noto Sans JP', sans-serif; }
         body { background-color: var(--bg-color); height: 100vh; display: flex; align-items: center; justify-content: center; }
 
-        .login-container { width: 100%; max-width: 450px; background: var(--card-bg); border-radius: 20px; box-shadow: 0px 18px 40px rgba(112, 144, 176, 0.12); padding: 40px; }
-        .logo-area { text-align: center; margin-bottom: 30px; }
+        .login-container { width: 100%; max-width: 450px; background: var(--card-bg); border-radius: 20px; box-shadow: 0px 18px 40px rgba(112, 144, 176, 0.12); padding: 50px 40px; }
+        .logo-area { text-align: center; margin-bottom: 40px; }
         .logo-area h1 { font-size: 32px; color: var(--primary-blue); letter-spacing: 2px; }
         .logo-area p { font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 1px; }
-
-        .tabs { display: flex; border-bottom: 2px solid var(--border-color); margin-bottom: 30px; }
-        .tab { flex: 1; text-align: center; padding: 15px 0; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; }
-        .tab.active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); }
 
         .form-view { display: none; animation: fadeIn 0.4s ease; }
         .form-view.active { display: block; }
@@ -39,7 +35,7 @@
         .btn-primary { width: 100%; background: linear-gradient(135deg, var(--primary-blue), #60A5FA); border: none; color: white; padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(66,133,244,0.3); }
 
-        .link-text { text-align: center; font-size: 13px; color: var(--primary-blue); margin-top: 20px; cursor: pointer; display: block; font-weight: 600; }
+        .link-text { text-align: center; font-size: 13px; color: var(--primary-blue); margin-top: 25px; cursor: pointer; display: block; font-weight: 600; }
         .link-text:hover { text-decoration: underline; }
 
         /* モックアップ用の模擬メール画面 */
@@ -55,52 +51,31 @@
             <p>MEO DASHBOARD LOGIN</p>
         </div>
 
-        <div class="tabs">
-            <div class="tab active" onclick="switchTab('client')">クライアント専用</div>
-            <div class="tab" onclick="switchTab('master')">本部マスター</div>
-        </div>
-
-        <!-- クライアント：ログイン画面 -->
-        <div id="view-client-login" class="form-view active">
+        <!-- 統合ログイン画面 -->
+        <div id="view-login" class="form-view active">
             <div class="form-group">
                 <label>ご登録メールアドレス</label>
-                <input type="email" id="clientEmail" class="form-control" placeholder="example@shop.com">
+                <input type="email" id="loginEmail" class="form-control" placeholder="example@shop.com">
             </div>
             <div class="form-group">
                 <label>パスワード</label>
-                <input type="password" id="clientPass" class="form-control" placeholder="••••••••">
+                <input type="password" id="loginPass" class="form-control" placeholder="••••••••">
             </div>
-            <button class="btn-primary" onclick="clientLogin()"><i class="fa-solid fa-right-to-bracket"></i> ログインして管理画面へ</button>
-            <a class="link-text" onclick="switchClientView('issue')">初めての方・パスワードの発行はこちら</a>
+            <button class="btn-primary" onclick="processLogin()"><i class="fa-solid fa-right-to-bracket"></i> ログイン</button>
+            <a class="link-text" onclick="switchView('issue')">初めての方・パスワードの発行はこちら</a>
         </div>
 
-        <!-- クライアント：初期パスワード発行画面 -->
-        <div id="view-client-issue" class="form-view">
+        <!-- 初期パスワード発行画面 -->
+        <div id="view-issue" class="form-view">
             <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.6;">
                 ご登録したいメールアドレスを入力してください。<br>システムからログイン用の初期パスワードと専用URLを発行してメールでお届けします。
             </p>
             <div class="form-group">
                 <label>受信可能なメールアドレス</label>
-                <input type="email" id="newClientEmail" class="form-control" placeholder="example@shop.com">
+                <input type="email" id="newEmail" class="form-control" placeholder="example@shop.com">
             </div>
             <button class="btn-primary" onclick="simulateEmailSend()"><i class="fa-regular fa-paper-plane"></i> パスワードを発行・送信する</button>
-            <a class="link-text" onclick="switchClientView('login')" style="color:var(--text-muted);">ログイン画面へ戻る</a>
-        </div>
-
-        <!-- マスター：ログイン画面 -->
-        <div id="view-master-login" class="form-view">
-            <div style="background:#FEECEB; padding:10px; border-radius:8px; margin-bottom:20px;">
-                <p style="font-size:11px; color:#EA4335; text-align:center; font-weight:700;"><i class="fa-solid fa-triangle-exclamation"></i> 運営事務局の専用ログインです。</p>
-            </div>
-            <div class="form-group">
-                <label>管理用メールアドレス</label>
-                <input type="email" id="masterEmail" class="form-control" placeholder="urata@msm-jap.com">
-            </div>
-            <div class="form-group">
-                <label>マスターパスワード</label>
-                <input type="password" id="masterPass" class="form-control" placeholder="••••••••">
-            </div>
-            <button class="btn-primary" style="background: linear-gradient(135deg, #1A202C, #4A5568);" onclick="masterLogin()">認証してマスターパネルへ</button>
+            <a class="link-text" onclick="switchView('login')" style="color:var(--text-muted);">ログイン画面へ戻る</a>
         </div>
 
     </div>
@@ -121,68 +96,56 @@
                 ログイン用の初期パスワードを発行いたしました。<br><br>
                 ログインURL: <a>https://meo-dashboard-system...vercel.app/login.html</a><br>
                 登録メールアドレス: <span id="mockMailBodyTo" style="font-weight:bold;"></span><br>
-                初期パスワード: <b style="color:var(--primary-blue); font-size:16px;">Msm2026!</b><br><br>
+                初期パスワード: <b id="mockGenPass" style="color:var(--primary-blue); font-size:16px; letter-spacing:1px;"></b><br><br>
                 ※ログイン後、「設定」画面よりお好きなパスワードに変更してください。
             </div>
-            <button class="btn-primary" style="margin-top:20px;" onclick="document.getElementById('emailMockModal').style.display='none'; switchClientView('login');">確認してログイン画面へ</button>
+            <button class="btn-primary" style="margin-top:20px;" onclick="document.getElementById('emailMockModal').style.display='none'; switchView('login');">確認してログイン画面へ</button>
         </div>
     </div>
 
     <script>
-        function switchTab(type) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            if(type === 'client') {
-                document.querySelectorAll('.tab')[0].classList.add('active');
-                document.getElementById('view-master-login').classList.remove('active');
-                document.getElementById('view-client-login').classList.add('active');
-                document.getElementById('view-client-issue').classList.remove('active');
-            } else {
-                document.querySelectorAll('.tab')[1].classList.add('active');
-                document.getElementById('view-master-login').classList.add('active');
-                document.getElementById('view-client-login').classList.remove('active');
-                document.getElementById('view-client-issue').classList.remove('active');
-            }
-        }
-
-        function switchClientView(type) {
+        function switchView(type) {
             if(type === 'issue') {
-                document.getElementById('view-client-login').classList.remove('active');
-                document.getElementById('view-client-issue').classList.add('active');
+                document.getElementById('view-login').classList.remove('active');
+                document.getElementById('view-issue').classList.add('active');
             } else {
-                document.getElementById('view-client-issue').classList.remove('active');
-                document.getElementById('view-client-login').classList.add('active');
+                document.getElementById('view-issue').classList.remove('active');
+                document.getElementById('view-login').classList.add('active');
             }
         }
 
-        // マスターログイン処理
-        function masterLogin() {
-            const email = document.getElementById('masterEmail').value;
-            const pass = document.getElementById('masterPass').value;
+        // 統合ログイン処理（入力された情報でマスターかクライアントかを判別）
+        function processLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
 
-            if (email === 'urata@msm-jap.com' && pass === 'Koji2819') {
-                alert('認証成功！マスターダッシュボードへ移動します。');
-                window.location.href = 'master-dashboard.html';
-            } else {
-                alert('メールアドレスまたはパスワードが間違っています。');
-            }
-        }
-
-        // クライアントログイン処理（モックなので空でなければ通す）
-        function clientLogin() {
-            const email = document.getElementById('clientEmail').value;
-            const pass = document.getElementById('clientPass').value;
             if(!email || !pass) {
                 alert("メールアドレスとパスワードを入力してください。"); return;
             }
-            alert('ログイン成功！\nシステムの本番ではここで「index.html」へ移動します。');
-            window.location.href = 'index.html'; // 恐らくVercel上はindex.htmlに変更されているため
+
+            // 完全一致でマスターダッシュボードへリダイレクト
+            if (email === 'urata@msm-jap.com' && pass === 'Koji2819') {
+                window.location.href = 'master-dashboard.html';
+            } 
+            // それ以外はすべてクライアント用ダッシュボードへリダイレクト
+            else {
+                window.location.href = 'index.html';
+            }
         }
 
-        // メール送信のモックアップ
+        // パスワードランダム発行 & メール送信のモックアップ
         function simulateEmailSend() {
-            const email = document.getElementById('newClientEmail').value;
+            const email = document.getElementById('newEmail').value;
             if(!email) { alert("メールアドレスを入力してください。"); return; }
             
+            // 大文字・小文字・数字の混ざった8文字のランダムパスワードを生成
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let randomPass = '';
+            for (let i = 0; i < 8; i++) {
+                randomPass += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            document.getElementById('mockGenPass').innerText = randomPass;
             document.getElementById('mockMailTo').innerText = email;
             document.getElementById('mockMailBodyTo').innerText = email;
             document.getElementById('emailMockModal').style.display = 'flex';

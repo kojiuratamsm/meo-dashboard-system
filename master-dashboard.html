@@ -36,6 +36,26 @@
         .btn-action { background: var(--primary-blue); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; text-decoration:none; display:inline-block; }
         .btn-action:hover { opacity: 0.9; }
         .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; background:#E6F4EA; color:#34A853; font-weight:bold; }
+
+        /* --- レスポンシブ用（スマホ・タブレット向け） --- */
+        .mobile-only-header { display: none; }
+        @media (max-width: 768px) {
+            body { flex-direction: column; padding-bottom: 80px; }
+            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; flex-direction: row; padding: 5px 10px; z-index: 1000; justify-content: space-around; align-items:center; }
+            .sidebar .logo-area { display: none; }
+            .nav-item { padding: 10px; margin-bottom: 0; text-align: center; display:flex; flex-direction:column; align-items:center; flex:1; font-size:11px; }
+            .nav-item i { display: block; margin-bottom: 5px; font-size: 1.2rem; }
+
+            .main-content { padding: 15px; }
+            .mobile-only-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 10px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+            .header { display: none; } /* PC用ビッグヘッダーを隠す */
+            
+            .card { padding: 15px; }
+            .card > div:first-child { flex-direction: column; align-items: flex-start !important; gap: 10px; } 
+            .card h2 { font-size: 18px; }
+            
+            .client-table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; margin-top: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -50,6 +70,12 @@
     </nav>
 
     <main class="main-content">
+        <!-- モバイル専用ヘッダー -->
+        <div class="mobile-only-header">
+            <div class="msm-logo" style="font-size:24px; margin:0; color:var(--text-main); font-weight:800;">MSM <span style="font-size:10px; color:var(--text-muted);">MASTER</span></div>
+            <a href="login.html" style="color:#EA4335; font-size:11px; text-decoration:none; font-weight:700; padding:6px 12px; border-radius:8px; background:#FEECEB;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
+        </div>
+
         <header class="header">
             <h1>本部（マスター）管理パネル</h1>
         </header>
