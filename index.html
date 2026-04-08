@@ -161,6 +161,9 @@
         <a class="nav-item active" onclick="switchMainView('dashboard', this)">
             <i class="fa-solid fa-chart-pie"></i> ダッシュボード
         </a>
+        <a class="nav-item" onclick="switchMainView('posts', this)">
+            <i class="fa-solid fa-pen-to-square"></i> 投稿作成
+        </a>
         <a class="nav-item" onclick="switchMainView('reviews', this)" style="position: relative;">
             <i class="fa-solid fa-star"></i> 口コミ管理
             <span style="position:absolute; right:15px; background:#EA4335; color:white; font-size:10px; padding:2px 6px; border-radius:10px;">HOT</span>
@@ -168,14 +171,11 @@
         <a class="nav-item" onclick="switchMainView('competitors', this)">
             <i class="fa-solid fa-chess-knight"></i> 競合分析
         </a>
-        <a class="nav-item" onclick="switchMainView('settings', this)">
-            <i class="fa-solid fa-gear"></i> 設定
-        </a>
-        <a class="nav-item" onclick="switchMainView('posts', this)">
-            <i class="fa-solid fa-pen-to-square"></i> 投稿作成
-        </a>
         <a class="nav-item" onclick="switchMainView('reservations', this)">
             <i class="fa-solid fa-calendar-check"></i> 予約管理
+        </a>
+        <a class="nav-item" onclick="switchMainView('settings', this)">
+            <i class="fa-solid fa-gear"></i> 設定
         </a>
         <a href="login.html" class="nav-item logout-btn">
             <i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト
@@ -212,9 +212,36 @@
                     <div class="kpi-icon icon-green"><i class="fa-solid fa-route"></i></div>
                     <div class="kpi-info"><h3>ルート検索数</h3><div class="value">842 <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 5.2%</span></div></div>
                 </div>
+                </div>
                 <div class="card kpi-card">
                     <div class="kpi-icon icon-yellow"><i class="fa-solid fa-globe"></i></div>
                     <div class="kpi-info"><h3>サイトアクセス</h3><div class="value">315 <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 8.4%</span></div></div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:20px; animation: fadeIn 0.3s ease; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+                <h2 style="font-size:16px; margin-bottom:15px; border-left:4px solid var(--primary-blue); padding-left:10px;"><i class="fa-solid fa-bell" style="color:var(--primary-blue);"></i> 本日の予約一覧（リアルタイム）</h2>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+                        <tr style="background:#F8FAFC; border-bottom:1px solid #E2E8F0;">
+                            <th style="padding:10px; color:#4A5568;">予約時間</th>
+                            <th style="padding:10px; color:#4A5568;">お名前（人数）</th>
+                            <th style="padding:10px; color:#4A5568;">予約メニュー / コース</th>
+                            <th style="padding:10px; color:#4A5568;">担当スタッフ</th>
+                        </tr>
+                        <tr style="border-bottom:1px solid #E2E8F0;">
+                            <td style="padding:12px 10px; font-weight:bold; color:var(--primary-blue);">18:00</td>
+                            <td style="padding:12px 10px;">山田 太郎 様 <span style="background:#E2E8F0; padding:2px 6px; border-radius:10px; font-size:11px;">2名</span></td>
+                            <td style="padding:12px 10px;">極上黒毛和牛アニバーサリーコース</td>
+                            <td style="padding:12px 10px;">佐藤（店長）</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #E2E8F0;">
+                            <td style="padding:12px 10px; font-weight:bold; color:var(--primary-blue);">19:30</td>
+                            <td style="padding:12px 10px;">鈴木 花子 様 <span style="background:#E2E8F0; padding:2px 6px; border-radius:10px; font-size:11px;">4名</span></td>
+                            <td style="padding:12px 10px;">席のみ予約</td>
+                            <td style="padding:12px 10px;">高橋</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
 
@@ -642,12 +669,50 @@
                 <!-- カレンダーエリア -->
                 <div class="card" style="grid-column: span 2; animation: fadeIn 0.4s ease;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <h2>1年分の予約カレンダー</h2>
-                        <button class="btn-outline" style="font-size:12px; padding:6px 12px;"><i class="fa-solid fa-link"></i> お客様向け予約URLを発行</button>
+                        <h2 style="margin:0;"><span id="cal-month-title">今月</span> の予約カレンダー</h2>
+                        <div>
+                            <button class="btn-outline" style="padding:4px 10px; font-size:12px; margin-right:5px;">＜</button>
+                            <button class="btn-outline" style="padding:4px 10px; font-size:12px;">＞</button>
+                        </div>
                     </div>
-                    <div style="background:#F8FAFC; border:2px dashed #CBD5E1; color:#94A3B8; text-align:center; padding:80px 20px; border-radius:12px;">
-                        <i class="fa-regular fa-calendar-days" style="font-size:40px; margin-bottom:15px; color:#CBD5E1;"></i><br>
-                        ここにカレンダーUIが表示され、お客様からの予約が自動で一覧表示されます。
+                    
+                    <div style="border:1px solid #E2E8F0; border-radius:8px; overflow:hidden;">
+                        <!-- ヘッダー -->
+                        <div style="display:grid; grid-template-columns: repeat(7, 1fr); background:#F8FAFC; border-bottom:1px solid #E2E8F0; text-align:center; font-size:12px; font-weight:bold; color:#64748B;">
+                            <div style="padding:10px; color:#EA4335;">日</div><div style="padding:10px;">月</div><div style="padding:10px;">火</div><div style="padding:10px;">水</div><div style="padding:10px;">木</div><div style="padding:10px;">金</div><div style="padding:10px; color:#4285F4;">土</div>
+                        </div>
+                        <!-- 日付マス -->
+                        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:1px; background:#E2E8F0;">
+                            <!-- 1週目 -->
+                            <div style="background:white; min-height:80px;"></div><div style="background:white; min-height:80px;"></div><div style="background:white; min-height:80px;"></div>
+                            <div style="background:white; min-height:80px; padding:5px;">
+                                <div style="font-size:11px; text-align:right; color:#A0AEC0; margin-bottom:5px;">1</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="switchMainView('dashboard')">予約 2件</div>
+                            </div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">2</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;">
+                                <div style="font-size:11px; text-align:right; color:#A0AEC0; margin-bottom:5px;">3</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="switchMainView('dashboard')">予約 1件</div>
+                            </div>
+                            <div style="background:#F4F8FE; min-height:80px; padding:5px;">
+                                <div style="font-size:11px; text-align:right; color:#4285F4; margin-bottom:5px;">4</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="switchMainView('dashboard')">予約 5件</div>
+                                <div style="background:#FEF3C7; color:#B45309; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; cursor:pointer;">残席わずか</div>
+                            </div>
+                            
+                            <!-- 2週目 (一部省略) -->
+                            <div style="background:#FFF5F5; min-height:80px; padding:5px;">
+                                <div style="font-size:11px; text-align:right; color:#EA4335; margin-bottom:5px;">5</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="switchMainView('dashboard')">予約 8件</div>
+                            </div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">6</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">7</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">8</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">9</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">10</div></div>
+                            <div style="background:#F4F8FE; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#4285F4;">11</div></div>
+                        </div>
+                        <div style="padding:10px; background:white; font-size:11px; color:#A0AEC0; text-align:center;">※カレンダーの「予約◯件」をタップするとダッシュボード詳細へ遷移します。実際はここから予約のドラッグ＆ドロップ管理が可能です。</div>
                     </div>
                 </div>
 
@@ -720,11 +785,64 @@
                     <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">お客様が予約・選択する項目の詳細設定</p>
                     
                     <ul style="list-style:none; padding:0; margin:0; font-size:14px; line-height:3;">
-                        <li style="border-bottom:1px solid #eee; cursor:pointer;"><i class="fa-solid fa-users" style="width:25px; color:var(--primary-blue);"></i> スタッフ登録（最大50名） <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
-                        <li style="border-bottom:1px solid #eee; cursor:pointer;"><i class="fa-solid fa-utensils" style="width:25px; color:var(--primary-blue);"></i> メニュー登録（最大100件）<span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
-                        <li style="cursor:pointer;"><i class="fa-solid fa-yen-sign" style="width:25px; color:var(--primary-blue);"></i> 金額(税込)・メニュー説明文<span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
+                        <li style="border-bottom:1px solid #eee; cursor:pointer; color:var(--text-main);" onclick="switchMainView('staff-form')"><i class="fa-solid fa-users" style="width:25px; color:var(--primary-blue);"></i> スタッフ登録 <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
+                        <li style="border-bottom:1px solid #eee; cursor:pointer; color:var(--text-main);" onclick="switchMainView('menu-form')"><i class="fa-solid fa-utensils" style="width:25px; color:var(--primary-blue);"></i> メニュー登録 <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
+                        <li style="border-bottom:1px solid #eee; cursor:pointer; color:var(--text-main);" onclick="switchMainView('price-desc-form')"><i class="fa-solid fa-yen-sign" style="width:25px; color:var(--primary-blue);"></i> 金額(税抜/税込)・メニュー説明文<span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
+                        <li style="cursor:pointer; color:var(--text-main);" onclick="switchMainView('reservation-form')"><i class="fa-solid fa-link" style="width:25px; color:var(--primary-blue);"></i> 予約フォーム設定 <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
                     </ul>
                 </div>
+            </div>
+        </section>
+
+        <!-- STAFF FORM VIEW (予約管理の詳細) -->
+        <section id="view-staff-form" class="view-section">
+            <header class="header">
+                <div>
+                    <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
+                    <h1>スタッフ登録</h1>
+                </div>
+            </header>
+            <div class="card" style="animation: fadeIn 0.3s ease;">
+                <p style="color:var(--text-muted); font-size:14px;"><i class="fa-solid fa-circle-info"></i> スタッフの顔写真や名前、指名オプションなどを登録する専用ページが構築されます。</p>
+            </div>
+        </section>
+
+        <!-- MENU FORM VIEW (予約管理の詳細) -->
+        <section id="view-menu-form" class="view-section">
+            <header class="header">
+                <div>
+                    <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
+                    <h1>メニュー登録</h1>
+                </div>
+            </header>
+            <div class="card" style="animation: fadeIn 0.3s ease;">
+                <p style="color:var(--text-muted); font-size:14px;"><i class="fa-solid fa-circle-info"></i> コースや単品メニューのカテゴリ分け、画像アップロードが可能な専用ページが構築されます。</p>
+            </div>
+        </section>
+
+        <!-- PRICE DESC FORM VIEW (予約管理の詳細) -->
+        <section id="view-price-desc-form" class="view-section">
+            <header class="header">
+                <div>
+                    <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
+                    <h1>金額(税抜/税込)・メニュー説明文設定</h1>
+                </div>
+            </header>
+            <div class="card" style="animation: fadeIn 0.3s ease;">
+                <p style="color:var(--text-muted); font-size:14px;"><i class="fa-solid fa-circle-info"></i> 金額の税計算設定や、魅力的なメニュー説明文を一元管理する編集ページが構築されます。</p>
+            </div>
+        </section>
+        
+        <!-- RESERVATION FORM VIEW (予約管理の詳細) -->
+        <section id="view-reservation-form" class="view-section">
+            <header class="header">
+                <div>
+                    <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
+                    <h1>予約フォーム設定</h1>
+                </div>
+            </header>
+            <div class="card" style="animation: fadeIn 0.3s ease;">
+                <p style="color:var(--text-muted); font-size:14px;"><i class="fa-solid fa-circle-info"></i> お客様向けに発行される予約フォームのURLコピーや、フォームのカラーや埋め込みタグ変更機能が構築されます。</p>
             </div>
         </section>
 
@@ -865,10 +983,21 @@
             document.getElementById('mobileOverlay').classList.toggle('active');
         }
 
-        // --- 画面切替 ---
         function switchMainView(viewId, element) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
+            if(element) {
+                element.classList.add('active');
+            } else {
+                let targetId = viewId;
+                if(viewId.includes('form')) targetId = 'reservations'; 
+                
+                document.querySelectorAll('.nav-item').forEach(link => {
+                    const onclickStr = link.getAttribute('onclick');
+                    if (onclickStr && onclickStr.includes(`'${targetId}'`)) {
+                        link.classList.add('active');
+                    }
+                });
+            }
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + viewId).classList.add('active');
             
@@ -876,6 +1005,7 @@
             if(document.querySelector('.sidebar').classList.contains('active')){
                 toggleMobileMenu();
             }
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         function switchReviewSubView(tabId) {

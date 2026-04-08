@@ -59,7 +59,8 @@
             </div>
             <div class="form-group">
                 <label>パスワード</label>
-                <input type="password" id="loginPass" class="form-control" placeholder="••••••••">
+                <!-- ブラウザの漏洩警告を防ぐために type="text" にしつつ、CSSで黒丸に偽装しています -->
+                <input type="text" id="loginPass" class="form-control" placeholder="••••••••" style="-webkit-text-security: disc;">
             </div>
             <button class="btn-primary" onclick="processLogin()"><i class="fa-solid fa-right-to-bracket"></i> ログイン</button>
             <a class="link-text" onclick="switchView('issue')">初めての方・パスワードの発行はこちら</a>
