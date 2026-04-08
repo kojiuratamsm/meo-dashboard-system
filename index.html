@@ -153,9 +153,14 @@
 
     <!-- Sidebar -->
     <nav class="sidebar">
-        <div class="logo-area">
-            <div class="msm-logo">MSM</div>
-            <div class="msm-sub">MEO DASHBOARD</div>
+        <div class="logo-area" style="cursor:pointer;" onclick="switchMainView('dashboard', document.querySelector('.nav-item'))">
+            <div class="msm-logo" style="display:flex; align-items:center; gap:8px;">
+                <div style="background:linear-gradient(135deg, #a855f7, #6366f1); color:white; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(99,102,241,0.4);">
+                    <i class="fa-solid fa-chart-line" style="font-size:18px;"></i>
+                </div>
+                <span style="font-size:24px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px;">MSM</span>
+            </div>
+            <div class="msm-sub" style="margin-top:8px; font-size:10px; font-weight:bold; color:#94A3B8; letter-spacing:2px;">MEO DASHBOARD</div>
         </div>
 
         <a class="nav-item active" onclick="switchMainView('dashboard', this)">
@@ -187,7 +192,10 @@
         
         <!-- モバイル専用ヘッダー -->
         <div class="mobile-only-header">
-            <div class="msm-logo" style="font-size:24px; margin:0;">MSM <span style="font-size:10px; color:var(--text-muted); font-weight:600;">MEO</span></div>
+            <div class="msm-logo" style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;" onclick="switchMainView('dashboard', document.querySelector('.nav-item'))">
+                <i class="fa-solid fa-chart-line" style="color:#a855f7; font-size:18px;"></i>
+                <span style="font-size:20px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">MSM</span>
+            </div>
             <button onclick="toggleMobileMenu()" style="background:none; border:none; font-size:26px; color:var(--text-main); cursor:pointer;"><i class="fa-solid fa-bars"></i></button>
         </div>
 
@@ -673,8 +681,12 @@
                         <i class="fa-solid fa-wand-magic-sparkles"></i> AIで1400文字の投稿文を作成
                     </button>
                     
-                    <div class="form-group">
-                        <label>生成された投稿文（手動での微調整も可能です）</label>
+                    <div class="form-group" style="position:relative;">
+                        <label style="display:flex; justify-content:space-between; align-items:flex-end;">
+                            <span>生成された投稿文（手動での微調整も可能です）</span>
+                            <button onclick="copyGeneratedPost()" style="background:none; border:1px solid #CBD5E1; color:#4A5568; font-size:12px; padding:4px 12px; border-radius:12px; cursor:pointer; font-weight:600; transition:all 0.2s;"><i class="fa-regular fa-copy"></i> コピー</button>
+                        </label>
+                        <p style="font-size:11px; color:#E53E3E; margin:5px 0 10px 0; font-weight:bold;"><i class="fa-solid fa-triangle-exclamation"></i> ※あくまでAIが執筆した文章です。文章に誤りや誇張表現がないか確認し、修正を行ってから投稿して下さい。</p>
                         <textarea class="form-control" id="postTextarea" rows="12" placeholder="ここにAIが生成した文章が表示されます..."></textarea>
                     </div>
                     
@@ -919,86 +931,63 @@
 
     </main>
 
-    <!-- HELP MODAL (共有URLの取得方法) -->
+    <!-- HELP MODAL (共有URLの取得方法: 競合分析用) -->
     <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
-        <div class="card" style="max-width:650px; width:90%; position:relative; padding:0; overflow:hidden;">
-            <div style="background:linear-gradient(135deg, #1A202C, #2D3748); padding:25px; color:white; text-align:center; position:relative;">
-                <button style="position:absolute; top:20px; right:20px; background:none; border:none; font-size:20px; color:#A0AEC0; cursor:pointer;" onclick="closeHelpModal()"><i class="fa-solid fa-xmark"></i></button>
-                <h2 style="margin:0; font-size:20px; font-weight:700;">💡 【重要】競合URLの正しい取り方</h2>
-                <p style="margin:8px 0 0 0; font-size:13px; color:#CBD5E1;">正確なデータを取得するため、必ず以下の手順をご確認ください。</p>
+        <div class="card" style="max-width: 700px; width:90%; position:relative; padding: 0; overflow:hidden;">
+            <div style="background:linear-gradient(135deg, #1A202C, #2D3748); padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">💡 【重要】競合URLの正しい取り方</h2>
+                <button style="background:none; border:none; font-size:20px; color:#A0AEC0; cursor:pointer;" onclick="closeHelpModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
-            <div style="padding: 30px; max-height: 70vh; overflow-y: auto;">
-                <div style="display:flex; gap:20px; flex-direction:column;">
-                    <!-- よくある間違い -->
-                    <div style="border:1px solid #FEECEB; border-radius:12px; overflow:hidden;">
-                        <div style="background:#FEECEB; color:#EA4335; padding:10px 15px; font-weight:700; font-size:14px; display:flex; align-items:center; gap:10px;">
-                            <i class="fa-solid fa-xmark" style="background:#EA4335; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> よくあるNGな取り方（システムエラーになります）
-                        </div>
-                        <div style="padding:20px; display:flex; gap:15px; background:white;">
-                            <div style="flex:1; text-align:center;">
-                                <div style="font-size:11px; font-weight:bold; color:#64748B; margin-bottom:8px;">STEP 1</div>
-                                <svg width="70" height="90" viewBox="0 0 60 80">
-                                    <rect x="5" y="5" width="50" height="70" rx="4" fill="white" stroke="#CBD5E1" stroke-width="2"/>
-                                    <circle cx="30" cy="20" r="6" fill="#A0AEC0"/>
-                                    <rect x="15" y="32" width="30" height="4" fill="#E2E8F0" rx="2"/>
-                                </svg>
-                                <div style="font-size:12px; font-weight:600; margin-top:10px; line-height:1.4;">Safariなどで検索するか<br>普通に「Google」で検索</div>
-                            </div>
-                            <div style="display:flex; align-items:center; color:#CBD5E1;"><i class="fa-solid fa-chevron-right"></i></div>
-                            <div style="flex:1; text-align:center;">
-                                <div style="font-size:11px; font-weight:bold; color:#64748B; margin-bottom:8px;">STEP 2</div>
-                                <svg width="70" height="90" viewBox="0 0 60 80">
-                                    <rect x="5" y="5" width="50" height="70" rx="4" fill="white" stroke="#CBD5E1" stroke-width="2"/>
-                                    <rect x="15" y="25" width="30" height="20" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
-                                    <circle cx="40" cy="60" r="7" fill="#EA4335"/>
-                                    <path d="M38 58 L42 60 L38 62" fill="none" stroke="white" stroke-width="1.5"/>
-                                </svg>
-                                <div style="font-size:12px; font-weight:600; margin-top:10px; line-height:1.4;">検索結果の下から<br>共有ボタンを押す</div>
-                            </div>
-                        </div>
-                        <div style="background:#FFF5F5; color:#C53030; font-size:12px; padding:10px; text-align:center; font-weight:bold; border-top:1px dashed #FEECEB;">
-                            ❌ URLが「share.google/〜」となり、別店舗のデータが出てしまいます！
-                        </div>
-                    </div>
+            <div style="padding: 20px;">
+                <p style="text-align:center; font-size:14px; font-weight:bold; color:var(--text-main); margin-bottom:20px;">
+                    競合店の情報はGoogleマップアプリから直接取得します。<br>ブラウザ経由はシステムエラーになるためお控えください。
+                </p>
 
-                    <!-- 正しいやり方 -->
-                    <div style="border:1px solid #E6F4EA; border-radius:12px; overflow:hidden;">
-                        <div style="background:#E6F4EA; color:#059669; padding:10px 15px; font-weight:700; font-size:14px; display:flex; align-items:center; gap:10px;">
-                            <i class="fa-solid fa-check" style="background:#059669; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> 正しい取り方（100%正確に取得します！）
+                <!-- よくある間違い -->
+                <div style="border:1px solid #FEECEB; border-radius:12px; margin-bottom:20px; overflow:hidden;">
+                    <div style="background:#FEECEB; color:#E53E3E; padding:10px 15px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-xmark" style="background:#E53E3E; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> よくあるNGな取り方（システムエラーになります）
+                    </div>
+                    <div style="padding:15px; display:flex; gap:15px; background:white; justify-content:center; align-items:center;">
+                        <div style="text-align:center; flex:1;">
+                            <i class="fa-brands fa-safari" style="font-size:36px; color:#4285F4; margin-bottom:10px;"></i>
+                            <i class="fa-brands fa-chrome" style="font-size:36px; color:#EA4335; margin-left:10px; margin-bottom:10px;"></i>
+                            <div style="font-size:12px; font-weight:bold; color:#4A5568;">SafariやChromeなどの<br>「ブラウザ」でGoogle検索する</div>
                         </div>
-                        <div style="padding:20px; display:flex; gap:15px; background:white;">
-                            <div style="flex:1; text-align:center;">
-                                <div style="font-size:11px; font-weight:bold; color:#64748B; margin-bottom:8px;">STEP 1</div>
-                                <svg width="70" height="90" viewBox="0 0 60 80">
-                                    <rect x="5" y="5" width="50" height="70" rx="4" fill="white" stroke="#10B981" stroke-width="2"/>
-                                    <path d="M30 20 C24 20 20 25 20 31 C20 39 30 50 30 50 C30 50 40 39 40 31 C40 25 36 20 30 20 Z" fill="#34A853"/>
-                                    <circle cx="30" cy="30" r="3" fill="white"/>
-                                </svg>
-                                <div style="font-size:12px; font-weight:600; margin-top:10px; line-height:1.4;">絶対に！専用の<br>「Googleマップアプリ」を開く</div>
+                        <div style="display:flex; align-items:center; color:#E53E3E;"><i class="fa-solid fa-chevron-right"></i></div>
+                        <div style="text-align:center; flex:1;">
+                            <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:10px; border-radius:8px; font-size:11px; word-break:break-all; font-family:monospace; color:#A0AEC0;">
+                                https://share.google/...
                             </div>
-                            <div style="display:flex; align-items:center; color:#10B981;"><i class="fa-solid fa-chevron-right"></i></div>
-                            <div style="flex:1; text-align:center;">
-                                <div style="font-size:11px; font-weight:bold; color:#64748B; margin-bottom:8px;">STEP 2</div>
-                                <svg width="70" height="90" viewBox="0 0 60 80">
-                                    <rect x="5" y="5" width="50" height="70" rx="4" fill="white" stroke="#10B981" stroke-width="2"/>
-                                    <rect x="15" y="30" width="30" height="6" fill="#E2E8F0" rx="1"/>
-                                    <rect x="15" y="40" width="20" height="4" fill="#E2E8F0" rx="1"/>
-                                    <circle cx="30" cy="55" r="7" fill="#4285F4"/>
-                                    <path d="M28 53 L32 55 L28 57" fill="none" stroke="white" stroke-width="1.5"/>
-                                </svg>
-                                <div style="font-size:12px; font-weight:600; margin-top:10px; line-height:1.4;">気になる競合店を表示して<br>「共有」をコピーする</div>
-                            </div>
-                        </div>
-                        <div style="background:#ECFDF5; color:#047857; font-size:12px; padding:10px; text-align:center; font-weight:bold; border-top:1px dashed #D1FAE5;">
-                            ⭕️ URLが「maps.app.goo.gl/〜」となり一発で正確に成功します！
+                            <div style="font-size:12px; font-weight:bold; color:#E53E3E; margin-top:10px;">❌ 共有リンクが「share.google...」になり失敗します</div>
                         </div>
                     </div>
                 </div>
 
-                <div style="text-align:center; margin-top:25px;">
-                    <button class="btn-primary" style="width:100%; box-shadow:none; padding:12px; font-size:15px; font-weight:bold; background:#2B3674;" onclick="closeHelpModal()">理解したのでURLを入力する</button>
+                <!-- 正しいやり方 -->
+                <div style="border:1px solid #E6F4EA; border-radius:12px; overflow:hidden;">
+                    <div style="background:#E6F4EA; color:#059669; padding:10px 15px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-check" style="background:#059669; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> 正しい取り方（100%正確に取得します！）
+                    </div>
+                    <div style="padding:15px; display:flex; gap:15px; background:white; justify-content:center; align-items:center;">
+                        <div style="text-align:center; flex:1;">
+                            <i class="fa-solid fa-map-location-dot" style="font-size:40px; color:#34A853; margin-bottom:10px;"></i>
+                            <div style="font-size:12px; font-weight:bold; color:#4A5568;">必ず「Googleマップ」<br>専用アプリから競合店を開く</div>
+                        </div>
+                        <div style="display:flex; align-items:center; color:#059669;"><i class="fa-solid fa-chevron-right"></i></div>
+                        <div style="text-align:center; flex:1;">
+                            <div style="background:#ECFDF5; border:1px solid #A7F3D0; padding:10px; border-radius:8px; font-size:11px; word-break:break-all; font-family:monospace; color:#059669; font-weight:bold;">
+                                https://maps.app.goo.gl/...
+                            </div>
+                            <div style="font-size:12px; font-weight:bold; color:#059669; margin-top:10px;">✅ 共有リンクが「maps.app.goo.gl...」になります</div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+            
+            <div style="text-align:center; margin:0 20px 20px 20px;">
+                <button class="btn-primary" style="width:100%; box-shadow:none; padding:12px; font-size:15px; font-weight:bold; background:#2B3674;" onclick="closeHelpModal()">理解したので競合URLを入力する</button>
             </div>
         </div>
     </div>
@@ -1802,6 +1791,39 @@
             document.getElementById('postKeywordsContainer').innerHTML = '';
             document.getElementById('postEmojisContainer').innerHTML = '';
         }
+
+        // コピー機能
+        function copyGeneratedPost() {
+            const textarea = document.getElementById('postTextarea');
+            if(!textarea.value) {
+                alert('コピーするAI作成文がありません。');
+                return;
+            }
+            textarea.select();
+            document.execCommand('copy');
+            alert('投稿文を全選択してコピーしました！');
+            // 選択解除
+            window.getSelection().removeAllRanges();
+        }
+
+        // --- 全画面統一: 右上プロフィール表示の動的挿入（競合分析等での表示ブレ対策） ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const globalProfileHtml = `
+                <div class="user-profile global-user-profile" style="display:flex !important; align-items:center; gap:12px; background:var(--card-bg); padding:8px 16px; border-radius:30px; box-shadow:var(--shadow);">
+                    <div style="width:32px; height:32px; background:var(--primary-blue); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px;">店舗</div>
+                    <span style="font-weight:600; font-size:14px; color:var(--text-main);">株式会社MSM 様</span>
+                </div>
+            `;
+            document.querySelectorAll('.header').forEach(header => {
+                // 古いプロフィール表記があれば削除して統一
+                const oldProfile = header.querySelector('.user-profile');
+                if (oldProfile) {
+                    oldProfile.remove();
+                }
+                // グローバルプロフィールを再配置
+                header.insertAdjacentHTML('beforeend', globalProfileHtml);
+            });
+        });
 
     </script>
 </body>
