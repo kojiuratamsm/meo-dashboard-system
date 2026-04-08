@@ -212,7 +212,6 @@
                     <div class="kpi-icon icon-green"><i class="fa-solid fa-route"></i></div>
                     <div class="kpi-info"><h3>ルート検索数</h3><div class="value">842 <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 5.2%</span></div></div>
                 </div>
-                </div>
                 <div class="card kpi-card">
                     <div class="kpi-icon icon-yellow"><i class="fa-solid fa-globe"></i></div>
                     <div class="kpi-info"><h3>サイトアクセス</h3><div class="value">315 <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 8.4%</span></div></div>
@@ -669,10 +668,10 @@
                 <!-- カレンダーエリア -->
                 <div class="card" style="grid-column: span 2; animation: fadeIn 0.4s ease;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                        <h2 style="margin:0;"><span id="cal-month-title">今月</span> の予約カレンダー</h2>
+                        <h2 style="margin:0;"><span id="cal-month-title">2026年 4月</span> の予約カレンダー</h2>
                         <div>
-                            <button class="btn-outline" style="padding:4px 10px; font-size:12px; margin-right:5px;">＜</button>
-                            <button class="btn-outline" style="padding:4px 10px; font-size:12px;">＞</button>
+                            <button class="btn-outline" style="padding:4px 10px; font-size:12px; margin-right:5px;">＜ 前月</button>
+                            <button class="btn-outline" style="padding:4px 10px; font-size:12px;">次月 ＞</button>
                         </div>
                     </div>
                     
@@ -687,23 +686,23 @@
                             <div style="background:white; min-height:80px;"></div><div style="background:white; min-height:80px;"></div><div style="background:white; min-height:80px;"></div>
                             <div style="background:white; min-height:80px; padding:5px;">
                                 <div style="font-size:11px; text-align:right; color:#A0AEC0; margin-bottom:5px;">1</div>
-                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="switchMainView('dashboard')">予約 2件</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="openReservationDetail('2026年 4月1日 (水)', 2)">予約 2件</div>
                             </div>
                             <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">2</div></div>
                             <div style="background:white; min-height:80px; padding:5px;">
                                 <div style="font-size:11px; text-align:right; color:#A0AEC0; margin-bottom:5px;">3</div>
-                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="switchMainView('dashboard')">予約 1件</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="openReservationDetail('2026年 4月3日 (金)', 1)">予約 1件</div>
                             </div>
                             <div style="background:#F4F8FE; min-height:80px; padding:5px;">
                                 <div style="font-size:11px; text-align:right; color:#4285F4; margin-bottom:5px;">4</div>
-                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="switchMainView('dashboard')">予約 5件</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="openReservationDetail('2026年 4月4日 (土)', 5)">予約 5件</div>
                                 <div style="background:#FEF3C7; color:#B45309; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; cursor:pointer;">残席わずか</div>
                             </div>
                             
-                            <!-- 2週目 (一部省略) -->
+                            <!-- 2週目 -->
                             <div style="background:#FFF5F5; min-height:80px; padding:5px;">
                                 <div style="font-size:11px; text-align:right; color:#EA4335; margin-bottom:5px;">5</div>
-                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="switchMainView('dashboard')">予約 8件</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="openReservationDetail('2026年 4月5日 (日)', 8)">予約 8件</div>
                             </div>
                             <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">6</div></div>
                             <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">7</div></div>
@@ -711,8 +710,34 @@
                             <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">9</div></div>
                             <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">10</div></div>
                             <div style="background:#F4F8FE; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#4285F4;">11</div></div>
+
+                            <!-- 3週目 -->
+                            <div style="background:#FFF5F5; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#EA4335;">12</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">13</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">14</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">15</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">16</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">17</div></div>
+                            <div style="background:#F4F8FE; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#4285F4;">18</div></div>
+
+                            <!-- 4週目 -->
+                            <div style="background:#FFF5F5; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#EA4335;">19</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">20</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">21</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">22</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">23</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">24</div></div>
+                            <div style="background:#F4F8FE; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#4285F4;">25</div></div>
+
+                            <!-- 5週目 -->
+                            <div style="background:#FFF5F5; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#EA4335;">26</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">27</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">28</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">29</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">30</div></div>
+                            <div style="background:white; min-height:80px;"></div><div style="background:white; min-height:80px;"></div>
                         </div>
-                        <div style="padding:10px; background:white; font-size:11px; color:#A0AEC0; text-align:center;">※カレンダーの「予約◯件」をタップするとダッシュボード詳細へ遷移します。実際はここから予約のドラッグ＆ドロップ管理が可能です。</div>
+                        <div style="padding:10px; background:white; font-size:11px; color:#A0AEC0; text-align:center;">※カレンダーの「予約◯件」をタップすると、その日の予約詳細POPが開きます。</div>
                     </div>
                 </div>
 
@@ -976,6 +1001,45 @@
         </div>
     </div>
 
+    <!-- RESERVATION DETAIL MODAL -->
+    <div id="reservationDetailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
+        <div class="card" style="max-width: 650px; width:90%; position:relative; padding: 0; overflow:hidden;">
+            <div style="background:linear-gradient(135deg, var(--primary-blue), #2B3674); padding:20px 25px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:18px; font-weight:700;"><i class="fa-solid fa-calendar-check"></i> <span id="rsvModalDate">2026年 4月4日 (土)</span> の予約一覧</h2>
+                <button style="background:none; border:none; font-size:22px; color:white; cursor:pointer;" onclick="closeReservationDetail()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+                    <tr style="background:#F8FAFC; border-bottom:1px solid #E2E8F0;">
+                        <th style="padding:10px; color:#4A5568;">時間</th>
+                        <th style="padding:10px; color:#4A5568;">ご予約者（人数）</th>
+                        <th style="padding:10px; color:#4A5568;">メニュー/担当</th>
+                        <th style="padding:10px; color:#4A5568; text-align:center;">LINE配信状況</th>
+                    </tr>
+                    <tr style="border-bottom:1px solid #E2E8F0;">
+                        <td style="padding:15px 10px; font-weight:bold; color:var(--text-main);">17:00</td>
+                        <td style="padding:15px 10px;">山口 健太 様 <span style="background:#E2E8F0; padding:2px 6px; border-radius:10px; font-size:11px;">2名</span></td>
+                        <td style="padding:15px 10px;">席のみ予約<br><span style="color:#A0AEC0; font-size:11px;">担当: 佐藤</span></td>
+                        <td style="padding:15px 10px; text-align:center;"><span style="background:#E6F4EA; color:#059669; padding:4px 8px; border-radius:12px; font-size:11px; font-weight:bold;">前日リマインド済</span></td>
+                    </tr>
+                    <tr id="rsvModalExtraRow" style="border-bottom:1px solid #E2E8F0;">
+                        <td style="padding:15px 10px; font-weight:bold; color:var(--text-main);">18:30</td>
+                        <td style="padding:15px 10px;">高田 彩 様 <span style="background:#E2E8F0; padding:2px 6px; border-radius:10px; font-size:11px;">4名</span></td>
+                        <td style="padding:15px 10px;">スタンダードコース<br><span style="color:#A0AEC0; font-size:11px;">担当: 高橋</span></td>
+                        <td style="padding:15px 10px; text-align:center;"><span style="background:#E2E8F0; color:#4A5568; padding:4px 8px; border-radius:12px; font-size:11px; font-weight:bold;">未配信（当日配信待機中）</span></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #E2E8F0;">
+                        <td style="padding:15px 10px; font-weight:bold; color:var(--text-main);">19:00</td>
+                        <td style="padding:15px 10px;">中村 翔 様 <span style="background:#E2E8F0; padding:2px 6px; border-radius:10px; font-size:11px;">6名</span></td>
+                        <td style="padding:15px 10px;">VIPアニバーサリー<br><span style="color:#A0AEC0; font-size:11px;">担当: 店長</span></td>
+                        <td style="padding:15px 10px; text-align:center;"><span style="background:#E6F4EA; color:#059669; padding:4px 8px; border-radius:12px; font-size:11px; font-weight:bold;">前日リマインド済</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- モバイルメニュー操作 ---
         function toggleMobileMenu() {
@@ -1006,6 +1070,21 @@
                 toggleMobileMenu();
             }
             window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        // --- カレンダーの予約POP ---
+        function openReservationDetail(dateStr, count) {
+            document.getElementById('rsvModalDate').innerText = dateStr;
+            // デモ用に件数によって行の表示/非表示を切り替える遊び心
+            if(count === 1) {
+                document.getElementById('rsvModalExtraRow').style.display = 'none';
+            } else {
+                document.getElementById('rsvModalExtraRow').style.display = 'table-row';
+            }
+            document.getElementById('reservationDetailModal').style.display = 'flex';
+        }
+        function closeReservationDetail() {
+            document.getElementById('reservationDetailModal').style.display = 'none';
         }
 
         function switchReviewSubView(tabId) {
