@@ -2066,12 +2066,14 @@
             alert('GoogleでのOAuth認証が完了し、店舗とシステムが完全に紐付きました！\n全ての機能をご利用いただけます。');
         }
 
-        // デモ用：ページロード時に自動で「初回セットアップModal」を被せる
+        // 本番用：初回ログイン時のみ「初回セットアップModal」を表示するロジックが入ります
+        /*
         document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => {
                 document.getElementById('initialSetupModal').style.display = 'flex';
             }, 300);
         });
+        */
 
     </script>
 </body>
