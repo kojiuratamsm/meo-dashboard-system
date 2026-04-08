@@ -944,46 +944,91 @@
                     競合店の情報はGoogleマップアプリから直接取得します。<br>ブラウザ経由はシステムエラーになるためお控えください。
                 </p>
 
-                <!-- よくある間違い -->
-                <div style="border:1px solid #FEECEB; border-radius:12px; margin-bottom:20px; overflow:hidden;">
-                    <div style="background:#FEECEB; color:#E53E3E; padding:10px 15px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-xmark" style="background:#E53E3E; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> よくあるNGな取り方（システムエラーになります）
-                    </div>
-                    <div style="padding:15px; display:flex; gap:15px; background:white; justify-content:center; align-items:center;">
-                        <div style="text-align:center; flex:1;">
-                            <i class="fa-brands fa-safari" style="font-size:36px; color:#4285F4; margin-bottom:10px;"></i>
-                            <i class="fa-brands fa-chrome" style="font-size:36px; color:#EA4335; margin-left:10px; margin-bottom:10px;"></i>
-                            <div style="font-size:12px; font-weight:bold; color:#4A5568;">SafariやChromeなどの<br>「ブラウザ」でGoogle検索する</div>
-                        </div>
-                        <div style="display:flex; align-items:center; color:#E53E3E;"><i class="fa-solid fa-chevron-right"></i></div>
-                        <div style="text-align:center; flex:1;">
-                            <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:10px; border-radius:8px; font-size:11px; word-break:break-all; font-family:monospace; color:#A0AEC0;">
-                                https://share.google/...
+                    <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:20px;">
+                        <!-- スマホ版 -->
+                        <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
+                            <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-mobile-screen-button" style="font-size:16px;"></i> スマホから取得する場合
                             </div>
-                            <div style="font-size:12px; font-weight:bold; color:#E53E3E; margin-top:10px;">❌ 共有リンクが「share.google...」になり失敗します</div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map-location-dot" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>アプリを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        店舗名を<br>検索して開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">Safariやブラウザ</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">Google検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報の共有 <span style="color:#E53E3E;">(エラー)</span></div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- 正しいやり方 -->
-                <div style="border:1px solid #E6F4EA; border-radius:12px; overflow:hidden;">
-                    <div style="background:#E6F4EA; color:#059669; padding:10px 15px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-check" style="background:#059669; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> 正しい取り方（100%正確に取得します！）
-                    </div>
-                    <div style="padding:15px; display:flex; gap:15px; background:white; justify-content:center; align-items:center;">
-                        <div style="text-align:center; flex:1;">
-                            <i class="fa-solid fa-map-location-dot" style="font-size:40px; color:#34A853; margin-bottom:10px;"></i>
-                            <div style="font-size:12px; font-weight:bold; color:#4A5568;">必ず「Googleマップ」<br>専用アプリから競合店を開く</div>
-                        </div>
-                        <div style="display:flex; align-items:center; color:#059669;"><i class="fa-solid fa-chevron-right"></i></div>
-                        <div style="text-align:center; flex:1;">
-                            <div style="background:#ECFDF5; border:1px solid #A7F3D0; padding:10px; border-radius:8px; font-size:11px; word-break:break-all; font-family:monospace; color:#059669; font-weight:bold;">
-                                https://maps.app.goo.gl/...
+                        <!-- PC版 -->
+                        <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
+                            <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-desktop" style="font-size:16px;"></i> パソコンから取得する場合
                             </div>
-                            <div style="font-size:12px; font-weight:bold; color:#059669; margin-top:10px;">✅ 共有リンクが「maps.app.goo.gl...」になります</div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>サイトを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        店舗名を<br>検索して開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">通常のGoogle検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報を開く</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">共有リンク <span style="color:#E53E3E;">(エラー)</span></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
             </div>
             
             <div style="text-align:center; margin:0 20px 20px 20px;">
@@ -1010,46 +1055,91 @@
                     店舗情報はGoogleマップアプリから直接取得します。<br>ブラウザ経由は100%エラーになるためお控えください。
                 </p>
 
-                <!-- よくある間違い -->
-                <div style="border:1px solid #FEECEB; border-radius:12px; margin-bottom:20px; overflow:hidden;">
-                    <div style="background:#FEECEB; color:#E53E3E; padding:10px 15px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-xmark" style="background:#E53E3E; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> よくある間違い（エラーになります）
-                    </div>
-                    <div style="padding:15px; display:flex; gap:15px; background:white; justify-content:center; align-items:center;">
-                        <div style="text-align:center; flex:1;">
-                            <i class="fa-brands fa-safari" style="font-size:36px; color:#4285F4; margin-bottom:10px;"></i>
-                            <i class="fa-brands fa-chrome" style="font-size:36px; color:#EA4335; margin-left:10px; margin-bottom:10px;"></i>
-                            <div style="font-size:12px; font-weight:bold; color:#4A5568;">SafariやChromeなどの<br>「ブラウザ」でGoogleを開く</div>
-                        </div>
-                        <div style="display:flex; align-items:center; color:#E53E3E;"><i class="fa-solid fa-chevron-right"></i></div>
-                        <div style="text-align:center; flex:1;">
-                            <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:10px; border-radius:8px; font-size:11px; word-break:break-all; font-family:monospace; color:#A0AEC0;">
-                                https://share.google/...
+                    <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:20px;">
+                        <!-- スマホ版 -->
+                        <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
+                            <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-mobile-screen-button" style="font-size:16px;"></i> スマホから取得する場合
                             </div>
-                            <div style="font-size:12px; font-weight:bold; color:#E53E3E; margin-top:10px;">❌ 共有リンクが「share.google...」になり失敗します</div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map-location-dot" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>アプリを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        自分の店舗の<br>情報を開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">Safariやブラウザ</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">Google検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報の共有 <span style="color:#E53E3E;">(エラー)</span></div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- 正しいやり方 -->
-                <div style="border:1px solid #E6F4EA; border-radius:12px; overflow:hidden;">
-                    <div style="background:#E6F4EA; color:#059669; padding:10px 15px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-check" style="background:#059669; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> 正しいやり方（必ず成功します）
-                    </div>
-                    <div style="padding:15px; display:flex; gap:15px; background:white; justify-content:center; align-items:center;">
-                        <div style="text-align:center; flex:1;">
-                            <i class="fa-solid fa-map-location-dot" style="font-size:40px; color:#34A853; margin-bottom:10px;"></i>
-                            <div style="font-size:12px; font-weight:bold; color:#4A5568;">必ず「Googleマップ」<br>専用アプリから店舗を開く</div>
-                        </div>
-                        <div style="display:flex; align-items:center; color:#059669;"><i class="fa-solid fa-chevron-right"></i></div>
-                        <div style="text-align:center; flex:1;">
-                            <div style="background:#ECFDF5; border:1px solid #A7F3D0; padding:10px; border-radius:8px; font-size:11px; word-break:break-all; font-family:monospace; color:#059669; font-weight:bold;">
-                                https://maps.app.goo.gl/...
+                        <!-- PC版 -->
+                        <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
+                            <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-desktop" style="font-size:16px;"></i> パソコンから取得する場合
                             </div>
-                            <div style="font-size:12px; font-weight:bold; color:#059669; margin-top:10px;">✅ 共有リンクが「maps.app.goo.gl...」になります</div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>サイトを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        店舗名を<br>検索して開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">通常のGoogle検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報を開く</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">共有リンク <span style="color:#E53E3E;">(エラー)</span></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
             </div>
         </div>
     </div>
@@ -1144,25 +1234,51 @@
             </div>
             
             <div style="padding:30px;">
-                <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:20px; border-radius:12px; margin-bottom:25px;">
-                    <h3 style="font-size:15px; margin-bottom:15px; text-align:center; color:var(--text-main);">STEP 1: 正しいGBPのURL形式を取得してください</h3>
-                    
-                    <div style="display:flex; flex-direction:column; gap:15px;">
+                <div style="margin-bottom:25px;">
+                    <h3 style="font-size:15px; margin-bottom:15px; text-align:center; color:var(--text-main); font-weight:800; border-bottom:2px solid #E2E8F0; padding-bottom:10px;">
+                        STEP 1: 正しいGBPのURL形式を取得してください
+                    </h3>
+
+                    <!-- スマホ向け -->
+                    <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:15px;">
                         <!-- スマホ版 -->
                         <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
                             <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
                                 <i class="fa-solid fa-mobile-screen-button" style="font-size:16px;"></i> スマホから取得する場合
                             </div>
-                            <div style="padding:15px; display:flex; background:white; align-items:center; justify-content:center; gap:20px;">
-                                <div style="text-align:center;">
-                                    <i class="fa-brands fa-safari" style="font-size:24px; color:#A0AEC0;"></i>
-                                    <div style="font-size:11px; margin-top:5px; color:#A0AEC0; text-decoration:line-through;">ブラウザ❌</div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map-location-dot" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>アプリを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        自分の店舗の<br>情報を開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
                                 </div>
-                                <div style="color:#059669; font-weight:bold;"><i class="fa-solid fa-arrow-right"></i></div>
-                                <div style="text-align:center; border:2px solid #34A853; padding:10px; border-radius:8px; background:#F0FDF4;">
-                                    <i class="fa-solid fa-map-location-dot" style="font-size:28px; color:#34A853;"></i>
-                                    <div style="font-size:12px; margin-top:5px; font-weight:bold; color:#059669;">マップ アプリ✅</div>
-                                    <div style="font-size:10px; color:#64748B; margin-top:5px;">アプリで開き「共有」をコピー</div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">Safariやブラウザ</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">Google検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報の共有 <span style="color:#E53E3E;">(エラー)</span></div>
                                 </div>
                             </div>
                         </div>
@@ -1170,18 +1286,41 @@
                         <!-- PC版 -->
                         <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
                             <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
-                                <i class="fa-solid fa-desktop" style="font-size:16px;"></i> PCから取得する場合
+                                <i class="fa-solid fa-desktop" style="font-size:16px;"></i> パソコンから取得する場合
                             </div>
-                            <div style="padding:15px; display:flex; background:white; align-items:center; justify-content:center; gap:20px;">
-                                <div style="text-align:center;">
-                                    <div style="font-weight:bold; font-size:24px; color:#A0AEC0; font-family:serif;">G</div>
-                                    <div style="font-size:11px; margin-top:5px; color:#A0AEC0; text-decoration:line-through;">通常のGoogle検索❌</div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>サイトを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        店舗名を<br>検索して開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
                                 </div>
-                                <div style="color:#059669; font-weight:bold;"><i class="fa-solid fa-arrow-right"></i></div>
-                                <div style="text-align:center; border:2px solid #34A853; padding:10px; border-radius:8px; background:#F0FDF4;">
-                                    <i class="fa-solid fa-map" style="font-size:28px; color:#34A853;"></i>
-                                    <div style="font-size:12px; margin-top:5px; font-weight:bold; color:#059669;">マップ サイト✅</div>
-                                    <div style="font-size:10px; color:#64748B; margin-top:5px;">マップ内で検索し「共有」をコピー</div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">通常のGoogle検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報を開く</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">共有リンク <span style="color:#E53E3E;">(エラー)</span></div>
                                 </div>
                             </div>
                         </div>
