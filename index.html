@@ -171,6 +171,12 @@
         <a class="nav-item" onclick="switchMainView('settings', this)">
             <i class="fa-solid fa-gear"></i> 設定
         </a>
+        <a class="nav-item" onclick="switchMainView('posts', this)">
+            <i class="fa-solid fa-pen-to-square"></i> 投稿作成 (AI)
+        </a>
+        <a class="nav-item" onclick="switchMainView('reservations', this)">
+            <i class="fa-solid fa-calendar-check"></i> 予約管理
+        </a>
         <a href="login.html" class="nav-item logout-btn">
             <i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト
         </a>
@@ -550,47 +556,193 @@
                 </div>
                 <button class="btn-primary" style="width:auto; padding:10px 20px; font-size:14px; background:linear-gradient(135deg, #A0AEC0, #718096);" onclick="alert('パスワードを変更しました！次回から新しいパスワードでログインできます。')"><i class="fa-solid fa-lock"></i> パスワードを変更する</button>
             </div>
+            </div>
         </div>
+
+        <!-- AI POSTS VIEW (新規追加) -->
+        <section id="view-posts" class="view-section">
+            <header class="header">
+                <h1>AI自動投稿・予約投稿</h1>
+                <div class="user-profile">
+                    <div class="user-icon"><i class="fa-solid fa-user"></i></div>
+                    <span style="font-weight:600;">焼肉 新宿本店 様</span>
+                </div>
+            </header>
+            
+            <div class="card" style="margin-bottom:20px; animation: fadeIn 0.4s ease;">
+                <h2>新規投稿を作成</h2>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">AIがGoogleポリシーに100%準拠した自然な文章（約1400文字）を生成します。</p>
+                
+                <div class="form-group">
+                    <label>対策したいキーワード</label>
+                    <input type="text" class="form-control" placeholder="例: 渋谷 焼肉 個室 記念日">
+                </div>
+                <div class="form-group">
+                    <label>使用したい絵文字</label>
+                    <input type="text" class="form-control" placeholder="例: 🥩✨🥂😎">
+                </div>
+                <div class="form-group">
+                    <label>参照する外部サイトURL（HPやブログなど）</label>
+                    <input type="text" class="form-control" placeholder="https://...">
+                    <small style="color:var(--text-muted); display:block; margin-top:5px;">※URLを入力すると、AIが対象サイトを読み込んで嘘偽りのない正確な店舗情報を文章に自動で加味します。</small>
+                </div>
+                
+                <button class="btn-primary" style="margin-bottom:20px; background:linear-gradient(135deg, #a855f7, #6366f1); border:none;"><i class="fa-solid fa-wand-magic-sparkles"></i> AIで1400文字の投稿文を生成</button>
+                
+                <div class="form-group">
+                    <label>生成された投稿文（手動での微調整も可能です）</label>
+                    <textarea class="form-control" rows="8" placeholder="ここにAIが生成した文章が表示されます..."></textarea>
+                </div>
+                
+                <div style="padding:20px; background:#F8FAFC; border:1px solid var(--border-color); border-radius:12px;">
+                    <h3 style="font-size:14px; margin-bottom:10px;"><i class="fa-solid fa-clock"></i> 投稿日時の設定（2ヶ月先まで作成可能）</h3>
+                    <input type="datetime-local" class="form-control" style="max-width:300px; margin-bottom:15px;">
+                    <div>
+                        <button class="btn-primary" style="width:100%; max-width:300px;"><i class="fa-solid fa-calendar-plus"></i> 時間になったら自動投稿</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESERVATIONS VIEW (新規追加) -->
+        <section id="view-reservations" class="view-section">
+            <header class="header">
+                <h1>予約管理カレンダー・LINE連携</h1>
+                <div class="user-profile">
+                    <div class="user-icon"><i class="fa-solid fa-user"></i></div>
+                    <span style="font-weight:600;">焼肉 新宿本店 様</span>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- カレンダーエリア -->
+                <div class="card" style="grid-column: span 2; animation: fadeIn 0.4s ease;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h2>1年分の予約カレンダー</h2>
+                        <button class="btn-outline" style="font-size:12px; padding:6px 12px;"><i class="fa-solid fa-link"></i> お客様向け予約URLを発行</button>
+                    </div>
+                    <div style="background:#F8FAFC; border:2px dashed #CBD5E1; color:#94A3B8; text-align:center; padding:80px 20px; border-radius:12px;">
+                        <i class="fa-regular fa-calendar-days" style="font-size:40px; margin-bottom:15px; color:#CBD5E1;"></i><br>
+                        ここにカレンダーUIが表示され、お客様からの予約が自動で一覧表示されます。
+                    </div>
+                </div>
+
+                <!-- 公式LINE連携エリア -->
+                <div class="card" style="animation: fadeIn 0.5s ease;">
+                    <h2>公式LINEリマインダー連携</h2>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">予約完了時、前日、当日に自動でLINEメッセージを配信します。</p>
+                    
+                    <div class="form-group" style="margin-top:15px;">
+                        <label>公式LINE連携ステータス</label>
+                        <div style="color:#34A853; font-size:13px; font-weight:bold;"><i class="fa-solid fa-circle-check"></i> 連携済み</div>
+                    </div>
+                    
+                    <div style="font-size:13px; font-weight:bold; margin-bottom:5px; color:var(--text-main);">予約完了メール（名前と日時は自動記載）</div>
+                    <textarea class="form-control" rows="2" style="font-size:12px; margin-bottom:15px;">{お客様名}様、ご予約ありがとうございます！\n{予約日時}のご来店を当店のスタッフ一同、心よりお待ちしております。</textarea>
+                    
+                    <div style="font-size:13px; font-weight:bold; margin-bottom:5px; color:var(--text-main);">予約前日リマインド（自動記載）</div>
+                    <textarea class="form-control" rows="2" style="font-size:12px;">【お知らせ】{お客様名}様、明日のご予約日（{予約日時}）が近づいてまいりました。\nお気をつけてお越しくださいませ！</textarea>
+                    
+                    <button class="btn-primary" style="margin-top:15px; width:100%;">LINE設定を更新</button>
+                </div>
+
+                <!-- マスター設定エリア -->
+                <div class="card" style="animation: fadeIn 0.6s ease;">
+                    <h2>予約マスター設定</h2>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">お客様が予約・選択する項目の詳細設定</p>
+                    
+                    <ul style="list-style:none; padding:0; margin:0; font-size:14px; line-height:3;">
+                        <li style="border-bottom:1px solid #eee; cursor:pointer;"><i class="fa-solid fa-users" style="width:25px; color:var(--primary-blue);"></i> スタッフ登録（最大50名） <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
+                        <li style="border-bottom:1px solid #eee; cursor:pointer;"><i class="fa-solid fa-utensils" style="width:25px; color:var(--primary-blue);"></i> メニュー登録（最大100件）<span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
+                        <li style="cursor:pointer;"><i class="fa-solid fa-yen-sign" style="width:25px; color:var(--primary-blue);"></i> 金額(税込)・メニュー説明文<span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
     </main>
 
     <!-- HELP MODAL (共有URLの取得方法) -->
     <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
-        <div class="card" style="max-width:550px; width:90%; position:relative; padding:30px;">
-            <button style="position:absolute; top:20px; right:20px; background:none; border:none; font-size:20px; color:#A3AED0; cursor:pointer;" onclick="closeHelpModal()"><i class="fa-solid fa-xmark"></i></button>
-            <h2 style="font-size:18px; color:var(--text-main); margin-bottom:15px; border-bottom:1px solid #E2E8F0; padding-bottom:15px;"><i class="fa-solid fa-share-nodes" style="color:var(--primary-blue)"></i> 共有URL（リンク）の取得方法</h2>
-            
-            <p style="font-size:14px; margin-bottom:20px; line-height:1.8; color:#4A5568;">
-                1. Googleマップで対象のライバル店舗を検索します。<br>
-                2. 店舗情報の中にある<b style="color:var(--primary-blue); background:#E8F0FE; padding:2px 6px; border-radius:4px; margin:0 3px;">「共有」</b>ボタン（または矢印アイコン）をクリック。<br>
-                3. 出てきた画面の<b style="color:var(--primary-blue); background:#E8F0FE; padding:2px 6px; border-radius:4px; margin:0 3px;">「リンクをコピー」</b>を押して、先ほどの入力欄に貼り付けてください。
-            </p>
-            
-            <div style="text-align:center; padding:20px; background:#F8FAFC; border-radius:15px; border:2px dashed #E2E8F0;">
-                <svg viewBox="0 0 400 220" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" style="max-width:320px;">
-                  <rect width="400" height="220" fill="#F4F7FE" rx="10"/>
-                  <rect x="100" y="20" width="200" height="280" rx="15" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="4"/>
-                  <rect x="100" y="20" width="200" height="70" fill="#E8F0FE" rx="15" style="border-bottom-left-radius:0; border-bottom-right-radius:0;"/>
-                  <rect x="115" y="105" width="120" height="10" fill="#2B3674" rx="5"/>
-                  <rect x="115" y="125" width="80" height="6" fill="#FBBC05" rx="3"/>
-                  <rect x="200" y="125" width="30" height="6" fill="#A3AED0" rx="3"/>
-                  <circle cx="130" cy="165" r="16" fill="#E8F0FE"/>
-                  <circle cx="176" cy="165" r="16" fill="#E8F0FE"/>
-                  <circle cx="223" cy="165" r="16" fill="#E8F0FE"/>
-                  <circle cx="270" cy="165" r="16" fill="#4285F4" stroke="#D2E3FC" stroke-width="4"/>
-                  <text x="130" y="195" font-size="9" fill="#A3AED0" font-family="sans-serif" text-anchor="middle">経路</text>
-                  <text x="176" y="195" font-size="9" fill="#A3AED0" font-family="sans-serif" text-anchor="middle">通話</text>
-                  <text x="223" y="195" font-size="9" fill="#A3AED0" font-family="sans-serif" text-anchor="middle">保存</text>
-                  <text x="270" y="195" font-size="9" fill="#4285F4" font-family="sans-serif" font-weight="bold" text-anchor="middle">共有</text>
-                  <path d="M272 160 L275 163 L272 166 M274 163 L265 163 C265 168 268 170 270 170" stroke="#FFFFFF" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M315 120 Q290 125 282 150" fill="none" stroke="#EA4335" stroke-width="3" stroke-linecap="round"/>
-                  <polygon points="282,150 288,143 290,153" fill="#EA4335"/>
-                  <rect x="248" y="140" width="44" height="60" fill="none" stroke="#EA4335" stroke-width="2" stroke-dasharray="4,4" rx="5"/>
-                </svg>
-                <p style="font-size:12px; color:#718096; margin-top:10px; font-weight:600;">※スマートフォンの場合は、こちらの「共有」アイコンを探してください。</p>
+        <div class="card" style="max-width:650px; width:90%; position:relative; padding:0; overflow:hidden;">
+            <div style="background:linear-gradient(135deg, #1A202C, #2D3748); padding:25px; color:white; text-align:center; position:relative;">
+                <button style="position:absolute; top:20px; right:20px; background:none; border:none; font-size:20px; color:#A0AEC0; cursor:pointer;" onclick="closeHelpModal()"><i class="fa-solid fa-xmark"></i></button>
+                <h2 style="margin:0; font-size:20px; font-weight:700;">💡 【重要】競合URLの正しい取り方</h2>
+                <p style="margin:8px 0 0 0; font-size:13px; color:#CBD5E1;">正確なデータを取得するため、必ず以下の手順をご確認ください。</p>
             </div>
             
-            <button class="btn-primary" style="margin-top:20px; box-shadow:none;" onclick="closeHelpModal()">閉じる</button>
+            <div style="padding: 30px; max-height: 70vh; overflow-y: auto;">
+                <div style="display:flex; gap:20px; flex-direction:column;">
+                    <!-- よくある間違い -->
+                    <div style="border:1px solid #FEECEB; border-radius:12px; overflow:hidden;">
+                        <div style="background:#FEECEB; color:#EA4335; padding:10px 15px; font-weight:700; font-size:14px; display:flex; align-items:center; gap:10px;">
+                            <i class="fa-solid fa-xmark" style="background:#EA4335; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> よくあるNGな取り方（システムエラーになります）
+                        </div>
+                        <div style="padding:20px; display:flex; gap:15px; background:white;">
+                            <div style="flex:1; text-align:center;">
+                                <div style="font-size:11px; font-weight:bold; color:#64748B; margin-bottom:8px;">STEP 1</div>
+                                <svg width="70" height="90" viewBox="0 0 60 80">
+                                    <rect x="5" y="5" width="50" height="70" rx="4" fill="white" stroke="#CBD5E1" stroke-width="2"/>
+                                    <circle cx="30" cy="20" r="6" fill="#A0AEC0"/>
+                                    <rect x="15" y="32" width="30" height="4" fill="#E2E8F0" rx="2"/>
+                                </svg>
+                                <div style="font-size:12px; font-weight:600; margin-top:10px; line-height:1.4;">Safariなどで検索するか<br>普通に「Google」で検索</div>
+                            </div>
+                            <div style="display:flex; align-items:center; color:#CBD5E1;"><i class="fa-solid fa-chevron-right"></i></div>
+                            <div style="flex:1; text-align:center;">
+                                <div style="font-size:11px; font-weight:bold; color:#64748B; margin-bottom:8px;">STEP 2</div>
+                                <svg width="70" height="90" viewBox="0 0 60 80">
+                                    <rect x="5" y="5" width="50" height="70" rx="4" fill="white" stroke="#CBD5E1" stroke-width="2"/>
+                                    <rect x="15" y="25" width="30" height="20" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+                                    <circle cx="40" cy="60" r="7" fill="#EA4335"/>
+                                    <path d="M38 58 L42 60 L38 62" fill="none" stroke="white" stroke-width="1.5"/>
+                                </svg>
+                                <div style="font-size:12px; font-weight:600; margin-top:10px; line-height:1.4;">検索結果の下から<br>共有ボタンを押す</div>
+                            </div>
+                        </div>
+                        <div style="background:#FFF5F5; color:#C53030; font-size:12px; padding:10px; text-align:center; font-weight:bold; border-top:1px dashed #FEECEB;">
+                            ❌ URLが「share.google/〜」となり、別店舗のデータが出てしまいます！
+                        </div>
+                    </div>
+
+                    <!-- 正しいやり方 -->
+                    <div style="border:1px solid #E6F4EA; border-radius:12px; overflow:hidden;">
+                        <div style="background:#E6F4EA; color:#059669; padding:10px 15px; font-weight:700; font-size:14px; display:flex; align-items:center; gap:10px;">
+                            <i class="fa-solid fa-check" style="background:#059669; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> 正しい取り方（100%正確に取得します！）
+                        </div>
+                        <div style="padding:20px; display:flex; gap:15px; background:white;">
+                            <div style="flex:1; text-align:center;">
+                                <div style="font-size:11px; font-weight:bold; color:#64748B; margin-bottom:8px;">STEP 1</div>
+                                <svg width="70" height="90" viewBox="0 0 60 80">
+                                    <rect x="5" y="5" width="50" height="70" rx="4" fill="white" stroke="#10B981" stroke-width="2"/>
+                                    <path d="M30 20 C24 20 20 25 20 31 C20 39 30 50 30 50 C30 50 40 39 40 31 C40 25 36 20 30 20 Z" fill="#34A853"/>
+                                    <circle cx="30" cy="30" r="3" fill="white"/>
+                                </svg>
+                                <div style="font-size:12px; font-weight:600; margin-top:10px; line-height:1.4;">絶対に！専用の<br>「Googleマップアプリ」を開く</div>
+                            </div>
+                            <div style="display:flex; align-items:center; color:#10B981;"><i class="fa-solid fa-chevron-right"></i></div>
+                            <div style="flex:1; text-align:center;">
+                                <div style="font-size:11px; font-weight:bold; color:#64748B; margin-bottom:8px;">STEP 2</div>
+                                <svg width="70" height="90" viewBox="0 0 60 80">
+                                    <rect x="5" y="5" width="50" height="70" rx="4" fill="white" stroke="#10B981" stroke-width="2"/>
+                                    <rect x="15" y="30" width="30" height="6" fill="#E2E8F0" rx="1"/>
+                                    <rect x="15" y="40" width="20" height="4" fill="#E2E8F0" rx="1"/>
+                                    <circle cx="30" cy="55" r="7" fill="#4285F4"/>
+                                    <path d="M28 53 L32 55 L28 57" fill="none" stroke="white" stroke-width="1.5"/>
+                                </svg>
+                                <div style="font-size:12px; font-weight:600; margin-top:10px; line-height:1.4;">気になる競合店を表示して<br>「共有」をコピーする</div>
+                            </div>
+                        </div>
+                        <div style="background:#ECFDF5; color:#047857; font-size:12px; padding:10px; text-align:center; font-weight:bold; border-top:1px dashed #D1FAE5;">
+                            ⭕️ URLが「maps.app.goo.gl/〜」となり一発で正確に成功します！
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align:center; margin-top:25px;">
+                    <button class="btn-primary" style="width:100%; box-shadow:none; padding:12px; font-size:15px; font-weight:bold; background:#2B3674;" onclick="closeHelpModal()">理解したのでURLを入力する</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1008,6 +1160,13 @@
             const url = input.value.trim();
             if(!url) {
                 alert("競合店舗のGoogleマップURLを入力してください。");
+                return;
+            }
+
+            // 【重要】 share.google のリンクを検知した場合は自動で図解ガイドを開いて警告する
+            if(url.includes("share.google")) {
+                input.value = ''; // 誤ったURLを消す
+                openHelpModal(); // ガイドを自動オープン
                 return;
             }
             
