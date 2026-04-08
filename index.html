@@ -587,9 +587,14 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>参照する外部サイトURL（HPやブログなど）</label>
-                        <input type="text" class="form-control" placeholder="https://...">
-                        <small style="color:var(--text-muted); display:block; margin-top:5px;">※URLを入力すると、AIが対象サイトを読み込んで嘘偽りのない正確な店舗情報を文章に自動で加味します。</small>
+                        <label>HP（任意）</label>
+                        <input type="text" class="form-control" id="postHpUrlInput" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>外部サイト（ホットペッパーや食べログなど）</label>
+                        <input type="text" class="form-control" id="postExternalUrlInput" placeholder="https://...">
+                        <small style="color:var(--text-muted); display:block; margin-top:5px;">※入力されたURLの事実情報のみをAIが抽出し、予測や空想を含まずに正確に文章化します。</small>
                     </div>
                     
                     <button class="btn-primary" id="aiGenerateBtn" style="margin-bottom:20px; background:linear-gradient(135deg, #a855f7, #6366f1); border:none;" onclick="generateAIPost()">
@@ -650,7 +655,7 @@
                 <div class="card" style="animation: fadeIn 0.5s ease;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <h2 style="margin:0;">公式LINEリマインダー連携</h2>
-                        <button class="btn-primary" style="font-size:12px; padding:6px 15px; width:auto; background:#00B900;" onclick="alert('【デモ】公式LINEとのAPI接続設定画面（Channel ID/Secretの入力画面）を開きます。')"><i class="fa-brands fa-line"></i> 公式LINE設定</button>
+                        <button class="btn-primary" style="font-size:12px; padding:6px 15px; width:auto; background:#00B900;" onclick="openLineSettingsModal()"><i class="fa-brands fa-line"></i> 公式LINE設定</button>
                     </div>
                     
                     <div style="background:#E8F0FE; padding:10px 15px; border-radius:8px; display:inline-block; margin-bottom:20px;">
@@ -676,7 +681,8 @@
                         <div style="font-size:11px; color:#64748B; margin-bottom:8px; display:flex; align-items:center; gap:5px;">
                             <b>発火条件：</b> 予約日時の 
                             <select style="border:1px solid #E2E8F0; border-radius:4px; padding:2px;"><option>1</option><option>2</option><option>3</option></select> 日前の 
-                            <input type="time" value="12:00" style="border:1px solid #E2E8F0; border-radius:4px; padding:2px;"> に送る
+                            <select style="border:1px solid #E2E8F0; border-radius:4px; padding:2px;" id="reminderHourSelect"></select> :
+                            <select style="border:1px solid #E2E8F0; border-radius:4px; padding:2px;" id="reminderMinuteSelect"></select> に送る
                         </div>
                         <textarea class="form-control" rows="2" style="font-size:12px; margin-bottom:5px;">【お知らせ】{お客様名} 様、明日のご予約日（{予約日時}）が近づいてまいりました。\nお気をつけてお越しくださいませ！</textarea>
                     </div>
@@ -685,10 +691,25 @@
                         <div style="font-size:13px; font-weight:bold; margin-bottom:5px; color:var(--text-main);">🔥 当日リマインド</div>
                         <div style="font-size:11px; color:#64748B; margin-bottom:8px; display:flex; align-items:center; gap:5px;">
                             <b>発火条件：</b> 予約日時の 
-                            <select style="border:1px solid #E2E8F0; border-radius:4px; padding:2px;"><option>1</option><option selected>2</option><option>3</option><option>4</option></select> 時間前に送る
+                            <select style="border:1px solid #E2E8F0; border-radius:4px; padding:2px;" id="sameDayHourSelect"></select> 時間前に送る
                         </div>
                         <textarea class="form-control" rows="2" style="font-size:12px; margin-bottom:5px;">{お客様名} 様、本日{予約日時}よりお待ちしております！\n道に迷われた際はお気軽に店舗までお電話ください。</textarea>
                     </div>
+                    
+                    <script>
+                        // 時間のセレクトボックスを生成
+                        let hOpts = '';
+                        for(let i=1; i<=24; i++) hOpts += '<option>'+String(i).padStart(2,'0')+'</option>';
+                        document.getElementById('reminderHourSelect').innerHTML = hOpts;
+                        
+                        let mOpts = '';
+                        for(let i=1; i<=59; i++) mOpts += '<option>'+String(i).padStart(2,'0')+'</option>';
+                        document.getElementById('reminderMinuteSelect').innerHTML = mOpts;
+                        
+                        let sameH = '';
+                        for(let i=1; i<=24; i++) sameH += '<option'+(i===2?' selected':'')+'>'+i+'</option>';
+                        document.getElementById('sameDayHourSelect').innerHTML = sameH;
+                    </script>
                     
                     <button class="btn-primary" style="margin-top:5px; width:100%;">LINE配信設定を保存する</button>
                 </div>
@@ -788,6 +809,50 @@
 
                 <div style="text-align:center; margin-top:25px;">
                     <button class="btn-primary" style="width:100%; box-shadow:none; padding:12px; font-size:15px; font-weight:bold; background:#2B3674;" onclick="closeHelpModal()">理解したのでURLを入力する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LINE SETTINGS MODAL -->
+    <div id="lineSettingsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
+        <div class="card" style="max-width: 650px; width:90%; position:relative; padding: 0; overflow:hidden;">
+            <div style="background:linear-gradient(135deg, #00B900, #008F00); padding:25px; color:white; text-align:center; position:relative;">
+                <button style="position:absolute; top:20px; right:20px; background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="closeLineSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
+                <h2 style="margin:0; font-size:20px; font-weight:700;"><i class="fa-brands fa-line"></i> 公式LINE連携設定</h2>
+                <p style="margin:8px 0 0 0; font-size:13px; color:#E8F0FE;">Channel ID と Channel Secret を入力して連携を完了させてください。</p>
+            </div>
+            
+            <div style="padding: 30px; max-height: 70vh; overflow-y: auto;">
+                <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:15px; border-radius:12px; margin-bottom:25px;">
+                    <h3 style="font-size:14px; margin-bottom:10px; color:#2B3674;"><i class="fa-solid fa-circle-question" style="color:var(--primary-blue);"></i> 各情報の取得手順（LINE Developers）</h3>
+                    <div style="display:flex; gap:10px; flex-direction:column; font-size:12px; color:#4A5568;">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <div style="background:#00B900; color:white; width:22px; height:22px; border-radius:50%; display:flex; justify-content:center; align-items:center; font-weight:bold; flex-shrink:0;">1</div>
+                            <div>LINE Developersコンソールにログインし、作成したプロバイダーを選択します。</div>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <div style="background:#00B900; color:white; width:22px; height:22px; border-radius:50%; display:flex; justify-content:center; align-items:center; font-weight:bold; flex-shrink:0;">2</div>
+                            <div>「Messaging API」チャネルを作成または選択し、「チャネル基本設定」タブを開きます。</div>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <div style="background:#00B900; color:white; width:22px; height:22px; border-radius:50%; display:flex; justify-content:center; align-items:center; font-weight:bold; flex-shrink:0;">3</div>
+                            <div>画面下部にある <b>Channel ID</b> と <b>Channel Secret</b> をコピーして下記に入力します。</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Channel ID <span style="color:red;">*</span></label>
+                    <input type="text" class="form-control" placeholder="例: 1234567890">
+                </div>
+                <div class="form-group" style="margin-bottom:25px;">
+                    <label>Channel Secret <span style="color:red;">*</span></label>
+                    <input type="text" class="form-control" placeholder="例: abcdef1234567890abcdef1234567890">
+                </div>
+
+                <div style="text-align:center;">
+                    <button class="btn-primary" style="width:100%; box-shadow:none; padding:12px; font-size:15px; font-weight:bold; background:#00B900;" onclick="alert('指定の公式LINEアカウントとのAPI連携を確立しました！'); closeLineSettingsModal()">この設定でLINEと連携する</button>
                 </div>
             </div>
         </div>
@@ -1286,6 +1351,13 @@
             document.getElementById('helpModal').style.display = 'none';
         }
 
+        function openLineSettingsModal() {
+            document.getElementById('lineSettingsModal').style.display = 'flex';
+        }
+        function closeLineSettingsModal() {
+            document.getElementById('lineSettingsModal').style.display = 'none';
+        }
+
         // ページ読み込み時に履歴リストを構成
         updateHistoryDropdowns();
         // --- 投稿機能のJS実装（デモ） ---
@@ -1312,30 +1384,39 @@
         function generateAIPost() {
             const btn = document.getElementById('aiGenerateBtn');
             const origHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> サイトを解析して100%安全な文章を執筆中...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> サイトの事実情報を解析して執筆中...';
             btn.disabled = true;
             btn.style.opacity = '0.7';
-            
+
             setTimeout(() => {
-                const result = `【焼肉 新宿本店】自慢の黒毛和牛を堪能🥩✨
-独自のルートで仕入れたこだわりの完全個室で、大切な方との記念日や接待に最適です🥂
-
-当店では、A5ランクの最高級黒毛和牛を一頭買いで仕入れており、希少部位もリーズナブルにお楽しみいただけます😊
-無煙ロースターを全席完備しておりますので、お洋服への匂い移りも気にせず、快適なディナータイムをお過ごしいただけます。
-
-🥩 おすすめメニュー 🥩
-・極上厚切り牛タン（数量限定）
-・特選黒毛和牛 希少部位3種盛り
-・とろける和牛炙り肉寿司
-
-また、HP（https://...）をご覧のお客様限定の特別コースもご用意しております。
-新宿エリアでワンランク上の焼肉デートやご宴会をお探しの際は、ぜひ当店へお越しくださいませ😎✨
-
-Googleポリシーに完全に準拠し、最新のガイドラインに沿った衛生・店舗情報を掲載しております。
-皆様のご来店をスタッフ一同、心よりお待ち申し上げております！
-👇 ご予約・詳細はこちらから`;
+                const emojis = Array.from(document.getElementById('postEmojisContainer').querySelectorAll('.tag')).map(t => t.innerText.replace(' ', ''));
+                const keywords = Array.from(document.getElementById('postKeywordsContainer').querySelectorAll('.tag')).map(t => t.innerText.replace(' ', ''));
+                const hpValue = document.getElementById('postHpUrlInput').value.trim();
+                const extValue = document.getElementById('postExternalUrlInput').value.trim();
                 
-                document.getElementById('postTextarea').value = result;
+                const useEmoji = emojis.length > 0;
+                // 絵文字が入力された場合、それのみを使用。入力がなければ一切使用せず句読点。
+                const e1 = useEmoji ? emojis[0 % emojis.length] : "。";
+                const e2 = useEmoji ? emojis[emojis.length > 1 ? 1 : 0] : "。";
+                const e3 = useEmoji ? emojis[emojis.length > 2 ? 2 : 0] : "。";
+                const ex = useEmoji ? "" : "。"; 
+                
+                let text = "新宿エリアの焼肉専門店として、皆様の特別な一日を彩るお食事空間をご用意しております" + e1 + "\n\n";
+                text += "当店では厳選された和牛をはじめ、上質なお肉を豊富にご準備しております" + e2 + "\n";
+                text += "無煙ロースターを全席完備した完全個室を多数ご用意しておりますので、接待や大切な方との会食など様々なシーンでご活用いただけます" + e3 + "\n\n";
+                
+                if(keywords.length > 0) {
+                    text += "「" + keywords.join('」「') + "」をお探しの際は、ぜひ当店をご検討ください" + ex + "\n\n";
+                }
+                
+                if(hpValue || extValue) {
+                    text += "現在ご提供しているコース内容やメニューの詳細、店舗の最新の営業時間等につきましては、外部紹介サイトまたは公式HPにて事実情報のみを正確に掲載しております" + ex + "\n";
+                    text += "季節や仕入れ状況により内容が変更となる場合がございますので、ご来店前に当店のサイト情報をご確認いただけますと幸いです" + e1 + "\n\n";
+                }
+                
+                text += "皆様のご予約とご来店を、心よりお待ち申し上げております" + e2;
+
+                document.getElementById('postTextarea').value = text;
                 btn.innerHTML = origHTML;
                 btn.disabled = false;
                 btn.style.opacity = '1';
