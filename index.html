@@ -628,8 +628,46 @@
                     <div class="form-group">
                         <label>外部サイト（ホットペッパーや食べログなど）</label>
                         <input type="text" class="form-control" id="postExternalUrlInput" placeholder="https://...">
-                        <small style="color:var(--text-muted); display:block; margin-top:5px;">※入力されたURLの事実情報のみをAIが抽出し、予測や空想を含まずに正確に文章化します。</small>
+                        <small style="color:var(--text-muted); display:block; margin-top:5px;">※入力されたURLの事実情報のみをAIが抽出し、正確に文章化します。</small>
                     </div>
+                    
+                    <div class="form-group" style="margin-top:20px;">
+                        <label>写真または動画を追加 <span style="font-size:11px; font-weight:normal; color:#A0AEC0;">(ドラッグ&ドロップまたはクリック)</span></label>
+                        <div style="border:2px dashed #CBD5E1; padding:30px; text-align:center; border-radius:8px; background:#F8FAFC; color:#64748B; cursor:pointer; transition:all 0.2s ease;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='#F8FAFC'" onclick="alert('デバイスのフォルダが開き、画像や動画を選択できます。')">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px; margin-bottom:12px; color:var(--primary-blue);"></i><br>
+                            <span style="font-size:14px; font-weight:600;">ここをクリック、または画像・動画をドラッグ＆ドロップ</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ボタンの追加 <span style="font-size:11px; font-weight:normal; color:#A0AEC0;">(任意)</span></label>
+                        <select class="form-control" id="postActionButtonSelect" onchange="togglePostActionLink()">
+                            <option value="none">なし</option>
+                            <option value="reserve">予約</option>
+                            <option value="order">オンライン注文</option>
+                            <option value="buy">購入</option>
+                            <option value="details">詳細</option>
+                            <option value="register">登録</option>
+                            <option value="call">今すぐ電話</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="postActionLinkWrapper" style="display:none; animation:fadeIn 0.2s ease;">
+                        <label>ボタンのリンクURL <span style="font-size:11px; font-weight:normal; color:#A0AEC0;">(ユーザーがボタンを押した際の遷移先)</span></label>
+                        <input type="text" class="form-control" placeholder="https://...">
+                    </div>
+                    
+                    <script>
+                        function togglePostActionLink() {
+                            const val = document.getElementById('postActionButtonSelect').value;
+                            const wrap = document.getElementById('postActionLinkWrapper');
+                            // 「なし」または「今すぐ電話(GBPの電話番号が使われる)」の場合はリンク入力を隠す
+                            if(val === 'none' || val === 'call') {
+                                wrap.style.display = 'none';
+                            } else {
+                                wrap.style.display = 'block';
+                            }
+                        }
+                    </script>
                     
                     <button class="btn-primary" id="aiGenerateBtn" style="margin-bottom:20px; background:linear-gradient(135deg, #a855f7, #6366f1); border:none;" onclick="generateAIPost()">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> AIで1400文字の投稿文を作成
@@ -972,18 +1010,56 @@
 
     <!-- MY SHOP URL HELP MODAL -->
     <div id="myShopUrlHelpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
-        <div class="card" style="max-width: 600px; width:90%; position:relative; padding: 0; overflow:hidden;">
+        <div class="card" style="max-width: 700px; width:90%; position:relative; padding: 0; overflow:hidden;">
             <div style="background:var(--primary-blue); padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
                 <h2 style="margin:0; font-size:16px;">自店舗のGoogleマップURLの取り方</h2>
                 <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('myShopUrlHelpModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div style="padding: 20px; text-align:center;">
-                <div style="font-size:14px; color:var(--text-main); margin-bottom:15px; font-weight:bold; line-height:1.6;">
-                    ご自身の店舗のGoogleマップを開き、<br>「共有」ボタンからURLをコピーして貼り付けてください！
+            
+            <div style="padding: 20px;">
+                <p style="text-align:center; font-size:14px; font-weight:bold; color:var(--text-main); margin-bottom:20px;">
+                    店舗情報はGoogleマップアプリから直接取得します。<br>ブラウザ経由は100%エラーになるためお控えください。
+                </p>
+
+                <!-- よくある間違い -->
+                <div style="border:1px solid #FEECEB; border-radius:12px; margin-bottom:20px; overflow:hidden;">
+                    <div style="background:#FEECEB; color:#E53E3E; padding:10px 15px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-xmark" style="background:#E53E3E; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> よくある間違い（エラーになります）
+                    </div>
+                    <div style="padding:15px; display:flex; gap:15px; background:white; justify-content:center; align-items:center;">
+                        <div style="text-align:center; flex:1;">
+                            <i class="fa-brands fa-safari" style="font-size:36px; color:#4285F4; margin-bottom:10px;"></i>
+                            <i class="fa-brands fa-chrome" style="font-size:36px; color:#EA4335; margin-left:10px; margin-bottom:10px;"></i>
+                            <div style="font-size:12px; font-weight:bold; color:#4A5568;">SafariやChromeなどの<br>「ブラウザ」でGoogleを開く</div>
+                        </div>
+                        <div style="display:flex; align-items:center; color:#E53E3E;"><i class="fa-solid fa-chevron-right"></i></div>
+                        <div style="text-align:center; flex:1;">
+                            <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:10px; border-radius:8px; font-size:11px; word-break:break-all; font-family:monospace; color:#A0AEC0;">
+                                https://share.google/...
+                            </div>
+                            <div style="font-size:12px; font-weight:bold; color:#E53E3E; margin-top:10px;">❌ 共有リンクが「share.google...」になり失敗します</div>
+                        </div>
+                    </div>
                 </div>
-                <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:15px; display:inline-block; text-align:left;">
-                    <div style="font-size:12px; color:#4A5568;"><i class="fa-solid fa-check" style="color:var(--primary-green);"></i> URLの形式例</div>
-                    <div style="font-weight:bold; color:var(--primary-blue); font-size:14px; margin-top:5px;">https://maps.app.goo.gl/xxxxxx</div>
+
+                <!-- 正しいやり方 -->
+                <div style="border:1px solid #E6F4EA; border-radius:12px; overflow:hidden;">
+                    <div style="background:#E6F4EA; color:#059669; padding:10px 15px; font-weight:700; font-size:13px; display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-check" style="background:#059669; color:white; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:11px;"></i> 正しいやり方（必ず成功します）
+                    </div>
+                    <div style="padding:15px; display:flex; gap:15px; background:white; justify-content:center; align-items:center;">
+                        <div style="text-align:center; flex:1;">
+                            <i class="fa-solid fa-map-location-dot" style="font-size:40px; color:#34A853; margin-bottom:10px;"></i>
+                            <div style="font-size:12px; font-weight:bold; color:#4A5568;">必ず「Googleマップ」<br>専用アプリから店舗を開く</div>
+                        </div>
+                        <div style="display:flex; align-items:center; color:#059669;"><i class="fa-solid fa-chevron-right"></i></div>
+                        <div style="text-align:center; flex:1;">
+                            <div style="background:#ECFDF5; border:1px solid #A7F3D0; padding:10px; border-radius:8px; font-size:11px; word-break:break-all; font-family:monospace; color:#059669; font-weight:bold;">
+                                https://maps.app.goo.gl/...
+                            </div>
+                            <div style="font-size:12px; font-weight:bold; color:#059669; margin-top:10px;">✅ 共有リンクが「maps.app.goo.gl...」になります</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1644,31 +1720,21 @@
                 const ex = useEmoji ? "" : "。"; 
                 
                 // --- 以下、ユーザーの指定プロンプトに基づく、AI生成文字のモック ---
-                // プロのライター目線、行動喚起（相談したい！）、ポリシー完全準拠、文字数1200〜1450文字想定、ハッシュタグ禁止、絵文字制御
+                // ポリシー完全準拠。本文中へのURL/住所/電話番号は一切なし。行動喚起（相談したい！）に特化。完全自然な文章。
                 
-                let text = `私たち【${shopName}】は、${shopAddress}にて、皆様に最高のひとときをご提供するために日々真剣に向き合っております${e1}\n\n`;
-                text += `お食事の場は、単にお腹を満たすだけではなく、大切な方との語らいや、日々の疲れを癒やす特別な空間であるべきだと私たちは強く信じています${e2}\n`;
-                text += `当店では、厳選された食材と丁寧な調理はもちろんのこと、お客様一人ひとりに温かいおもてなしを感じていただけるよう、スタッフ一同心を込めて準備をしております${e3}\n\n`;
+                let text = `皆様は、毎日の生活の中で「なんだか今日は特別にしたいな」と思う瞬間はございませんか？${e1}\n`;
+                text += `私たちはお客様にとって、単にお腹を満たすだけではなく、大切な方との語らいや、日々の疲れを癒やす特別な空間でありたいと強く信じております${e2}\n\n`;
+                text += `選び抜かれた食材と丁寧な調理はもちろんのこと、お客様一人ひとりに温かいおもてなしを感じていただけるよう、スタッフ全員が心を一つにして準備をしております${e3}\n\n`;
                 
-                text += `毎日の生活の中で「なんだか今日は特別にしたいな」と思う瞬間はございませんか？\n`;
-                text += `そんな時は、ぜひ私たちにご相談ください${e1}\n`;
                 if(keywords.length > 0) {
-                    text += `「${keywords.join('」「')}」とお悩みの方や探されている方へ、私たちが提供できる最高のソリューションと空間をご提案させていただきます${ex}\n\n`;
+                    text += `「${keywords.join('」「')}」とお悩みの方や探されている方へ、私たちが提供できる最高の体験をご提案させていただきます${ex}\n\n`;
                 } else {
-                    text += `どのようなご要望に対しても、私たちが提供できる最高のソリューションと空間をご提案させていただきます${ex}\n\n`;
+                    text += `どのようなご要望に対しても、私たちが提供できる最高の体験をご提案させていただきます${ex}\n\n`;
                 }
 
-                text += `記念日のサプライズや、アレルギー対応、個室の貸し切りなど「こんなことできるかな？」と思うような些細な疑問でも、どうぞご遠慮なくご相談ください${e2}\n`;
-                text += `「ここに来てよかった」と心から笑顔でお帰りいただけるよう、最初のご相談からお見送りの瞬間まで、一切の妥協なく全力を尽くしてお迎えいたします${e1}\n\n`;
-
-                text += `ご提供しているメニューやコースの詳細についてなど、事実に基づいた最新の情報は常に以下の外部サイトにて更新しております${ex}\n`;
-                if(hpValue) text += `■公式ホームページで詳細を見る:\n${hpValue}\n`;
-                if(extValue) text += `■ご予約やコース一覧はこちら:\n${extValue}\n`;
-                text += `■お店の場所・Googleマップはこちら:\n${myGbpUrl}\n\n`;
-                
-                text += `※本投稿はGoogleポリシーに完全準拠し、最新の確認済み事実のみを掲載しております。提供内容の誇大表現は一切行っておりませんのでご安心ください${e3}\n\n`;
-                
-                text += `皆様とお会いできる日を、そして皆様の生活のほんの一部を豊かにできる日を、心より楽しみにお待ち申し上げております${e2}`;
+                text += `記念日のサプライズや、少し特別なお祝いなど、「こんなこと相談していいのかな？」と思うような些細なことでも、どうぞご遠慮なく私たちにご相談ください${e1}\n`;
+                text += `お店を出る時に「ここに来て本当によかった！」と心から笑顔でお帰りいただけるよう、お出迎えからお見送りの瞬間まで、一切の妥協なく全力を尽くしてお迎えいたします${e2}\n\n`;
+                text += `皆様とお会いできる日を、そして皆様の生活のほんの一部を豊かにできる日を、スタッフ一同、心より楽しみにお待ち申し上げております${e3}`;
 
                 document.getElementById('postTextarea').value = text;
                 btn.innerHTML = origHTML;
