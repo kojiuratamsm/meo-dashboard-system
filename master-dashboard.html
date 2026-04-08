@@ -85,46 +85,59 @@
         </header>
 
         <div class="card">
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
-                <h2>契約クライアント一覧</h2>
-                <button style="background:#4A5568; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold;"><i class="fa-solid fa-plus"></i> 新規クライアント追加</button>
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center; flex-wrap:wrap; gap:15px;">
+                <h2 style="margin:0;">契約クライアント一覧</h2>
+                <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                    <!-- 検索バー -->
+                    <div style="position:relative;">
+                        <input type="text" id="clientSearchInput" placeholder="店舗名/法人名/メールを検索..." style="padding:10px 15px 10px 35px; border-radius:8px; border:1px solid var(--border-color); width:260px; font-size:14px; outline:none;" onkeyup="searchClients()">
+                        <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#A0AEC0;"></i>
+                    </div>
+                    <!-- 追加ボタン -->
+                    <button onclick="openAddClientModal()" style="background:#4A5568; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer; font-weight:bold; white-space:nowrap;"><i class="fa-solid fa-plus"></i> 新規クライアント追加</button>
+                </div>
             </div>
 
-            <table class="client-table">
+            <table class="client-table" id="clientTable">
                 <thead>
                     <tr>
                         <th>店舗名 / 法人名</th>
                         <th>メールアドレス</th>
+                        <th>パスワード</th>
                         <th>口コミ収集数</th>
                         <th>ステータス</th>
                         <th>操作</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><i class="fa-solid fa-shop" style="color:var(--text-muted);"></i> 焼肉 新宿本店</td>
-                        <td>tenchou@yakiniku.com</td>
-                        <td>124件</td>
-                        <td><span class="status-badge">稼働中</span></td>
-                        <td><a href="index.html" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a></td>
-                    </tr>
-                    <tr>
-                        <td><i class="fa-solid fa-shop" style="color:var(--text-muted);"></i> 美容室 渋谷サロン</td>
-                        <td>info@shibuya-salon.jp</td>
-                        <td>45件</td>
-                        <td><span class="status-badge">稼働中</span></td>
-                        <td><a href="index.html" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a></td>
-                    </tr>
-                    <tr>
-                        <td><i class="fa-solid fa-shop" style="color:var(--text-muted);"></i> 居酒屋 えびす</td>
-                        <td>ebisu_store@izakaya.co.jp</td>
-                        <td>-</td>
-                        <td><span class="status-badge" style="background:#FEECEB; color:#EA4335;">一時停止</span></td>
-                        <td><a href="index.html" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a></td>
-                    </tr>
+                <tbody id="clientTableBody">
+                    <!-- DBからデータが挿入されます -->
                 </tbody>
             </table>
         </div>
+
+        <!-- クライアント追加モーダル -->
+        <div id="addClientModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+            <div class="card" style="width:400px; padding:30px;">
+                <h3 style="margin-bottom:20px;">新規クライアント追加</h3>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">店舗名 / 法人名</label>
+                    <input type="text" id="newCompanyName" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">メールアドレス</label>
+                    <input type="email" id="newEmail" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
+                </div>
+                <div style="margin-bottom:25px;">
+                    <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">仮パスワード</label>
+                    <input type="text" id="newPassword" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button onclick="document.getElementById('addClientModal').style.display='none'" style="padding:10px 15px; border-radius:8px; border:none; background:#F8FAFC; color:#64748B; font-weight:bold; cursor:pointer;">キャンセル</button>
+                    <button id="saveClientBtn" style="padding:10px 15px; border-radius:8px; border:none; background:#4285F4; color:white; font-weight:bold; cursor:pointer;">DBに登録</button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <script>
@@ -132,6 +145,103 @@
             document.querySelector('.sidebar').classList.toggle('active');
             document.getElementById('mobileOverlay').classList.toggle('active');
         }
+
+        // クライアントを検索する機能
+        function searchClients() {
+            let input = document.getElementById('clientSearchInput').value.toLowerCase();
+            let rows = document.getElementsByClassName('client-row');
+            for (let i = 0; i < rows.length; i++) {
+                let text = rows[i].innerText.toLowerCase();
+                rows[i].style.display = text.includes(input) ? "" : "none";
+            }
+        }
+
+        // モーダルを開く処理をグローバル関数のままにしておく（onclick動作用）
+        window.openAddClientModal = function() {
+            document.getElementById('newCompanyName').value = '';
+            document.getElementById('newEmail').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('addClientModal').style.display = 'flex';
+        };
+    </script>
+
+    <!-- Supabase連携のリアルタイム通信スクリプト -->
+    <script type="module">
+        import { supabase } from './supabase-config.js';
+
+        // ページ読み込み時にDBからクライアントを読み込む
+        async function loadClients() {
+            const tableBody = document.getElementById('clientTableBody');
+            tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">データベースから読み込み中...</td></tr>';
+
+            const { data, error } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error("DB読み込みエラー:", error);
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">エラーが発生しました</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = '';
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#A0AEC0;">まだ登録されているクライアントがいません</td></tr>';
+                return;
+            }
+
+            data.forEach(client => {
+                const tr = document.createElement('tr');
+                tr.className = 'client-row';
+                
+                // ステータスバッジの小技
+                const statusHtml = client.status === '稼働中' 
+                    ? '<span class="status-badge">稼働中</span>' 
+                    : '<span class="status-badge" style="background:#FEECEB; color:#EA4335;">一時停止</span>';
+
+                tr.innerHTML = `
+                    <td class="search-target"><i class="fa-solid fa-shop" style="color:var(--text-muted);"></i> ${client.company_name}</td>
+                    <td class="search-target">${client.email}</td>
+                    <td style="font-family:monospace; color:#4A5568;">${client.temp_password || '未設定'}</td>
+                    <td>- 件</td>
+                    <td>${statusHtml}</td>
+                    <td><a href="index.html" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a></td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // DBに新しいクライアントを保存する
+        document.getElementById('saveClientBtn').addEventListener('click', async () => {
+            const company_name = document.getElementById('newCompanyName').value;
+            const email = document.getElementById('newEmail').value;
+            const temp_password = document.getElementById('newPassword').value;
+
+            if(!company_name || !email) {
+                alert("店舗名とメールアドレスは必須です！");
+                return;
+            }
+
+            const btn = document.getElementById('saveClientBtn');
+            btn.innerText = '登録中...';
+            btn.disabled = true;
+
+            const { error } = await supabase.from('clients').insert([
+                { company_name: company_name, email: email, temp_password: temp_password }
+            ]);
+
+            btn.innerText = 'DBに登録';
+            btn.disabled = false;
+
+            if (error) {
+                alert("エラーが発生しました: " + error.message);
+            } else {
+                alert("新しいクライアントをデータベースに登録しました！");
+                document.getElementById('addClientModal').style.display = 'none';
+                loadClients(); // 再読み込みして画面更新
+            }
+        });
+
+        // ページ開いた瞬間に自動実行
+        loadClients();
     </script>
 </body>
 </html>
