@@ -104,8 +104,12 @@
         </div>
     </div>
 
-    <script>
-        function switchView(type) {
+    <!-- 認証機能 / Supabase連携スクリプト -->
+    <script type="module">
+        import { supabase } from './supabase-config.js';
+
+        // 画面切り替え
+        window.switchView = function(type) {
             if(type === 'issue') {
                 document.getElementById('view-login').classList.remove('active');
                 document.getElementById('view-issue').classList.add('active');
@@ -113,38 +117,57 @@
                 document.getElementById('view-issue').classList.remove('active');
                 document.getElementById('view-login').classList.add('active');
             }
-        }
+        };
 
-        // 統合ログイン処理（入力された情報でマスターかクライアントかを判別）
-        function processLogin() {
+        // 統合ログイン処理（データベース照合）
+        window.processLogin = async function() {
+            const btn = document.querySelector('#view-login .btn-primary');
             const email = document.getElementById('loginEmail').value;
             const pass = document.getElementById('loginPass').value;
 
             if(!email || !pass) {
-                alert("メールアドレスとパスワードを入力してください。"); return;
+                alert("メールアドレスとパスワードを入力してください。"); 
+                return;
             }
 
-            // 完全一致でマスターダッシュボードへリダイレクト
+            // 1. マスター権限の判定（これだけは絶対パス）
             if (email === 'urata@msm-jap.com' && pass === 'Koji2819') {
+                localStorage.setItem('masterAdmin', 'true');
                 window.location.href = 'master-dashboard.html';
+                return;
             } 
-            // デモ用アカウント・お客様テスト用
-            else if (email === 'demo@msm-fund.com' && pass === 'demo1234') {
-                alert('【テスト案内】デモアカウントで認証しました。\nダッシュボード画面（クライアント様が見る画面）へ移動します。');
-                window.location.href = 'index.html';
-            }
-            // 新規発行テストなどで作られたパスワード用（モックアップなので基本は通します）
-            else {
-                window.location.href = 'index.html';
-            }
-        }
 
-        // パスワードランダム発行 & メール送信のモックアップ
-        function simulateEmailSend() {
+            // 2. クライアント（顧客）のデータベース照合
+            btn.innerText = '認証中...';
+            btn.disabled = true;
+
+            // Supabaseから一致するデータを検索
+            const { data, error } = await supabase
+                .from('clients')
+                .select('*')
+                .eq('email', email)
+                .eq('temp_password', pass)
+                .single(); // 単一レコードで取得
+
+            if (error || !data) {
+                // 合致するデータがない場合
+                alert("メールアドレスまたはパスワードが間違っています。");
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> ログイン';
+                btn.disabled = false;
+                return;
+            }
+
+            // 認証成功！ブラウザにこの顧客の情報を記憶させる
+            localStorage.setItem('currentUser', JSON.stringify(data));
+            // 本番ダッシュボードへ遷移
+            window.location.href = 'index.html';
+        };
+
+        // パスワードランダム発行 & メール送信のモックアップ（変更なし）
+        window.simulateEmailSend = function() {
             const email = document.getElementById('newEmail').value;
             if(!email) { alert("メールアドレスを入力してください。"); return; }
             
-            // 大文字・小文字・数字の混ざった8文字のランダムパスワードを生成
             const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let randomPass = '';
             for (let i = 0; i < 8; i++) {
@@ -155,7 +178,7 @@
             document.getElementById('mockMailTo').innerText = email;
             document.getElementById('mockMailBodyTo').innerText = email;
             document.getElementById('emailMockModal').style.display = 'flex';
-        }
+        };
     </script>
 </body>
 </html>
