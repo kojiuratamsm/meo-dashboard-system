@@ -215,7 +215,7 @@
         <div id="view-dashboard" class="view-section active">
             <header class="header">
                 <div>
-                    <h1>焼肉 新宿本店 様</h1>
+                    <h1><span class="dynamic-store-name">焼肉 新宿本店</span> 様</h1>
                     <p>Googleビジネスプロフィール パフォーマンスレポート</p>
                 </div>
                 <div class="user-profile">
@@ -223,18 +223,22 @@
                 </div>
             </header>
 
-            <div class="kpi-grid">
+            <div class="kpi-grid-4">
                 <div class="card kpi-card">
                     <div class="kpi-icon icon-blue"><i class="fa-regular fa-eye"></i></div>
-                    <div class="kpi-info"><h3>合計表示回数</h3><div class="value">12,485 <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 12.5%</span></div></div>
+                    <div class="kpi-info"><h3>合計表示回数</h3><div class="value">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
                 </div>
                 <div class="card kpi-card">
                     <div class="kpi-icon icon-green"><i class="fa-solid fa-route"></i></div>
-                    <div class="kpi-info"><h3>ルート検索数</h3><div class="value">842 <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 5.2%</span></div></div>
+                    <div class="kpi-info"><h3>ルート検索数</h3><div class="value">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
                 </div>
                 <div class="card kpi-card">
                     <div class="kpi-icon icon-yellow"><i class="fa-solid fa-globe"></i></div>
-                    <div class="kpi-info"><h3>サイトアクセス</h3><div class="value">315 <span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 8.4%</span></div></div>
+                    <div class="kpi-info"><h3>サイトアクセス</h3><div class="value">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon" style="background:#FEECEB; color:#EA4335;"><i class="fa-solid fa-phone"></i></div>
+                    <div class="kpi-info"><h3>通話</h3><div class="value">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
                 </div>
             </div>
 
@@ -286,7 +290,7 @@
                 <div class="right-column">
                     <div class="ai-card">
                         <h2 class="card-title" style="color:var(--primary-blue); margin-bottom:15px;"><i class="fa-solid fa-wand-magic-sparkles"></i> MEO対策チャンネル改善アドバイス</h2>
-                        <p style="font-size:14px; line-height:1.6; margin-bottom: 10px;"><b>【ポジティブな分析】</b><br>昨年同月比で「合計表示回数」が+125%と大幅増加しています。</p>
+                        <p style="font-size:14px; line-height:1.6; margin-bottom: 10px;"><b>【データ連携待ち】</b><br>GoogleビジネスプロフィールとのAPI連携が完了次第、こちらにAI分析レポートが表示されます。</p>
                         <p style="font-size:14px; line-height:1.6;"><b>【今月の改善アクション】</b><br>口コミ数が前月と比較して増加していない傾向にあります。左メニューの<b>「口コミ管理」</b>からアンケートを稼働させましょう。</p>
                     </div>
                 </div>
@@ -525,7 +529,7 @@
                     <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
                         <span style="background:var(--primary-blue); color:white; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">自店舗（目標）</span>
                     </div>
-                    <h3 style="font-size:18px; color:var(--text-main); margin-bottom:5px;">焼肉 新宿本店</h3>
+                    <h3 style="font-size:18px; color:var(--text-main); margin-bottom:5px;" class="dynamic-store-name">焼肉 新宿本店</h3>
                     <div style="font-size:32px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:10px;">
                         4.2 <span style="font-size:18px; color:#FBBC05;">★★★★☆</span>
                     </div>
@@ -619,7 +623,7 @@
                 <h1>AI自動投稿・予約投稿</h1>
                 <div class="user-profile">
                     <div class="user-icon"><i class="fa-solid fa-user"></i></div>
-                    <span style="font-weight:600;">焼肉 新宿本店 様</span>
+                    <span style="font-weight:600;"><span class="dynamic-store-name">焼肉 新宿本店</span> 様</span>
                 </div>
             </header>
             
@@ -730,7 +734,7 @@
                 <h1>予約管理カレンダー・LINE連携</h1>
                 <div class="user-profile">
                     <div class="user-icon"><i class="fa-solid fa-user"></i></div>
-                    <span style="font-weight:600;">焼肉 新宿本店 様</span>
+                    <span style="font-weight:600;"><span class="dynamic-store-name">焼肉 新宿本店</span> 様</span>
                 </div>
             </header>
 
@@ -2039,7 +2043,7 @@
             const globalProfileHtml = `
                 <div class="user-profile global-user-profile" style="display:flex !important; align-items:center; gap:12px; background:var(--card-bg); padding:8px 16px; border-radius:30px; box-shadow:var(--shadow);">
                     <div style="width:32px; height:32px; background:var(--primary-blue); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px;">店舗</div>
-                    <span style="font-weight:600; font-size:14px; color:var(--text-main);">株式会社MSM 様</span>
+                    <span style="font-weight:600; font-size:14px; color:var(--text-main);"><span class="dynamic-store-name">株式会社MSM</span> 様</span>
                 </div>
             `;
             document.querySelectorAll('.header').forEach(header => {
@@ -2087,6 +2091,32 @@
         });
         */
 
+        // 動的データ反映スクリプト（パーソナライズ）
+        document.addEventListener('DOMContentLoaded', function() {
+            const userDataStr = localStorage.getItem('currentUser');
+            const isMaster = localStorage.getItem('masterAdmin');
+            
+            if (userDataStr) {
+                try {
+                    const userData = JSON.parse(userDataStr);
+                    const storeName = userData.company_name;
+
+                    // 画面内の「dynamic-store-name」を抽出して全て入れ替え
+                    const nameElements = document.querySelectorAll('.dynamic-store-name');
+                    nameElements.forEach(el => {
+                        el.textContent = storeName;
+                    });
+                } catch(e) {
+                    console.error("ユーザー情報の読み込みエラー:", e);
+                }
+            } else if (isMaster) {
+                // マスター権限で直接見ている場合
+                const nameElements = document.querySelectorAll('.dynamic-store-name');
+                nameElements.forEach(el => {
+                    el.textContent = "(マスター観覧モード)";
+                });
+            }
+        });
     </script>
 </body>
 </html>
