@@ -57,6 +57,7 @@
         .card-title { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 20px; }
 
         .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .kpi-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
         .kpi-card { display: flex; align-items: center; gap: 20px; }
         .kpi-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
         .icon-blue { background: #E8F0FE; color: var(--primary-blue); }
@@ -137,7 +138,7 @@
             .user-profile { align-self: flex-start; font-size: 13px; padding: 5px 15px; }
             
             /* グリッドとカードのレイアウト崩れ補正 */
-            .kpi-grid, .dashboard-grid { grid-template-columns: 1fr; gap: 15px; }
+            .kpi-grid, .kpi-grid-4, .dashboard-grid { grid-template-columns: 1fr; gap: 15px; }
             .kpi-card { flex-wrap: wrap; justify-content: center; text-align: center; padding: 20px; }
             .kpi-icon { margin-bottom: 5px; }
             .chart-wrapper { height: 250px; }
@@ -1673,8 +1674,8 @@
             let currentMetric = 'overview';
             
             const dataConfig = {
-                '6months': { labels: ['10月', '11月', '12月', '1月', '2月', '3月'], overview: [85000, 92000, 110000, 105000, 98000, 125000], route: [250, 320, 480, 400, 350, 420], call: [45, 60, 80, 70, 50, 95], website: [120, 140, 200, 180, 160, 210] },
-                'daily': { labels: Array.from({length: 31}, (_, i) => `${i + 1}日`), overview: Array.from({length: 31}, () => Math.floor(Math.random() * 3000) + 2000), route: Array.from({length: 31}, () => Math.floor(Math.random() * 15) + 5), call: Array.from({length: 31}, () => Math.floor(Math.random() * 8)), website: Array.from({length: 31}, () => Math.floor(Math.random() * 10) + 2) }
+                '6months': { labels: ['10月', '11月', '12月', '1月', '2月', '3月'], overview: [0, 0, 0, 0, 0, 0], route: [0, 0, 0, 0, 0, 0], call: [0, 0, 0, 0, 0, 0], website: [0, 0, 0, 0, 0, 0] },
+                'daily': { labels: Array.from({length: 31}, (_, i) => `${i + 1}日`), overview: Array.from({length: 31}, () => 0), route: Array.from({length: 31}, () => 0), call: Array.from({length: 31}, () => 0), website: Array.from({length: 31}, () => 0) }
             };
 
             const metricConfig = {
