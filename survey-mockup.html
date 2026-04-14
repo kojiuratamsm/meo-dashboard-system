@@ -12,9 +12,32 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Noto Sans JP', sans-serif; }
         body { background-color: #F7FAFC; color: #2D3748; line-height: 1.6; }
         .mobile-container { max-width: 480px; margin: 0 auto; background-color: #FFFFFF; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-        .header-img { width: 100%; height: 150px; background: linear-gradient(135deg, #2B3674, #4285F4); display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; font-weight: 700; }
-        .content { padding: 25px 20px; flex: 1; }
-        .welcome-text { text-align: center; margin-bottom: 25px; font-size: 14px; color: #4A5568; }
+        
+        .header-img {
+            width: 100%;
+            height: 160px;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            font-size: 24px;
+            font-weight: 800;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.2);
+            overflow: hidden;
+        }
+        .header-img::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); z-index: 1;
+        }
+        .header-img-text { position: relative; z-index: 2; text-shadow: 0 2px 4px rgba(0,0,0,0.1); letter-spacing: 2px; }
+
+        .content { padding: 30px 20px; flex: 1; }
+        .welcome-text { text-align: center; margin-bottom: 30px; font-size: 15px; color: #4A5568; font-weight: 500; line-height: 1.8; }
         
         .question-block { margin-bottom: 30px; background: #F8FAFC; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; }
         .question-title { font-weight: 700; font-size: 15px; margin-bottom: 15px; color: #2B3674; line-height: 1.4; }
@@ -47,9 +70,11 @@
 </head>
 <body>
     <div class="mobile-container">
-        <header class="header-img">焼肉 新宿本店</header>
+        <header class="header-img">
+            <span class="header-img-text" id="surveyCompanyDisplay">焼肉 新宿本店</span>
+        </header>
         <div class="content" id="step1">
-            <p class="welcome-text">本日はご来店ありがとうございました！<br>よろしければ簡単なアンケートにご協力ください。</p>
+            <p class="welcome-text" id="surveyIntroText">本日はご来店ありがとうございました！<br>よろしければ簡単なアンケートにご協力ください。</p>
             <div id="dynamicSurveyContainer"></div>
             <button class="btn-submit" onclick="submitSurvey()">回答を完了する</button>
         </div>
@@ -86,6 +111,10 @@
                 const config = JSON.parse(rawConfig);
                 questionsData = config.questions || [];
                 savedKeywords = config.keywords || [];
+                
+                if (config.intro) {
+                    document.getElementById('surveyIntroText').innerHTML = config.intro.replace(/\n/g, '<br>');
+                }
                 
                 let htmlStr = '';
                 questionsData.forEach(q => {

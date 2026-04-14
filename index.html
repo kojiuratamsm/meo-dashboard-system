@@ -87,12 +87,12 @@
         .tag.deletable:hover { background-color: #D2E3FC; }
 
         .qr-area { position: relative; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #E2E8F0; border-radius: 15px; background: #F8FAFC; }
-        .qr-content { opacity: 0.1; filter: blur(4px); transition: all 0.5s ease; text-align: center; }
-        .qr-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-weight: 600; color: var(--text-muted); transition: all 0.5s ease; }
+        .qr-content { display: none; text-align: center; } /* 最初は見えないようにする */
+        .qr-overlay { text-align: center; font-weight: 600; color: var(--text-muted); width: 100%; }
 
         .qr-area.active { border: 2px solid var(--primary-blue); background: #FFFFFF; box-shadow: 0 10px 30px rgba(66,133,244,0.1); }
-        .qr-area.active .qr-content { opacity: 1; filter: blur(0); }
-        .qr-area.active .qr-overlay { opacity: 0; pointer-events: none; }
+        .qr-area.active .qr-content { display: block; animation: fadeIn 0.5s ease; }
+        .qr-area.active .qr-overlay { display: none; }
 
         .view-section { display: none; animation: fadeIn 0.4s ease forwards; }
         .view-section.active { display: block; }
@@ -357,6 +357,12 @@
                             <span style="font-size: 12px; color: var(--primary-green); font-weight:bold;"><i class="fa-solid fa-rotate"></i> 何度でも編集・更新可能</span>
                         </div>
                         
+                        <!-- アンケートの挨拶文 -->
+                        <div style="margin-bottom:25px; padding:15px; border-left:4px solid var(--primary-blue); background:#F8FAFC;">
+                            <label style="font-size:14px; font-weight:700; color:var(--text-main); margin-bottom:8px; display:block;">【お客様向け】アンケート上部に表示される挨拶文</label>
+                            <textarea id="adminSurveyIntroText" class="form-control" style="min-height:80px; border-color:#E2E8F0;" placeholder="例: 本日はご来店ありがとうございました！よろしければ簡単なアンケートにご協力ください。">本日はご来店ありがとうございました！&#10;よろしければ簡単なアンケートにご協力ください。</textarea>
+                        </div>
+                        
                         <div id="questionsContainer">
                             <!-- デフォルト構成1 (星) -->
                             <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px;">
@@ -450,6 +456,9 @@
                         <button class="btn-outline" onclick="addQuestion()"><i class="fa-solid fa-plus"></i> 新しい質問を追加する</button>
 
                         <h2 class="card-title" style="border-bottom: 2px solid #F4F7FE; padding-bottom:15px; margin-top: 40px;"><span style="color:var(--primary-blue)">STEP 2</span> 口コミに含める「MEOキーワード」</h2>
+                        <div style="font-size:12px; color:#A0AEC0; margin-bottom:15px; padding:10px; background:#F8FAFC; border-radius:8px;">
+                            ※設定してあるキーワードの中から、自然な文章をAIが作成する為、全てのキーワードが使われない可能性があります。あらかじめご了承ください。
+                        </div>
                         <div class="keyword-tags" id="keywordsContainer" style="margin-bottom: 15px;">
                             <span class="tag deletable" onclick="this.remove()">新宿 焼肉 <i class="fa-solid fa-xmark"></i></span>
                             <span class="tag deletable" onclick="this.remove()">個室 ディナー <i class="fa-solid fa-xmark"></i></span>
@@ -489,12 +498,21 @@
                                 <div style="margin-bottom:15px;">
                                     <span style="font-weight:600; color:var(--primary-green); font-size:16px;"><i class="fa-solid fa-circle-check"></i> 発行完了</span>
                                 </div>
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://msm-meo.com/survey/aj8sX9q" alt="QR Code" style="border-radius: 10px; margin-bottom: 15px;">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://msm-meo.com/survey/aj8sX9q" alt="QR Code" style="border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding:10px; background:white;">
                                 
-                                <div style="background:#F4F7FE; padding:12px; border-radius:8px; font-family:monospace; color:var(--text-main); font-size:12px; font-weight:bold; margin-bottom:10px; word-break:break-all;" id="surveyUrlText">https://msm-meo.com/survey/aj8sX9q</div>
-                                <button class="btn-action" style="width:100%; background:var(--primary-blue);" onclick="copySurveyUrl()"><i class="fa-solid fa-copy"></i> URLをコピーする</button>
+                                <div style="background:#F8FAFC; padding:15px; border-radius:10px; border: 1px solid #E2E8F0; margin-bottom:15px;">
+                                    <div style="font-family:monospace; color:var(--primary-blue); font-size:13px; font-weight:bold; word-break:break-all; margin-bottom:15px;" id="surveyUrlText">https://msm-meo.com/survey/aj8sX9q</div>
+                                    <button class="btn-primary" style="width:100%; border-radius:10px; padding:12px; font-size:14px; background:linear-gradient(135deg, #111827, #374151); box-shadow:0 4px 10px rgba(0,0,0,0.15);" onclick="copySurveyUrl()">
+                                        <i class="fa-solid fa-copy"></i> URLをコピーする
+                                    </button>
+                                </div>
                                 
-                                <div style="border-top:1px dashed #E2E8F0; margin-top:20px; padding-top:15px;">
+                                <div style="margin-bottom:20px;">
+                                    <!-- 実際のテスト確認用リンク -->
+                                    <a href="survey-mockup.html" target="_blank" style="display:inline-block; font-size:13px; color:var(--primary-blue); text-decoration:none; font-weight:600; padding:8px 15px; background:#EBF4FF; border-radius:20px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> 実際のお客様画面を別タブで開く</a>
+                                </div>
+
+                                <div style="border-top:1px dashed #E2E8F0; padding-top:15px;">
                                     <button class="btn-outline" style="border:none; color:var(--text-muted); font-size:13px;" onclick="document.getElementById('qrArea').classList.remove('active'); document.getElementById('surveyIframe').contentWindow.location.reload();"><i class="fa-solid fa-arrow-left"></i> 編集・プレビューに戻る</button>
                                 </div>
                             </div>
@@ -1639,8 +1657,9 @@
 
             const keywords = Array.from(document.querySelectorAll('#keywordsContainer .tag')).map(t => t.innerText.trim());
             const adminTitle = document.getElementById('adminSurveyTitle').value.trim() || '名称未設定のアンケート';
+            const introText = document.getElementById('adminSurveyIntroText').value.trim();
             
-            return { title: adminTitle, questions: surveyQuestions, keywords: keywords };
+            return { title: adminTitle, intro: introText, questions: surveyQuestions, keywords: keywords };
         }
 
         function saveSurveyAsDraft() {
