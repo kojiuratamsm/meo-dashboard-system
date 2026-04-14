@@ -15,26 +15,26 @@
         
         .header-img {
             width: 100%;
-            height: 160px;
-            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            height: 140px;
+            background: #ffffff;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            color: white;
-            font-size: 24px;
+            color: #2D3748;
+            font-size: 22px;
             font-weight: 800;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.2);
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.04);
             overflow: hidden;
         }
-        .header-img::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%); z-index: 1;
+        .header-img::after {
+            content: ''; position: absolute; bottom: 0; left: 0%; width: 100%; height: 5px;
+            background: linear-gradient(90deg, #4285F4, #34A853, #FBBC05, #EA4335); /* Google風のアクセントカラー */
         }
-        .header-img-text { position: relative; z-index: 2; text-shadow: 0 2px 4px rgba(0,0,0,0.1); letter-spacing: 2px; }
+        .header-img-text { position: relative; z-index: 2; letter-spacing: 1.5px; }
 
         .content { padding: 30px 20px; flex: 1; }
         .welcome-text { text-align: center; margin-bottom: 30px; font-size: 15px; color: #4A5568; font-weight: 500; line-height: 1.8; }
@@ -130,11 +130,13 @@
                         </div>`;
                     } else if (q.type === 'text') {
                         inputHtml = `<textarea class="survey-input-group" data-qid="${q.id}" data-type="text" placeholder="自由にご記入ください"></textarea>`;
-                    } else if (q.type === 'radio') {
+                    } else if (q.type === 'radio' || q.type === 'checkbox') {
                         const opts = q.options.split(',').map(s => s.trim()).filter(s => s);
-                        inputHtml = `<div class="radio-group survey-input-group" data-qid="${q.id}" data-type="radio" style="display:flex; flex-direction:column; gap:10px;">`;
+                        inputHtml = `<div class="radio-group survey-input-group" data-qid="${q.id}" data-type="${q.type}" style="display:flex; flex-direction:column; gap:10px;">`;
                         opts.forEach((o, i) => {
-                            inputHtml += `<label><input type="radio" name="q${q.id}" value="${o}"> ${o}</label>`;
+                            const inputType = q.type === 'checkbox' ? 'checkbox' : 'radio';
+                            const inputName = q.type === 'checkbox' ? `q${q.id}[]` : `q${q.id}`;
+                            inputHtml += `<label><input type="${inputType}" name="${inputName}" value="${o}" style="width:18px; height:18px; margin-right:10px; accent-color:#4285F4;"> ${o}</label>`;
                         });
                         inputHtml += `</div>`;
                     }
@@ -169,28 +171,23 @@
 
         function submitSurvey() {
             const groups = document.querySelectorAll('.survey-input-group');
-            let gatheredAnswers = [];
             let answersObj = {};
             
             groups.forEach(g => {
-                const qid = g.dataset.qid; // ★タイトルではなくIDに紐付けます！
+                const qid = g.dataset.qid;
                 const type = g.dataset.type;
-                let val = '';
                 
                 if (type === 'text') {
-                    val = g.value;
+                    answersObj[qid] = g.value || '';
                 } else if (type === 'radio' || type === 'stars') {
                     const checked = g.querySelector('input[type="radio"]:checked');
-                    if(checked) val = checked.value;
-                }
-                
-                if(val && qid) {
-                    gatheredAnswers.push(val);
-                    answersObj[qid] = val; // IDベースで保存
+                    if(checked) answersObj[qid] = checked.value;
+                } else if (type === 'checkbox') {
+                    const checkeds = Array.from(g.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+                    if(checkeds.length > 0) answersObj[qid] = checkeds;
                 }
             });
 
-            // 回答日時を生成
             const now = new Date();
             const dateStr = now.getFullYear() + '/' + 
                             String(now.getMonth() + 1).padStart(2, '0') + '/' + 
@@ -198,7 +195,6 @@
                             String(now.getHours()).padStart(2, '0') + ':' + 
                             String(now.getMinutes()).padStart(2, '0');
 
-            // LocalStorageに保存
             const newAnswerId = Date.now();
             window.currentAnswerId = newAnswerId;
             const currentConfig = JSON.parse(localStorage.getItem('msmSurveyConfig') || '{"questions":[]}');
@@ -209,24 +205,71 @@
                 answers: answersObj,
                 status: '未投稿（離脱）',
                 surveyTitle: currentConfig.title || '無題のアンケート',
-                configSnapshot: currentConfig // 回答時の質問フォーマットを凍結保存
+                configSnapshot: currentConfig
             };
             
             let storedAnswers = JSON.parse(localStorage.getItem('msmSurveyAnswers') || '[]');
             storedAnswers.unshift(newAnswerData);
             localStorage.setItem('msmSurveyAnswers', JSON.stringify(storedAnswers));
 
-            // AIの文章生成演出
             document.getElementById('step1').style.display = 'none';
             document.getElementById('step2').style.display = 'block';
 
+            // --- 高度な文章生成ロジック ---
             setTimeout(() => {
-                const baseContext = gatheredAnswers.join("や");
-                // MEOキーワードは自然に2つ程度までランダムに抽出して組み込む（無理に詰め込まない）
-                const naturalKeywords = savedKeywords.slice(0, 2).join("や");
-                const intro = naturalKeywords ? `${naturalKeywords}を探していたのですが、まさに条件にぴったりのお店でした！` : `今回初めてお伺いしたのですが、大正解のお店でした！`;
+                let sentences = [];
                 
-                const aiText = `本日は、${intro}\n${baseContext}など、料理の質も接客も大変素晴らしく、お値段以上の価値を感じました☺️\n再訪決定です！自信を持っておすすめできます！`;
+                // 1. 導入：MEOキーワードを文脈に合わせて活用
+                const kw = savedKeywords.length > 0 ? savedKeywords[Math.floor(Math.random() * savedKeywords.length)] : "";
+                const introPatterns = [
+                    `${kw}周辺でお店を探していたのですが、やっと理想的なところに出会えました。`,
+                    `以前から気になっていたのですが、${kw}で用事があったついでにようやく伺えました。`,
+                    `${kw}で評判を見て伺いましたが、期待以上の体験でした。`,
+                    `今回はじめて伺いましたが、とても素敵なお店だったのでシェアします。`
+                ];
+                sentences.push(introPatterns[Math.floor(Math.random() * introPatterns.length)]);
+
+                // 2. 本文：各質問と回答を理解して接続
+                questionsData.forEach(q => {
+                    const val = answersObj[q.id];
+                    if(!val) return;
+
+                    const title = q.title.toLowerCase();
+                    
+                    if (q.type === 'stars') {
+                        const starNum = parseInt(val);
+                        if(starNum >= 4) {
+                            sentences.push(`全体的な満足度が非常に高く、細部までこだわりを感じる素晴らしいクオリティでした。`);
+                        } else if(starNum === 3) {
+                            sentences.push(`価格に見合った内容で、安心して利用できるお店だと感じました。`);
+                        }
+                    } else if (q.type === 'checkbox' || q.type === 'radio') {
+                        const valStr = Array.isArray(val) ? val.join('や') : val;
+                        if (title.includes('味') || title.includes('料理') || title.includes('メニュー')) {
+                            sentences.push(`特にお料理の面では、${valStr}をいただきましたが、素材の良さが活かされていて感動しました。`);
+                        } else if (title.includes('雰囲気') || title.includes('シーン') || title.includes('利用')) {
+                            sentences.push(`${valStr}といった用途にぴったりな落ち着いた空間で、とても居心地が良かったです。`);
+                        } else if (title.includes('接客') || title.includes('スタッフ') || title.includes('対応')) {
+                            sentences.push(`スタッフの方々の${valStr}が心地よく、終始気分よく過ごすことができました。`);
+                        } else {
+                            sentences.push(`${q.title}についても、${valStr}という回答通り、とても納得のいく内容でした。`);
+                        }
+                    } else if (q.type === 'text') {
+                        sentences.push(`個人的には、${val}という点が非常に印象に残っており、高く評価したいポイントです。`);
+                    }
+                });
+
+                // 3. 結び
+                const closingPatterns = [
+                    "友人にも自信を持って薦められるお店です。また必ずお伺いします！",
+                    "素敵なおもてなしをありがとうございました。リピート確定です✨",
+                    "心地よい時間を過ごせました。また近いうちに再訪したいと思います。",
+                    "是非また利用させていただきたいです。ごちそうさまでした！"
+                ];
+                sentences.push(closingPatterns[Math.floor(Math.random() * closingPatterns.length)]);
+
+                // 自然な改行と接続で結合
+                const aiText = sentences.join('\n');
                 
                 document.getElementById('generatedText').innerText = aiText;
                 document.getElementById('step2').style.display = 'none';

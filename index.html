@@ -378,7 +378,8 @@
                                     <label>回答フォーマット</label>
                                     <select class="form-control question-type" onchange="handleTypeChange(this)">
                                         <option value="stars" selected>5段階評価（星）</option>
-                                        <option value="radio">選択式（推奨）</option>
+                                        <option value="radio">選択式（単一回答: 推奨）</option>
+                                        <option value="checkbox">選択式（複数回答）</option>
                                         <option value="text">記述式</option>
                                     </select>
                                 </div>
@@ -406,7 +407,8 @@
                                     <label>回答フォーマット</label>
                                     <select class="form-control question-type" onchange="handleTypeChange(this)">
                                         <option value="stars">5段階評価（星）</option>
-                                        <option value="radio" selected>選択式（推奨）</option>
+                                        <option value="radio" selected>選択式（単一回答: 推奨）</option>
+                                        <option value="checkbox">選択式（複数回答）</option>
                                         <option value="text">記述式</option>
                                     </select>
                                 </div>
@@ -438,7 +440,8 @@
                                     <label>回答フォーマット</label>
                                     <select class="form-control question-type" onchange="handleTypeChange(this)">
                                         <option value="stars">5段階評価（星）</option>
-                                        <option value="radio">選択式（推奨）</option>
+                                        <option value="radio">選択式（単一回答: 推奨）</option>
+                                        <option value="checkbox">選択式（複数回答）</option>
                                         <option value="text" selected>記述式</option>
                                     </select>
                                 </div>
@@ -481,7 +484,12 @@
 
                     <!-- 右側QR -->
                     <div class="card" style="text-align: center; position: sticky; top: 40px;">
-                        <h2 class="card-title">発行されたアンケート（お渡し用）</h2>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                            <h2 class="card-title" style="margin:0;">プレビュー / 発行</h2>
+                            <button class="btn-outline" style="padding:6px 12px; font-size:12px; color:var(--primary-blue); border-color:#E2E8F0; border-radius:8px; background:white;" onclick="createNewSurvey()">
+                                <i class="fa-solid fa-file-circle-plus"></i> 新規作成（クリア）
+                            </button>
+                        </div>
                         <div class="qr-area" id="qrArea">
                             <div class="qr-overlay" id="qrOverlay" style="position:relative; transform:none; top:0; left:0; width:100%; background:#F8FAFC;">
                                 <!-- 編集中は常にプレビューを表示 -->
@@ -1553,7 +1561,7 @@
                     return;
                 }
                 container.style.display = 'none';
-            } else if (val === 'radio') {
+            } else if (val === 'radio' || val === 'checkbox') {
                 container.style.display = 'block';
             } else {
                 container.style.display = 'none';
@@ -1598,7 +1606,8 @@
                     <label>回答フォーマット</label>
                     <select class="form-control question-type" onchange="handleTypeChange(this)">
                         <option value="stars">5段階評価（星）</option>
-                        <option value="radio" selected>選択式（推奨）</option>
+                        <option value="radio" selected>選択式（単一回答: 推奨）</option>
+                        <option value="checkbox">選択式（複数回答）</option>
                         <option value="text">記述式</option>
                     </select>
                 </div>
@@ -1643,7 +1652,7 @@
                 const qType = b.querySelector('.question-type').value;
                 const optsBox = b.querySelector('.options-container');
                 let optionsString = '';
-                if (qType === 'radio' && optsBox) {
+                if ((qType === 'radio' || qType === 'checkbox') && optsBox) {
                     const tags = optsBox.querySelectorAll('.options-tags .tag');
                     optionsString = Array.from(tags).map(t => t.innerText.trim()).join(',');
                 }
@@ -1669,7 +1678,16 @@
             const now = new Date();
             const dateStr = now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
             
-            draftHistory.unshift({ date: dateStr, config: configObj });
+            // 同一タイトルがあれば上書き
+            const existingIdx = draftHistory.findIndex(h => h.config.title === configObj.title);
+            if(existingIdx >= 0) {
+                draftHistory[existingIdx].config = configObj;
+                draftHistory[existingIdx].date = dateStr;
+                const updated = draftHistory.splice(existingIdx, 1)[0];
+                draftHistory.unshift(updated);
+            } else {
+                draftHistory.unshift({ date: dateStr, config: configObj });
+            }
             localStorage.setItem('msmSurveyDraftHistory', JSON.stringify(draftHistory));
             
             updateHistoryDropdowns();
@@ -1687,7 +1705,16 @@
             const now = new Date();
             const dateStr = now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
             
-            pubHistory.unshift({ date: dateStr, config: configObj });
+            // 同一タイトルがあれば上書き
+            const existingIdx = pubHistory.findIndex(h => h.config.title === configObj.title);
+            if(existingIdx >= 0) {
+                pubHistory[existingIdx].config = configObj;
+                pubHistory[existingIdx].date = dateStr;
+                const updated = pubHistory.splice(existingIdx, 1)[0];
+                pubHistory.unshift(updated);
+            } else {
+                pubHistory.unshift({ date: dateStr, config: configObj });
+            }
             localStorage.setItem('msmSurveyPublishHistory', JSON.stringify(pubHistory));
             
             updateHistoryDropdowns();
@@ -1743,6 +1770,28 @@
                 builderArea.addEventListener('click', autoSyncPreview); // タグ追加などに対応
             }
         });
+
+        // --- 新規アンケート作成機能 ---
+        function createNewSurvey() {
+            if(!confirm('現在編集中の内容をクリアして、新しいアンケートを作成しますか？（保存していない内容は失われます）')) return;
+            
+            document.getElementById('adminSurveyTitle').value = '';
+            document.getElementById('adminSurveyIntroText').value = '本日はご来店ありがとうございました！\nよろしければ簡単なアンケートにご協力ください。';
+            document.getElementById('questionsContainer').innerHTML = '';
+            document.getElementById('keywordsContainer').innerHTML = '';
+            
+            // 最低1つの質問をセット
+            addQuestion();
+            
+            // 履歴の選択も解除
+            document.getElementById('publishHistorySelect').value = '';
+            document.getElementById('draftHistorySelect').value = '';
+
+            // QR画面がアクティブなら元に戻す
+            document.getElementById('qrArea').classList.remove('active');
+            
+            autoSyncPreview();
+        }
 
         // --- グラフ用ロジック ---
         let myChart;
