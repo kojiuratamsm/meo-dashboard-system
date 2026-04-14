@@ -378,7 +378,7 @@
                                     <label>回答フォーマット</label>
                                     <select class="form-control question-type" onchange="handleTypeChange(this)">
                                         <option value="stars" selected>5段階評価（星）</option>
-                                        <option value="radio">選択式（単一回答: 推奨）</option>
+                                        <option value="radio">選択式（単一回答）</option>
                                         <option value="checkbox">選択式（複数回答）</option>
                                         <option value="text">記述式</option>
                                     </select>
@@ -407,7 +407,7 @@
                                     <label>回答フォーマット</label>
                                     <select class="form-control question-type" onchange="handleTypeChange(this)">
                                         <option value="stars">5段階評価（星）</option>
-                                        <option value="radio" selected>選択式（単一回答: 推奨）</option>
+                                        <option value="radio" selected>選択式（単一回答）</option>
                                         <option value="checkbox">選択式（複数回答）</option>
                                         <option value="text">記述式</option>
                                     </select>
@@ -440,7 +440,7 @@
                                     <label>回答フォーマット</label>
                                     <select class="form-control question-type" onchange="handleTypeChange(this)">
                                         <option value="stars">5段階評価（星）</option>
-                                        <option value="radio">選択式（単一回答: 推奨）</option>
+                                        <option value="radio">選択式（単一回答）</option>
                                         <option value="checkbox">選択式（複数回答）</option>
                                         <option value="text" selected>記述式</option>
                                     </select>
@@ -484,10 +484,10 @@
 
                     <!-- 右側QR -->
                     <div class="card" style="text-align: center; position: sticky; top: 40px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #F4F7FE;">
                             <h2 class="card-title" style="margin:0;">プレビュー / 発行</h2>
-                            <button class="btn-outline" style="padding:6px 12px; font-size:12px; color:var(--primary-blue); border-color:#E2E8F0; border-radius:8px; background:white;" onclick="createNewSurvey()">
-                                <i class="fa-solid fa-file-circle-plus"></i> 新規作成（クリア）
+                            <button class="btn-primary" style="padding:10px 20px; font-size:14px; background:white; color:var(--primary-blue); border:2px solid var(--primary-blue); border-radius:30px; box-shadow:0 4px 10px rgba(66,133,244,0.1); font-weight:800;" onclick="createNewSurvey()">
+                                <i class="fa-solid fa-file-circle-plus"></i> 新しく作り直す
                             </button>
                         </div>
                         <div class="qr-area" id="qrArea">
@@ -1585,7 +1585,12 @@
             
             const html = `<span class="tag deletable" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
             tagsBox.insertAdjacentHTML('beforeend', html);
-            input.value = '';
+            
+            // 入力欄を確実にクリア
+            setTimeout(() => {
+                input.value = '';
+                input.focus();
+            }, 10);
         }
 
         // --- 質問ブロック自体の追加 ---
@@ -1606,7 +1611,7 @@
                     <label>回答フォーマット</label>
                     <select class="form-control question-type" onchange="handleTypeChange(this)">
                         <option value="stars">5段階評価（星）</option>
-                        <option value="radio" selected>選択式（単一回答: 推奨）</option>
+                        <option value="radio" selected>選択式（単一回答）</option>
                         <option value="checkbox">選択式（複数回答）</option>
                         <option value="text">記述式</option>
                     </select>
