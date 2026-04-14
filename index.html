@@ -221,7 +221,10 @@
                         <select id="kpiMonthSelector" class="form-control" style="width:auto; padding:8px 15px; border-radius:8px; font-weight:600; cursor:pointer;" onchange="alert('テスト環境のため、データは現在0で固定されています。API連携後、月別データが切り替わります。')">
                             <option value="this">当月（2026年4月）</option>
                             <option value="prev1">先月（2026年3月）</option>
-                            <option value="prev2">先々月（2026年2月）</option>
+                            <option value="prev2">2ヶ月前（2026年2月）</option>
+                            <option value="prev3">3ヶ月前（2026年1月）</option>
+                            <option value="prev4">4ヶ月前（2025年12月）</option>
+                            <option value="prev5">5ヶ月前（2025年11月）</option>
                         </select>
                     </div>
                 </div>
@@ -471,20 +474,31 @@
                     <div class="card" style="text-align: center; position: sticky; top: 40px;">
                         <h2 class="card-title">発行されたアンケート（お渡し用）</h2>
                         <div class="qr-area" id="qrArea">
-                            <div class="qr-overlay" id="qrOverlay">
-                                <i class="fa-solid fa-qrcode" style="font-size: 40px; color:#A3AED0; margin-bottom:10px;"></i>
-                                <br>「設定を保存...」ボタンを押すと<br>最新のQRコードが生成されます
+                            <div class="qr-overlay" id="qrOverlay" style="position:relative; transform:none; top:0; left:0; width:100%; background:#F8FAFC;">
+                                <!-- 編集中は常にプレビューを表示 -->
+                                <div style="margin-bottom:10px;">
+                                    <span style="font-weight:600; color:var(--text-main); font-size:14px;"><i class="fa-solid fa-mobile-screen-button"></i> お客様画面プレビュー（編集中）</span>
+                                </div>
+                                <div style="width: 100%; max-width: 300px; height: 450px; margin: 0 auto; border: 12px solid #2D3748; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; background: #fff;">
+                                    <div style="position: absolute; top:0; left:50%; transform:translateX(-50%); width:40%; height:15px; background:#2D3748; border-bottom-left-radius:10px; border-bottom-right-radius:10px; z-index:10;"></div>
+                                    <iframe id="surveyIframe" src="survey-mockup.html" style="width:100%; height:100%; border:none;" title="アンケートプレビュー"></iframe>
+                                </div>
                             </div>
                             <div class="qr-content" id="qrContent">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://msm-meo.com/survey/aj8sX9q" alt="QR Code" style="border-radius: 10px; margin-bottom: 10px;">
-                                <div style="background:#F4F7FE; padding:12px; border-radius:8px; font-family:monospace; color:var(--primary-blue); font-size:12px; margin-bottom:10px;">https://msm-meo.com/survey/aj8sX9q</div>
-                                <div style="border-top:1px dashed #E2E8F0; padding-top:15px; margin-bottom:15px;">
-                                    <span style="font-weight:600; color:var(--text-main); font-size:14px;"><i class="fa-solid fa-mobile-screen-button"></i> お客様画面プレビュー</span>
+                                <!-- 発行ボタンを押すとこちらが表示される -->
+                                <div style="margin-bottom:15px;">
+                                    <span style="font-weight:600; color:var(--primary-green); font-size:16px;"><i class="fa-solid fa-circle-check"></i> 発行完了</span>
                                 </div>
-                                <div style="width: 100%; max-width: 320px; height: 500px; margin: 0 auto; border: 12px solid #2D3748; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; background: #fff;">
-                                    <div style="position: absolute; top:0; left:50%; transform:translateX(-50%); width:40%; height:15px; background:#2D3748; border-bottom-left-radius:10px; border-bottom-right-radius:10px; z-index:10;"></div>
-                                    <iframe src="survey-mockup.html" style="width:100%; height:100%; border:none;" title="アンケートプレビュー"></iframe>
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://msm-meo.com/survey/aj8sX9q" alt="QR Code" style="border-radius: 10px; margin-bottom: 15px;">
+                                
+                                <div style="background:#F4F7FE; padding:12px; border-radius:8px; font-family:monospace; color:var(--text-main); font-size:12px; font-weight:bold; margin-bottom:10px; word-break:break-all;" id="surveyUrlText">https://msm-meo.com/survey/aj8sX9q</div>
+                                <button class="btn-action" style="width:100%; background:var(--primary-blue);" onclick="copySurveyUrl()"><i class="fa-solid fa-copy"></i> URLをコピーする</button>
+                                
+                                <div style="border-top:1px dashed #E2E8F0; margin-top:20px; padding-top:15px;">
+                                    <button class="btn-outline" style="border:none; color:var(--text-muted); font-size:13px;" onclick="document.getElementById('qrArea').classList.remove('active'); document.getElementById('surveyIframe').contentWindow.location.reload();"><i class="fa-solid fa-arrow-left"></i> 編集・プレビューに戻る</button>
                                 </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -1673,6 +1687,43 @@
                 }, 3000);
             }, 800);
         }
+
+        // --- URLコピー機能 ---
+        function copySurveyUrl() {
+            const urlText = document.getElementById('surveyUrlText').innerText;
+            navigator.clipboard.writeText(urlText).then(() => {
+                alert('アンケートURLをコピーしました！\n' + urlText);
+            }).catch(err => {
+                console.error('コピー失敗:', err);
+            });
+        }
+
+        // --- プレビューの自動同期機能 ---
+        let syncTimer;
+        function autoSyncPreview() {
+            clearTimeout(syncTimer);
+            syncTimer = setTimeout(() => {
+                // 発行中（QR画面）の場合はリロードしない
+                if(document.getElementById('qrArea').classList.contains('active')) return;
+                
+                const configObj = collectSurveyConfig();
+                localStorage.setItem('msmSurveyConfig', JSON.stringify(configObj));
+                
+                const frame = document.getElementById('surveyIframe');
+                if(frame && frame.contentWindow) {
+                    frame.contentWindow.location.reload();
+                }
+            }, 800);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const builderArea = document.getElementById('subview-settings');
+            if(builderArea) {
+                builderArea.addEventListener('keyup', autoSyncPreview);
+                builderArea.addEventListener('change', autoSyncPreview);
+                builderArea.addEventListener('click', autoSyncPreview); // タグ追加などに対応
+            }
+        });
 
         // --- グラフ用ロジック ---
         let myChart;
