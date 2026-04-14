@@ -73,17 +73,25 @@
 
     <nav class="sidebar">
         <div class="logo-area">
-            <div class="msm-logo">MSM</div>
+            <div class="msm-logo" style="font-size:24px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">MapOn</div>
             <div style="font-size:11px; color:#A0AEC0; margin-top:5px;">MASTER DASHBOARD</div>
         </div>
         <a href="#" class="nav-item active"><i class="fa-solid fa-users"></i> 全クライアント一覧</a>
+        
+        <div style="margin-top:20px; padding:0 15px;">
+            <p style="font-size:11px; color:#A0AEC0; margin-bottom:10px; font-weight:bold;">申し込みフォームURL取得</p>
+            <button class="btn-action" style="background:#4A5568; margin-bottom:8px; width:100%; font-size:11px;" onclick="alert('【運用代行用】フォームURLをコピーしました！※フォーム画面は次ステップで制作します')">運用代行クライアント(A)</button>
+            <button class="btn-action" style="background:var(--primary-blue); margin-bottom:8px; width:100%; font-size:11px;" onclick="alert('【MapOn有料用】フォームURLをコピーしました！※フォーム画面は次ステップで制作します')">MapOn(B)</button>
+            <button class="btn-action" style="background:#34A853; width:100%; font-size:11px;" onclick="alert('【MapOnモニター用】フォームURLをコピーしました！※フォーム画面は次ステップで制作します')">MapOn(モニター)(C)</button>
+        </div>
+
         <a href="login.html" class="nav-item" style="margin-top:auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
     </nav>
 
     <main class="main-content">
         <!-- モバイル専用ヘッダー -->
         <div class="mobile-only-header">
-            <div class="msm-logo" style="font-size:24px; margin:0; color:var(--text-main); font-weight:800;">MSM <span style="font-size:10px; color:var(--text-muted);">MASTER</span></div>
+            <div class="msm-logo" style="font-size:24px; margin:0; color:var(--text-main); font-weight:800;">MapOn <span style="font-size:10px; color:var(--text-muted);">MASTER</span></div>
             <button onclick="toggleMobileMenu()" style="background:none; border:none; font-size:26px; color:var(--text-main); cursor:pointer;"><i class="fa-solid fa-bars"></i></button>
         </div>
 
@@ -95,6 +103,12 @@
             <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center; flex-wrap:wrap; gap:15px;">
                 <h2 style="margin:0;">契約クライアント一覧</h2>
                 <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                    <!-- 絞り込みタブ -->
+                    <select id="planFilterSelect" style="padding:10px; border-radius:8px; border:1px solid var(--border-color); font-weight:bold; color:var(--primary-blue); outline:none; cursor:pointer;" onchange="alert('データベースに「プラン種別」を追加後、このフィルターが稼働します！')">
+                        <option value="all">すべてのクライアント</option>
+                        <option value="agency">運用代行クライアントのみ</option>
+                        <option value="mapon">MapOn (有料/モニター)のみ</option>
+                    </select>
                     <!-- 検索バー -->
                     <div style="position:relative;">
                         <input type="text" id="clientSearchInput" placeholder="店舗名/法人名/メールを検索..." style="padding:10px 15px 10px 35px; border-radius:8px; border:1px solid var(--border-color); width:260px; font-size:14px; outline:none;" onkeyup="searchClients()">

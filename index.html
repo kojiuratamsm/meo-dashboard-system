@@ -169,11 +169,10 @@
         <div class="logo-area" style="cursor:pointer;" onclick="switchMainView('dashboard', document.querySelector('.nav-item'))">
             <div class="msm-logo" style="display:flex; align-items:center; gap:8px;">
                 <div style="background:linear-gradient(135deg, #a855f7, #6366f1); color:white; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(99,102,241,0.4);">
-                    <i class="fa-solid fa-chart-line" style="font-size:18px;"></i>
+                    <i class="fa-solid fa-map-location-dot" style="font-size:18px;"></i>
                 </div>
-                <span style="font-size:24px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px;">MSM</span>
+                <span style="font-size:24px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px;">MapOn</span>
             </div>
-            <div class="msm-sub" style="margin-top:8px; font-size:10px; font-weight:bold; color:#94A3B8; letter-spacing:2px;">MEO DASHBOARD</div>
         </div>
 
         <a class="nav-item active" onclick="switchMainView('dashboard', this)">
@@ -218,6 +217,13 @@
                 <div>
                     <h1><span class="dynamic-store-name">焼肉 新宿本店</span> 様</h1>
                     <p>Googleビジネスプロフィール パフォーマンスレポート</p>
+                    <div style="margin-top: 15px;">
+                        <select id="kpiMonthSelector" class="form-control" style="width:auto; padding:8px 15px; border-radius:8px; font-weight:600; cursor:pointer;" onchange="alert('テスト環境のため、データは現在0で固定されています。API連携後、月別データが切り替わります。')">
+                            <option value="this">当月（2026年4月）</option>
+                            <option value="prev1">先月（2026年3月）</option>
+                            <option value="prev2">先々月（2026年2月）</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="user-profile">
                     <div class="avatar">店</div> 管理者
@@ -472,10 +478,13 @@
                             <div class="qr-content" id="qrContent">
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://msm-meo.com/survey/aj8sX9q" alt="QR Code" style="border-radius: 10px; margin-bottom: 10px;">
                                 <div style="background:#F4F7FE; padding:12px; border-radius:8px; font-family:monospace; color:var(--primary-blue); font-size:12px; margin-bottom:10px;">https://msm-meo.com/survey/aj8sX9q</div>
-                                <div style="border-top:1px dashed #E2E8F0; padding-top:15px;">
-                                    <a href="survey-mockup.html" target="_blank" class="preview-link"><i class="fa-solid fa-mobile-screen-button"></i> お客様が見るアンケート画面（プレビュー）を開く</a>
+                                <div style="border-top:1px dashed #E2E8F0; padding-top:15px; margin-bottom:15px;">
+                                    <span style="font-weight:600; color:var(--text-main); font-size:14px;"><i class="fa-solid fa-mobile-screen-button"></i> お客様画面プレビュー</span>
                                 </div>
-                            </div>
+                                <div style="width: 100%; max-width: 320px; height: 500px; margin: 0 auto; border: 12px solid #2D3748; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; background: #fff;">
+                                    <div style="position: absolute; top:0; left:50%; transform:translateX(-50%); width:40%; height:15px; background:#2D3748; border-bottom-left-radius:10px; border-bottom-right-radius:10px; z-index:10;"></div>
+                                    <iframe src="survey-mockup.html" style="width:100%; height:100%; border:none;" title="アンケートプレビュー"></iframe>
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -610,10 +619,10 @@
                     </div>
                     <div class="form-group" style="flex:1; min-width:200px; margin-bottom:0;">
                         <label>新しいパスワード</label>
-                        <input type="password" class="form-control" placeholder="お好きなパスワード">
+                        <input type="password" id="newPasswordInput" class="form-control" placeholder="お好きなパスワード">
                     </div>
                 </div>
-                <button class="btn-primary" style="width:auto; padding:10px 20px; font-size:14px; background:linear-gradient(135deg, #A0AEC0, #718096);" onclick="alert('パスワードを変更しました！次回から新しいパスワードでログインできます。')"><i class="fa-solid fa-lock"></i> パスワードを変更する</button>
+                <button class="btn-primary" style="width:auto; padding:10px 20px; font-size:14px; background:linear-gradient(135deg, #A0AEC0, #718096);" onclick="changePassword()"><i class="fa-solid fa-lock"></i> パスワードを変更する</button>
             </div>
             </div>
         </div>
@@ -2118,6 +2127,53 @@
                 });
             }
         });
+    </script>
+
+    <!-- Supabase連携：設定画面でのパスワード変更処理 -->
+    <script type="module">
+        import { supabase } from './supabase-config.js';
+
+        window.changePassword = async function() {
+            const pwInput = document.getElementById('newPasswordInput');
+            const newPassword = pwInput.value.trim();
+
+            if (!newPassword) {
+                alert('新しいパスワードを入力してください。');
+                return;
+            }
+
+            const confirmMsg = `入力されたパスワードは【 ${newPassword} 】です。\nこちらに変更しても宜しいでしょうか？`;
+            if (confirm(confirmMsg)) {
+                // ローカルストレージのユーザー情報を取得
+                const userDataStr = localStorage.getItem('currentUser');
+                if (!userDataStr) {
+                    alert('ユーザー情報が見つかりません。再ログインしてください。');
+                    return;
+                }
+
+                try {
+                    const userData = JSON.parse(userDataStr);
+                    
+                    // Supabaseのデータを更新
+                    const { error } = await supabase
+                        .from('clients')
+                        .update({ temp_password: newPassword })
+                        .eq('id', userData.id);
+
+                    if (error) throw error;
+
+                    // ローカルのデータも更新しておく
+                    userData.temp_password = newPassword;
+                    localStorage.setItem('currentUser', JSON.stringify(userData));
+
+                    alert('パスワードの変更が完了しました。\n次回以降はこの新しいパスワードでログインしてください。');
+                    pwInput.value = ''; // フォームをクリア
+                } catch (e) {
+                    console.error("パスワード更新エラー:", e);
+                    alert('パスワードの更新に失敗しました。時間をおいて再度お試しください。');
+                }
+            }
+        };
     </script>
 </body>
 </html>

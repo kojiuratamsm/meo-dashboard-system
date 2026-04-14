@@ -192,9 +192,12 @@
             document.getElementById('step2').style.display = 'block';
 
             setTimeout(() => {
-                const baseContext = gatheredAnswers.join("・");
-                const meoWordString = savedKeywords.length > 0 ? `なんとなく${savedKeywords.join("や")}を探して来たのですが、大正解でした！` : '';
-                const aiText = `【本日の体験】${baseContext}\n\n${meoWordString}\n料理の質も接客も大変素晴らしく、お値段以上の価値を感じました。また近くに来た際は絶対に利用したいと思います。おすすめです！`;
+                const baseContext = gatheredAnswers.join("や");
+                // MEOキーワードは自然に2つ程度までランダムに抽出して組み込む（無理に詰め込まない）
+                const naturalKeywords = savedKeywords.slice(0, 2).join("や");
+                const intro = naturalKeywords ? `${naturalKeywords}を探していたのですが、まさに条件にぴったりのお店でした！` : `今回初めてお伺いしたのですが、大正解のお店でした！`;
+                
+                const aiText = `本日は、${intro}\n${baseContext}など、料理の質も接客も大変素晴らしく、お値段以上の価値を感じました☺️\n再訪決定です！自信を持っておすすめできます！`;
                 
                 document.getElementById('generatedText').innerText = aiText;
                 document.getElementById('step2').style.display = 'none';
