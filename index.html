@@ -482,15 +482,18 @@
                         </div>
                     </div>
 
-                    <!-- 右側QR -->
-                    <div class="card" style="text-align: center; position: sticky; top: 40px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid #F4F7FE;">
-                            <h2 class="card-title" style="margin:0;">プレビュー / 発行</h2>
-                            <button class="btn-primary" style="padding:10px 20px; font-size:14px; background:white; color:var(--primary-blue); border:2px solid var(--primary-blue); border-radius:30px; box-shadow:0 4px 10px rgba(66,133,244,0.1); font-weight:800;" onclick="createNewSurvey()">
-                                <i class="fa-solid fa-file-circle-plus"></i> 新しく作り直す
-                            </button>
-                        </div>
-                        <div class="qr-area" id="qrArea">
+                    <!-- 右側QR・プレビュー -->
+                    <div style="position: sticky; top: 40px;">
+                        <!-- 独立した新規作成ボタン -->
+                        <button class="btn-primary" style="width:100%; margin-bottom:20px; padding:12px; font-size:15px; background:white; color:var(--primary-blue); border:2px solid var(--primary-blue); border-radius:12px; font-weight:800; box-shadow:0 4px 15px rgba(66,133,244,0.1); cursor:pointer;" onclick="createNewSurvey()">
+                            <i class="fa-solid fa-circle-plus"></i> 新規作成
+                        </button>
+
+                        <div class="card" style="text-align: center; padding: 20px;">
+                            <div style="margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid #F4F7FE;">
+                                <h2 class="card-title" style="margin:0; white-space:nowrap; font-size:16px;"><i class="fa-solid fa-eye"></i> プレビュー / 発行</h2>
+                            </div>
+                            <div class="qr-area" id="qrArea">
                             <div class="qr-overlay" id="qrOverlay" style="position:relative; transform:none; top:0; left:0; width:100%; background:#F8FAFC;">
                                 <!-- 編集中は常にプレビューを表示 -->
                                 <div style="margin-bottom:10px;">
