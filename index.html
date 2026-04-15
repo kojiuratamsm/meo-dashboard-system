@@ -557,7 +557,7 @@
         </div>
 
         <!-- COMPETITORS VIEW -->
-        <div id="view-competitors" class="view-section">
+        <section id="view-competitors" class="view-section">
             <header class="header">
                 <div>
                     <h1>⚔️ 競合分析・ベンチマーク</h1>
@@ -609,10 +609,10 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </section> <!-- 修正: sectionタグへ統一、余分なdiv閉じを管理 -->
 
         <!-- SETTINGS VIEW -->
-        <div id="view-settings" class="view-section">
+        <section id="view-settings" class="view-section">
             <header class="header">
                 <div>
                     <h1>⚙️ 連携と設定</h1>
@@ -667,8 +667,7 @@
                 </div>
                 <button class="btn-primary" style="width:auto; padding:10px 20px; font-size:14px; background:linear-gradient(135deg, #A0AEC0, #718096);" onclick="changePassword()"><i class="fa-solid fa-lock"></i> パスワードを変更する</button>
             </div>
-            </div>
-        </div>
+        </section> <!-- 修正: タグ構造を適正化 -->
 
         <!-- AI POSTS VIEW (新規追加) -->
         <section id="view-posts" class="view-section">
@@ -2247,9 +2246,11 @@
                     // プラン別の機能制限（Aプランの場合は「投稿作成」を非表示にする）
                     if (userData.plan === 'A') {
                         const postsBtn = document.getElementById('nav-posts-btn');
-                        if (postsBtn) {
-                            postsBtn.style.display = 'none';
-                        }
+                        if (postsBtn) postsBtn.style.display = 'none';
+                        
+                        // 予約管理も非表示にする場合（必要に応じて追加）
+                        const rsvBtn = document.querySelector('a[onclick*="reservations"]');
+                        // if (rsvBtn) rsvBtn.style.display = 'none'; 
                     }
 
                 } catch(e) {
