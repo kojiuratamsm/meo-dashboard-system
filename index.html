@@ -171,7 +171,7 @@
                 <div style="background:linear-gradient(135deg, #a855f7, #6366f1); color:white; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(99,102,241,0.4);">
                     <i class="fa-solid fa-map-location-dot" style="font-size:18px;"></i>
                 </div>
-                <span style="font-size:24px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px;">MapOn</span>
+                <span style="font-size:24px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px;">MapOn</span>
             </div>
         </div>
 
@@ -185,13 +185,13 @@
             <i class="fa-solid fa-star"></i> 口コミ管理
             <span style="position:absolute; right:15px; background:#EA4335; color:white; font-size:10px; padding:2px 6px; border-radius:10px;">HOT</span>
         </a>
-        <a class="nav-item" onclick="switchMainView('competitors', this)">
+        <a class="nav-item" id="nav-competitors-btn" onclick="switchMainView('competitors', this)">
             <i class="fa-solid fa-chess-knight"></i> 競合分析
         </a>
-        <a class="nav-item" onclick="switchMainView('reservations', this)">
+        <a class="nav-item" id="nav-reservations-btn" onclick="switchMainView('reservations', this)">
             <i class="fa-solid fa-calendar-check"></i> 予約管理
         </a>
-        <a class="nav-item" onclick="switchMainView('settings', this)">
+        <a class="nav-item" id="nav-settings-btn" onclick="switchMainView('settings', this)">
             <i class="fa-solid fa-gear"></i> 設定
         </a>
         <a href="login.html" class="nav-item logout-btn">
@@ -206,7 +206,7 @@
         <div class="mobile-only-header">
             <div class="msm-logo" style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;" onclick="switchMainView('dashboard', document.querySelector('.nav-item'))">
                 <i class="fa-solid fa-chart-line" style="color:#a855f7; font-size:18px;"></i>
-                <span style="font-size:20px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">MSM</span>
+                <span style="font-size:20px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">MSM</span>
             </div>
             <button onclick="toggleMobileMenu()" style="background:none; border:none; font-size:26px; color:var(--text-main); cursor:pointer;"><i class="fa-solid fa-bars"></i></button>
         </div>
@@ -554,6 +554,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
 
         <!-- COMPETITORS VIEW -->
@@ -2243,8 +2244,9 @@
                         el.textContent = storeName;
                     });
 
-                    // プラン別の機能制限（Aプランの場合は「投稿作成」を非表示にする）
+                    // プラン別の機能制限（Aプランの場合は「投稿作成」のみ非表示にする）
                     const postsBtn = document.getElementById('nav-posts-btn');
+                    
                     if (userData.plan === 'A') {
                         if (postsBtn) postsBtn.style.display = 'none';
                     } else {
