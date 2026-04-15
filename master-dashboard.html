@@ -80,9 +80,9 @@
         
         <div style="margin-top:20px; padding:0 15px;">
             <p style="font-size:11px; color:#A0AEC0; margin-bottom:10px; font-weight:bold;">申し込みフォームURL取得</p>
-            <button class="btn-action" style="background:#4A5568; margin-bottom:8px; width:100%; font-size:11px;" onclick="alert('【運用代行用】フォームURLをコピーしました！※フォーム画面は次ステップで制作します')">運用代行クライアント(A)</button>
-            <button class="btn-action" style="background:var(--primary-blue); margin-bottom:8px; width:100%; font-size:11px;" onclick="alert('【MapOn有料用】フォームURLをコピーしました！※フォーム画面は次ステップで制作します')">MapOn(B)</button>
-            <button class="btn-action" style="background:#34A853; width:100%; font-size:11px;" onclick="alert('【MapOnモニター用】フォームURLをコピーしました！※フォーム画面は次ステップで制作します')">MapOn(モニター)(C)</button>
+            <button class="btn-action" style="background:#4A5568; margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('signup-a.html')">運用代行クライアント(A)</button>
+            <button class="btn-action" style="background:var(--primary-blue); margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('signup-b.html')">MapOn(B)</button>
+            <button class="btn-action" style="background:#34A853; width:100%; font-size:11px;" onclick="copySignupUrl('signup-c.html')">MapOn(モニター)(C)</button>
         </div>
 
         <a href="login.html" class="nav-item" style="margin-top:auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
@@ -183,6 +183,20 @@
             document.getElementById('newEmail').value = '';
             document.getElementById('newPassword').value = '';
             document.getElementById('addClientModal').style.display = 'flex';
+        };
+
+        // サインアップURLをコピーする処理
+        window.copySignupUrl = function(filename) {
+            // 現在のURL（master-dashboard.html等）からベースとなるパスを取得して生成
+            const url = window.location.href;
+            const baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
+            const targetUrl = baseUrl + filename;
+
+            navigator.clipboard.writeText(targetUrl).then(() => {
+                alert(`申し込みフォームのURLをコピーしました！\n\nコピーされたURL:\n${targetUrl}`);
+            }).catch(err => {
+                alert(`コピーに失敗しました。以下のURLを手動でコピーしてください。\n\n${targetUrl}`);
+            });
         };
     </script>
 
