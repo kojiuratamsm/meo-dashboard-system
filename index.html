@@ -178,7 +178,7 @@
         <a class="nav-item active" onclick="switchMainView('dashboard', this)">
             <i class="fa-solid fa-chart-pie"></i> ダッシュボード
         </a>
-        <a class="nav-item" id="nav-posts-btn" onclick="switchMainView('posts', this)">
+        <a class="nav-item" id="nav-posts-btn" onclick="switchMainView('posts', this)" style="display: flex;">
             <i class="fa-solid fa-pen-to-square"></i> 投稿作成
         </a>
         <a class="nav-item" onclick="switchMainView('reviews', this)" style="position: relative;">
@@ -612,7 +612,7 @@
         </section> <!-- 修正: sectionタグへ統一、余分なdiv閉じを管理 -->
 
         <!-- SETTINGS VIEW -->
-        <section id="view-settings" class="view-section">
+        <div id="view-settings" class="view-section">
             <header class="header">
                 <div>
                     <h1>⚙️ 連携と設定</h1>
@@ -667,7 +667,7 @@
                 </div>
                 <button class="btn-primary" style="width:auto; padding:10px 20px; font-size:14px; background:linear-gradient(135deg, #A0AEC0, #718096);" onclick="changePassword()"><i class="fa-solid fa-lock"></i> パスワードを変更する</button>
             </div>
-        </section> <!-- 修正: タグ構造を適正化 -->
+        </div>
 
         <!-- AI POSTS VIEW (新規追加) -->
         <section id="view-posts" class="view-section">
@@ -2244,13 +2244,12 @@
                     });
 
                     // プラン別の機能制限（Aプランの場合は「投稿作成」を非表示にする）
+                    const postsBtn = document.getElementById('nav-posts-btn');
                     if (userData.plan === 'A') {
-                        const postsBtn = document.getElementById('nav-posts-btn');
                         if (postsBtn) postsBtn.style.display = 'none';
-                        
-                        // 予約管理も非表示にする場合（必要に応じて追加）
-                        const rsvBtn = document.querySelector('a[onclick*="reservations"]');
-                        // if (rsvBtn) rsvBtn.style.display = 'none'; 
+                    } else {
+                        // プランA以外は、もし非表示にされていたら元に戻す（再表示）
+                        if (postsBtn) postsBtn.style.display = 'flex';
                     }
 
                 } catch(e) {
