@@ -364,24 +364,23 @@
                         </div>
                         
                         <div id="questionsContainer">
-                            <!-- デフォルト構成1 (星) -->
-                            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px;">
+                            <!-- 固定の構成1 (星) -->
+                            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px; background:#F8FAFC;">
                                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                                    <span style="font-weight:bold; color:var(--primary-blue);">質問1</span>
-                                    <button class="btn-outline" style="padding:2px 6px; font-size:10px; border:none; color:#EA4335;" onclick="this.closest('.question-block-admin').remove()"><i class="fa-solid fa-trash"></i> 削除</button>
+                                    <span style="font-weight:bold; color:var(--primary-blue);">質問1（必須固定）</span>
+                                    <span style="font-size:11px; color:var(--text-muted);">※この質問は削除・変更できません</span>
                                 </div>
                                 <div class="form-group">
                                     <label>質問タイトル</label>
-                                    <input type="text" class="form-control question-title" value="本日の料理のお味はいかがでしたか？">
+                                    <input type="text" class="form-control question-title" value="本日の評価をお願いします。" readonly style="background:#E2E8F0; color:#4A5568;">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="display:none;">
                                     <label>回答フォーマット</label>
-                                    <select class="form-control question-type" onchange="handleTypeChange(this)">
+                                    <select class="form-control question-type">
                                         <option value="stars" selected>5段階評価（星）</option>
-                                        <option value="radio">選択式（単一回答）</option>
-                                        <option value="checkbox">選択式（複数回答）</option>
-                                        <option value="text">記述式</option>
                                     </select>
+                                </div>
+                                <p style="font-size:13px; color:var(--text-muted);"><i class="fa-solid fa-star" style="color:#FBBC05;"></i> 5段階評価（星）形式で出力されます</p>
                                 </div>
                                 <div class="form-group options-container" style="display:none;">
                                     <label>選択肢を追加</label>
@@ -639,6 +638,18 @@
                         <b>住所:</b> <span id="myShopAddress">未登録</span><br>
                         <span style="font-size:11px; color:var(--primary-green);"><i class="fa-solid fa-check-circle"></i> この情報をもとにAIが自動で投稿などを最適化します</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- レビュー依頼リンクの登録 -->
+            <div class="card" style="margin-bottom:20px;">
+                <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">Googleレビュー依頼リンク</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">お客様がアンケート回答後に「コピーしてGoogleを開く」ボタンを押した際、ここで設定したURLに自動で飛ばすことができます。Googleビジネスプロフィールから「クチコミを依頼」のリンクを取得し貼り付けてください。</p>
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1; margin-bottom:0;">
+                        <input type="text" id="reviewLinkInput" class="form-control" placeholder="例: https://g.page/r/XXXXX/review" onchange="saveReviewLink()">
+                    </div>
+                    <button class="btn-primary" style="width:auto; padding:0 20px;" onclick="saveReviewLink()">登録する</button>
                 </div>
             </div>
 
@@ -2111,7 +2122,15 @@
             document.getElementById('myShopAddress').innerText = '東京都新宿区新宿1-2-3';
         }
 
-
+        function saveReviewLink() {
+            const url = document.getElementById('reviewLinkInput').value.trim();
+            if(!url) {
+                alert('URLを入力してください。');
+                return;
+            }
+            localStorage.setItem('msmReviewLink', url);
+            alert('レビュー依頼リンクを保存しました！\nアンケート完了画面からこのURLに転送されます。');
+        }
         function schedulePost() {
             const text = document.getElementById('postTextarea').value.trim();
             const time = document.getElementById('postTimeInput').value;
@@ -2230,6 +2249,12 @@
 
         // 動的データ反映スクリプト（パーソナライズ）
         document.addEventListener('DOMContentLoaded', function() {
+            const initReviewLink = localStorage.getItem('msmReviewLink');
+            if(initReviewLink) {
+                const reviewInput = document.getElementById('reviewLinkInput');
+                if(reviewInput) reviewInput.value = initReviewLink;
+            }
+            
             const userDataStr = localStorage.getItem('currentUser');
             const isMaster = localStorage.getItem('masterAdmin');
             

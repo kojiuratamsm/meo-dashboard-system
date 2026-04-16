@@ -90,6 +90,7 @@
             </div>
             <div class="ai-result">
                 <div class="ai-badge">3秒で口コミへ反映できます！</div>
+                <div id="displayUserStar" style="font-size:24px; color:#FBBC05; margin-bottom:10px; text-align:center;"></div>
                 <div id="generatedText" style="line-height: 1.8; color:#2D3748; padding-top: 5px;"></div>
             </div>
             <button class="btn-google" onclick="copyAndJump()">
@@ -157,7 +158,7 @@
         function renderDefaults(container) {
             container.innerHTML = `
                 <div class="question-block">
-                    <div class="question-title">1. 本日の料理のお味はいかがでしたか？</div>
+                    <div class="question-title">1. 本日の評価をお願いします。</div>
                     <div class="stars survey-input-group" data-qid="1" data-type="stars">
                         <input type="radio" id="s5" name="q1" value="5星"><label for="s5">★</label>
                         <input type="radio" id="s4" name="q1" value="4星"><label for="s4">★</label>
@@ -218,6 +219,20 @@
             // --- 高度な文章生成ロジック ---
             setTimeout(() => {
                 let sentences = [];
+                
+                // --- 質問1の星評価を取得して表示 ---
+                let userStarStr = answersObj['1']; 
+                if(!userStarStr) {
+                    const starsInput = Object.entries(answersObj).find(([k,v]) => typeof v === 'string' && v.includes('星'));
+                    if(starsInput) userStarStr = starsInput[1];
+                }
+                if(userStarStr) {
+                    const starNum = parseInt(userStarStr);
+                    const starsHtml = '★'.repeat(starNum) + '☆'.repeat(5 - starNum);
+                    document.getElementById('displayUserStar').innerHTML = starsHtml;
+                } else {
+                    document.getElementById('displayUserStar').style.display = 'none';
+                }
                 
                 // 1. 導入：MEOキーワードを文脈に合わせて活用
                 const kw = savedKeywords.length > 0 ? savedKeywords[Math.floor(Math.random() * savedKeywords.length)] : "";
@@ -291,7 +306,15 @@
                     }
                 }
 
-                alert("【クリップボードにコピーしました！】\n\nここから先は実際のシステムではGoogleマップの口コミ投稿画面に自動でジャンプします。\n（ジャンプした先で「ペースト」を押すだけになります）\n\n※ダッシュボードの回答データタブを見ると即時反映されています！");
+                const reviewLink = localStorage.getItem('msmReviewLink');
+                
+                if (reviewLink) {
+                    alert("【クリップボードにコピーしました！】\n\nGoogleのページへ移動します。\n移動先で「ペースト（貼り付け）」をして投稿してください。");
+                    window.location.href = reviewLink;
+                } else {
+                    alert("【クリップボードにコピーしました！】\n\n※お店の設定で「レビュー依頼リンク」が未登録のため、ここから先の設定済みページへは自動ジャンプできません。\n\n管理者画面の「設定」からURLをご登録ください。");
+                }
+
             }).catch(err => {
                 alert("コピーに失敗しました。");
             });
