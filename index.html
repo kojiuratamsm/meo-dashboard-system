@@ -1713,6 +1713,7 @@
                 element.classList.add('active');
             } else {
                 let targetId = viewId;
+                // マスター設定（スタッフ・メニュー等）は「予約管理」を光らせる
                 if(viewId.includes('form')) targetId = 'reservations'; 
                 
                 document.querySelectorAll('.nav-item').forEach(link => {
@@ -1723,9 +1724,13 @@
                 });
             }
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById('view-' + viewId).classList.add('active');
+            const targetView = document.getElementById('view-' + viewId);
+            if(targetView) {
+                targetView.classList.add('active');
+                targetView.style.opacity = 0;
+                setTimeout(() => targetView.style.opacity = 1, 50);
+            }
             
-            // モバイルなどでメニューが開いていたら閉じる
             if(document.querySelector('.sidebar').classList.contains('active')){
                 toggleMobileMenu();
             }
