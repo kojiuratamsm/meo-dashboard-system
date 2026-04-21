@@ -330,19 +330,17 @@
                             <!-- 過去に作成したアンケート（履歴呼び出し） => 下書き -->
                             <div style="flex:1; background:#F8FAFC; border:1px solid #CBD5E0; border-radius:12px; padding:15px; border-left:4px solid #A0AEC0;">
                                 <h3 style="font-size:13px; color:#4A5568; margin-bottom:10px;"><i class="fa-solid fa-folder-open"></i> 過去に作成したアンケート<br>（下書き履歴呼び出し）</h3>
-                                    <select id="draftHistorySelect" class="form-control" style="font-size:12px; padding:8px; margin-bottom:5px;">
+                                    <select id="draftHistorySelect" class="form-control" style="font-size:12px; padding:8px; margin-bottom:5px;" onchange="if(this.value !== '') loadSurveyHistory('draft')">
                                         <option value="">履歴データを選択してください...</option>
                                     </select>
-                                    <button class="btn-outline" style="width:100%; font-size:12px; padding:8px; border:1px solid #718096; color:#718096;" onclick="loadSurveyHistory('draft')">読み込む</button>
                             </div>
                             
                             <!-- 過去に発行したアンケート（履歴呼び出し） => 本番 -->
                             <div style="flex:1; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:12px; padding:15px; border-left:4px solid var(--primary-green);">
                                 <h3 style="font-size:13px; color:#166534; margin-bottom:10px;"><i class="fa-solid fa-rocket"></i> 過去に発行したアンケート<br>（本番の履歴呼び出し）</h3>
-                                    <select id="publishHistorySelect" class="form-control" style="font-size:12px; padding:8px; margin-bottom:5px; border-color:#BBF7D0; color:#166534;">
+                                    <select id="publishHistorySelect" class="form-control" style="font-size:12px; padding:8px; margin-bottom:5px; border-color:#BBF7D0; color:#166534;" onchange="if(this.value !== '') loadSurveyHistory('publish')">
                                         <option value="">履歴データを選択してください...</option>
                                     </select>
-                                    <button class="btn-outline" style="width:100%; font-size:12px; padding:8px; border:1px solid var(--primary-green); color:var(--primary-green); background:white;" onclick="loadSurveyHistory('publish')">読み込む</button>
                             </div>
                         </div>
 
@@ -455,16 +453,24 @@
                             </div>
                         </div>
 
-                        <button class="btn-outline" onclick="addQuestion()"><i class="fa-solid fa-plus"></i> 新しい質問を追加する</button>
+                        <div style="text-align:center; margin: 15px 0 30px;">
+                            <button class="btn-outline" style="border-radius:50%; width:45px; height:45px; padding:0; display:inline-flex; align-items:center; justify-content:center; color:white; background:var(--primary-blue); border:none; font-size:20px; box-shadow:0 4px 10px rgba(66,133,244,0.3);" onclick="addQuestion()" title="質問を追加する">
+                                <i class="fa-solid fa-plus"></i>
+                            </button>
+                        </div>
+
+                        <button class="btn-primary" style="width:100%; margin-bottom:20px; padding:12px; font-size:15px; background:white; color:var(--primary-blue); border:2px solid var(--primary-blue); border-radius:12px; font-weight:800; box-shadow:0 4px 15px rgba(66,133,244,0.1); cursor:pointer;" onclick="createNewSurvey()">
+                            <i class="fa-solid fa-circle-plus"></i> 新規作成
+                        </button>
 
                         <h2 class="card-title" style="border-bottom: 2px solid #F4F7FE; padding-bottom:15px; margin-top: 40px;"><span style="color:var(--primary-blue)">STEP 2</span> 口コミに含める「MEOキーワード」</h2>
                         <div style="font-size:12px; color:#A0AEC0; margin-bottom:15px; padding:10px; background:#F8FAFC; border-radius:8px;">
                             ※設定してあるキーワードの中から、自然な文章をAIが作成する為、全てのキーワードが使われない可能性があります。あらかじめご了承ください。
                         </div>
-                        <div class="keyword-tags" id="keywordsContainer" style="margin-bottom: 15px;">
-                            <span class="tag deletable" onclick="this.remove()">新宿 焼肉 <i class="fa-solid fa-xmark"></i></span>
-                            <span class="tag deletable" onclick="this.remove()">個室 ディナー <i class="fa-solid fa-xmark"></i></span>
-                            <span class="tag deletable" onclick="this.remove()">接待 <i class="fa-solid fa-xmark"></i></span>
+                        <div class="keyword-tags" id="keywordsContainer" style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px;">
+                            <span class="tag deletable" style="justify-content:space-between;" onclick="this.remove()">新宿 焼肉 <i class="fa-solid fa-xmark"></i></span>
+                            <span class="tag deletable" style="justify-content:space-between;" onclick="this.remove()">個室 ディナー <i class="fa-solid fa-xmark"></i></span>
+                            <span class="tag deletable" style="justify-content:space-between;" onclick="this.remove()">接待 <i class="fa-solid fa-xmark"></i></span>
                         </div>
                         <div style="display:flex; gap:10px;">
                             <input type="text" id="newKeywordInput" class="form-control" placeholder="新しいキーワードを入力..." style="flex:1;" onkeydown="if(event.key==='Enter') addKeyword()">
@@ -483,10 +489,6 @@
 
                     <!-- 右側QR・プレビュー -->
                     <div style="position: sticky; top: 40px;">
-                        <!-- 独立した新規作成ボタン -->
-                        <button class="btn-primary" style="width:100%; margin-bottom:20px; padding:12px; font-size:15px; background:white; color:var(--primary-blue); border:2px solid var(--primary-blue); border-radius:12px; font-weight:800; box-shadow:0 4px 15px rgba(66,133,244,0.1); cursor:pointer;" onclick="createNewSurvey()">
-                            <i class="fa-solid fa-circle-plus"></i> 新規作成
-                        </button>
 
                         <div class="card" style="text-align: center; padding: 20px;">
                             <div style="margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid #F4F7FE;">
@@ -1657,7 +1659,7 @@
                 alert("既に同じMEOキーワードが追加されています。別の言葉を選んでください。");
                 return;
             }
-            const html = `<span class="tag deletable" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
+            const html = `<span class="tag deletable" style="justify-content:space-between;" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
             container.insertAdjacentHTML('beforeend', html);
             input.value = ''; 
         }
