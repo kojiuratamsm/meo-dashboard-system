@@ -216,11 +216,13 @@
             document.getElementById('step1').style.display = 'none';
             document.getElementById('step2').style.display = 'block';
 
-            // --- 高度な文章生成ロジック ---
+            // --- 高品質な口コミ文章生成ロジック（プロンプト改善版） ---
+            // 方針：質問の「意図」とユーザーの「回答」の文脈を深く理解し、
+            // MEOキーワードは自然な文脈で適切な位置にのみ配置。
+            // 「人間が書いたような自然で説得力のある口コミ文章」を生成する。
             setTimeout(() => {
-                let sentences = [];
                 
-                // --- 質問1の星評価を取得して表示 ---
+                // --- 星評価の表示処理 ---
                 let userStarStr = answersObj['1']; 
                 if(!userStarStr) {
                     const starsInput = Object.entries(answersObj).find(([k,v]) => typeof v === 'string' && v.includes('星'));
@@ -233,58 +235,107 @@
                 } else {
                     document.getElementById('displayUserStar').style.display = 'none';
                 }
-                
-                // 1. 導入：MEOキーワードを文脈に合わせて活用
-                const kw = savedKeywords.length > 0 ? savedKeywords[Math.floor(Math.random() * savedKeywords.length)] : "";
-                const introPatterns = [
-                    `${kw}周辺でお店を探していたのですが、やっと理想的なところに出会えました。`,
-                    `以前から気になっていたのですが、${kw}で用事があったついでにようやく伺えました。`,
-                    `${kw}で評判を見て伺いましたが、期待以上の体験でした。`,
-                    `今回はじめて伺いましたが、とても素敵なお店だったのでシェアします。`
-                ];
-                sentences.push(introPatterns[Math.floor(Math.random() * introPatterns.length)]);
 
-                // 2. 本文：各質問と回答を理解して接続
+                // === AIプロンプト：文脈理解型の口コミ生成 ===
+                // STEP1: 回答データを意味カテゴリに分類
+                const context = { star: null, food: [], scene: [], service: [], freeText: [], other: [] };
+
                 questionsData.forEach(q => {
                     const val = answersObj[q.id];
                     if(!val) return;
+                    const title = (q.title || '').toLowerCase();
+                    const valStr = Array.isArray(val) ? val.join('、') : String(val);
 
-                    const title = q.title.toLowerCase();
-                    
                     if (q.type === 'stars') {
-                        const starNum = parseInt(val);
-                        if(starNum >= 4) {
-                            sentences.push(`全体的な満足度が非常に高く、細部までこだわりを感じる素晴らしいクオリティでした。`);
-                        } else if(starNum === 3) {
-                            sentences.push(`価格に見合った内容で、安心して利用できるお店だと感じました。`);
-                        }
-                    } else if (q.type === 'checkbox' || q.type === 'radio') {
-                        const valStr = Array.isArray(val) ? val.join('や') : val;
-                        if (title.includes('味') || title.includes('料理') || title.includes('メニュー')) {
-                            sentences.push(`特にお料理の面では、${valStr}をいただきましたが、素材の良さが活かされていて感動しました。`);
-                        } else if (title.includes('雰囲気') || title.includes('シーン') || title.includes('利用')) {
-                            sentences.push(`${valStr}といった用途にぴったりな落ち着いた空間で、とても居心地が良かったです。`);
-                        } else if (title.includes('接客') || title.includes('スタッフ') || title.includes('対応')) {
-                            sentences.push(`スタッフの方々の${valStr}が心地よく、終始気分よく過ごすことができました。`);
-                        } else {
-                            sentences.push(`${q.title}についても、${valStr}という回答通り、とても納得のいく内容でした。`);
-                        }
+                        context.star = parseInt(val);
+                    } else if (title.includes('味') || title.includes('料理') || title.includes('メニュー') || title.includes('食')) {
+                        context.food.push(valStr);
+                    } else if (title.includes('雰囲気') || title.includes('シーン') || title.includes('利用') || title.includes('目的') || title.includes('用途')) {
+                        context.scene.push(valStr);
+                    } else if (title.includes('接客') || title.includes('スタッフ') || title.includes('対応') || title.includes('サービス')) {
+                        context.service.push(valStr);
                     } else if (q.type === 'text') {
-                        sentences.push(`個人的には、${val}という点が非常に印象に残っており、高く評価したいポイントです。`);
+                        if(valStr.trim()) context.freeText.push(valStr);
+                    } else {
+                        context.other.push({ question: q.title, answer: valStr });
                     }
                 });
 
-                // 3. 結び
-                const closingPatterns = [
-                    "友人にも自信を持って薦められるお店です。また必ずお伺いします！",
-                    "素敵なおもてなしをありがとうございました。リピート確定です✨",
-                    "心地よい時間を過ごせました。また近いうちに再訪したいと思います。",
-                    "是非また利用させていただきたいです。ごちそうさまでした！"
-                ];
-                sentences.push(closingPatterns[Math.floor(Math.random() * closingPatterns.length)]);
+                // STEP2: MEOキーワードを文脈に自然に溶け込ませる
+                const kw = savedKeywords.length > 0 ? savedKeywords[Math.floor(Math.random() * savedKeywords.length)] : '';
+                const kwSub = savedKeywords.length > 1 ? savedKeywords.find(k => k !== kw) : '';
 
-                // 自然な改行と接続で結合
-                const aiText = sentences.join('\n');
+                // STEP3: 文脈に基づいた自然な文章を構築
+                let paragraphs = [];
+
+                // ■ 導入（来店動機 + ワード自然配置）
+                if(kw && context.scene.length > 0) {
+                    paragraphs.push(`${context.scene.join('や')}で使えるお店を${kw}エリアで探していたところ、こちらのお店を見つけて伺いました。結論から言うと、大正解でした。`);
+                } else if(kw) {
+                    paragraphs.push(`${kw}で評判が良かったので気になって訪問しました。実際に行ってみると、評判以上の素敵なお店で感動しました。`);
+                } else if(context.scene.length > 0) {
+                    paragraphs.push(`${context.scene.join('や')}で利用できるお店を探していて、こちらに伺いました。雰囲気も含めてとても良い選択でした。`);
+                } else {
+                    paragraphs.push(`以前から気になっていたこちらのお店にようやく行くことができました。想像以上に素敵なお店でした。`);
+                }
+
+                // ■ 料理・メニューへの言及
+                if(context.food.length > 0) {
+                    const foods = context.food.join('、');
+                    const foodPhrases = [
+                        `お料理は${foods}をいただきましたが、どれも丁寧に作られていて、素材の良さがしっかり伝わってきました。見た目も美しく、写真を撮る手が止まりませんでした。`,
+                        `${foods}を注文しましたが、一品一品に手間暇がかけられているのが分かる味わいで、最後まで美味しくいただけました。`,
+                        `いただいた${foods}はどれも絶品で、特に味付けのバランスが絶妙でした。次回は他のメニューも試してみたいです。`
+                    ];
+                    paragraphs.push(foodPhrases[Math.floor(Math.random() * foodPhrases.length)]);
+                }
+
+                // ■ 雰囲気・シーンへの言及（導入で使っていない場合）
+                if(context.scene.length > 0 && !paragraphs[0].includes(context.scene[0])) {
+                    paragraphs.push(`${context.scene.join('や')}にもぴったりな落ち着いた空間で、時間を忘れてゆったりと過ごすことができました。`);
+                }
+
+                // ■ 接客・スタッフへの言及
+                if(context.service.length > 0) {
+                    const svc = context.service.join('、');
+                    paragraphs.push(`スタッフの方の対応も${svc}で、細やかな気配りが嬉しかったです。おかげで終始リラックスして楽しめました。`);
+                }
+
+                // ■ 星評価に基づく総合印象
+                if(context.star !== null) {
+                    if(context.star >= 4) {
+                        paragraphs.push(`総合的にとても満足度が高く、全てにおいて期待を上回るクオリティでした。`);
+                    } else if(context.star === 3) {
+                        paragraphs.push(`全体的にバランスの取れた良いお店だと感じました。価格と内容のコスパも納得です。`);
+                    } else if(context.star <= 2) {
+                        paragraphs.push(`今回は少し気になる点もありましたが、ポテンシャルのあるお店だと思うので、次回に期待しています。`);
+                    }
+                }
+
+                // ■ 自由記述の反映
+                if(context.freeText.length > 0) {
+                    const ft = context.freeText[0];
+                    if(ft.length > 5) {
+                        paragraphs.push(`個人的には「${ft}」という点がとても印象的で、この体験があったからこそ再訪したいと強く感じました。`);
+                    }
+                }
+
+                // ■ その他の質問への対応
+                context.other.forEach(item => {
+                    paragraphs.push(`${item.question}については「${item.answer}」と感じており、こちらも好印象でした。`);
+                });
+
+                // ■ 結び（サブキーワードの自然な配置 + リピート意欲）
+                const closings = [
+                    kwSub ? `${kwSub}周辺で迷っている方にもぜひおすすめしたいお店です。またすぐにでも伺いたいと思います！` : `友人にも自信を持っておすすめできるお店です。近いうちにまた伺います！`,
+                    `大切な人を連れてまた来たいと思える、そんな温かいお店でした。ごちそうさまでした！`,
+                    `期待以上の時間を過ごせました。次回はぜひ別のメニューも楽しみたいです。`,
+                    `心地よい空間と美味しいお料理で、最高のひとときでした。リピート確定です！`
+                ];
+                paragraphs.push(closings[Math.floor(Math.random() * closings.length)]);
+
+                // STEP4: 自然な改行で結合して出力
+                const aiText = paragraphs.join('\n');
                 
                 document.getElementById('generatedText').innerText = aiText;
                 document.getElementById('step2').style.display = 'none';

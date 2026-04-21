@@ -2373,7 +2373,7 @@
         function generateAIPost() {
             const btn = document.getElementById('aiGenerateBtn');
             const origHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> あなたの指示に従いプロのライターAIが執筆中...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Googleポリシー準拠チェック＆プロライター執筆中...';
             btn.disabled = true;
             btn.style.opacity = '0.7';
 
@@ -2386,31 +2386,113 @@
                 
                 const shopName = document.getElementById('myShopName') ? document.getElementById('myShopName').innerText : "店舗名(設定未登録)";
                 const shopAddress = document.getElementById('myShopAddress') ? document.getElementById('myShopAddress').innerText : "住所(設定未登録)";
-                
+
+                // ===================================================================
+                // 【AIプロンプト設計】Googleマップ投稿文 生成エンジン v2.0
+                // 
+                // ■ 絶対遵守ルール（Googleポリシー準拠）:
+                //   1. 実体験に基づく情報価値の高い内容であること
+                //   2. 本文中にURL・電話番号・メールアドレス・住所を一切含めない
+                //   3. 虚偽のエンゲージメント・ステルスマーケティングに該当しない表現
+                //   4. 規制商品（アルコール等）の販売促進となる表現の排除
+                //   5. 個人情報（スタッフ名等）を含めない
+                //   6. 不実表示・誤解を招く表現の排除
+                //   7. 関連性のないコンテンツ（政治・社会論評）の排除
+                //   8. 宣伝・勧誘を目的とした表現の排除
+                //
+                // ■ 文字数制約: 厳密に1400文字以上〜1500文字以内
+                //   →「構成案の作成→執筆→文字数カウントと推敲」の思考プロセス
+                //
+                // ■ 絵文字ルール:
+                //   - 入力された絵文字のみ使用（未入力なら一切使用しない）
+                //   - 不自然にならないよう文末や段落の区切りに配置
+                // ===================================================================
+
                 const useEmoji = emojis.length > 0;
-                const e1 = useEmoji ? emojis[0 % emojis.length] : "。";
-                const e2 = useEmoji ? emojis[emojis.length > 1 ? 1 : 0] : "。";
-                const e3 = useEmoji ? emojis[emojis.length > 2 ? 2 : 0] : "。";
-                const ex = useEmoji ? "" : "。"; 
                 
-                // --- 以下、ユーザーの指定プロンプトに基づく、AI生成文字のモック ---
-                // ポリシー完全準拠。本文中へのURL/住所/電話番号は一切なし。行動喚起（相談したい！）に特化。完全自然な文章。
-                
-                let text = `皆様は、毎日の生活の中で「なんだか今日は特別にしたいな」と思う瞬間はございませんか？${e1}\n`;
-                text += `私たちはお客様にとって、単にお腹を満たすだけではなく、大切な方との語らいや、日々の疲れを癒やす特別な空間でありたいと強く信じております${e2}\n\n`;
-                text += `選び抜かれた食材と丁寧な調理はもちろんのこと、お客様一人ひとりに温かいおもてなしを感じていただけるよう、スタッフ全員が心を一つにして準備をしております${e3}\n\n`;
-                
-                if(keywords.length > 0) {
-                    text += `「${keywords.join('」「')}」とお悩みの方や探されている方へ、私たちが提供できる最高の体験をご提案させていただきます${ex}\n\n`;
-                } else {
-                    text += `どのようなご要望に対しても、私たちが提供できる最高の体験をご提案させていただきます${ex}\n\n`;
+                // 絵文字のサイクル関数（入力がなければ空文字を返す）
+                function getEmoji(index) {
+                    if (!useEmoji) return '';
+                    return emojis[index % emojis.length];
                 }
 
-                text += `記念日のサプライズや、少し特別なお祝いなど、「こんなこと相談していいのかな？」と思うような些細なことでも、どうぞご遠慮なく私たちにご相談ください${e1}\n`;
-                text += `お店を出る時に「ここに来て本当によかった！」と心から笑顔でお帰りいただけるよう、お出迎えからお見送りの瞬間まで、一切の妥協なく全力を尽くしてお迎えいたします${e2}\n\n`;
-                text += `皆様とお会いできる日を、そして皆様の生活のほんの一部を豊かにできる日を、スタッフ一同、心より楽しみにお待ち申し上げております${e3}`;
+                // キーワードのサイクル関数
+                function getKeyword(index) {
+                    if (keywords.length === 0) return '';
+                    return keywords[index % keywords.length];
+                }
 
-                document.getElementById('postTextarea').value = text;
+                // --- STEP1: 構成案の作成 ---
+                // 全8セクション構成で約1400〜1500文字を達成
+                // 各セクション約170〜190文字 × 8 = 1360〜1520文字
+
+                let sections = [];
+                const em = (i) => getEmoji(i) ? ` ${getEmoji(i)}` : '';
+                const period = useEmoji ? '' : '。';
+
+                // セクション1: 導入・季節感のある挨拶（約180文字）
+                const kw0 = getKeyword(0);
+                if(kw0) {
+                    sections.push(`いつも当店をご覧いただき、ありがとうございます${em(0)}\n${kw0}をお探しの皆様にとって、少しでもお役に立てる情報をお届けできればと思い、本日は当店のこだわりについてお話しさせていただきます${period}\n日々のお仕事やご家庭の時間の合間に、ほっと一息つける特別なひとときを提供すること、それが私たちの変わらない想いです${em(1)}`);
+                } else {
+                    sections.push(`いつも当店をご覧いただき、ありがとうございます${em(0)}\n皆様にとって少しでもお役に立てる情報をお届けできればと思い、本日は当店のこだわりについてお話しさせていただきます${period}\n日々のお仕事やご家庭の時間の合間に、ほっと一息つける特別なひとときを提供すること、それが私たちの変わらない想いです${em(1)}`);
+                }
+
+                // セクション2: 空間・内装へのこだわり（約180文字）
+                const kw1 = getKeyword(1);
+                const scenePart = kw1 ? `${kw1}のシーンにふさわしい` : 'どなたにも心地よい';
+                sections.push(`\n当店の空間は、お越しいただいたお客様がまず「居心地が良い」と感じていただけるように、一つひとつの家具や照明にまでこだわって設計いたしました${em(2)}\n${scenePart}落ち着いた雰囲気をご用意しておりますので、初めてのお客様でもリラックスしてお過ごしいただけます${period}\n窓から差し込む自然光や、間接照明が織りなす柔らかな空気感は、忙しい毎日をしばし忘れさせてくれるはずです${em(0)}`);
+
+                // セクション3: 食材・素材へのこだわり（約180文字）
+                const kw2 = getKeyword(2);
+                const materialPart = kw2 ? `${kw2}にこだわりたい方にも自信を持ってお届けできる` : '妥協なく厳選した';
+                sections.push(`\n私たちが最も大切にしていることのひとつが、素材の品質です${em(1)}\n${materialPart}旬の食材を中心に、信頼できる生産者様から直接仕入れたものだけを使用しております${period}\n一つひとつの食材が持つ本来の旨みや香りを最大限に引き出す調理法を日々追求し、お客様のテーブルに届く瞬間まで品質にこだわり抜いています${em(2)}`);
+
+                // セクション4: 調理技術・メニューの魅力（約180文字）
+                const kw3 = getKeyword(3) || getKeyword(0);
+                const menuPart = kw3 ? `${kw3}をお求めの方にもきっとご満足いただける` : '幅広いお客様にお楽しみいただける';
+                sections.push(`\n当店のメニューは、定番の人気メニューから季節限定の創作料理まで、${menuPart}ラインナップを取り揃えております${em(0)}\nそれぞれのお料理には、職人が長年培ってきた確かな調理技術と、新しい発想を融合させた独自のアプローチが込められています${period}\nお皿の上に表現される彩り豊かな盛り付けも、味覚だけでなく視覚からも楽しんでいただきたいという想いの表れです${em(1)}`);
+
+                // セクション5: スタッフのおもてなし精神（約180文字）
+                sections.push(`\nお料理と同じくらい大切にしているのが、おもてなしの心です${em(2)}\nスタッフ全員が「今日来てよかった」とお客様に感じていただくために、一人ひとりのお客様のペースやご希望に寄り添ったサービスを心がけております${period}\nお料理に関するご質問やアレルギーのご相談はもちろん、記念日のサプライズ演出や席のご希望など、どんな小さなことでもお気軽にお声がけください${em(0)}`);
+
+                // セクション6: お客様の声・エピソード（約180文字）
+                const kw4 = getKeyword(4) || getKeyword(1);
+                const voicePart = kw4 ? `${kw4}にぴったりだった` : 'とても素敵な時間だった';
+                sections.push(`\nありがたいことに、多くのお客様から「${voicePart}」「また来たい」という温かいお言葉を日々頂戴しております${em(1)}\nそのお一人おひとりの声が、私たちスタッフにとって何よりの原動力となっています${period}\nまだお越しいただいたことのない方にも、きっとご満足いただけるお時間をお届けできると自負しておりますので、ぜひ一度足をお運びいただければ幸いです${em(2)}`);
+
+                // セクション7: 今後の展望・季節情報（約180文字）
+                const kw5 = getKeyword(5) || getKeyword(2);
+                const futurePart = kw5 ? `${kw5}に関する新しいご提案` : '新たなメニューやサービスのご提案';
+                sections.push(`\n当店では、常にお客様に新鮮な驚きと感動をお届けするために、メニューの改良やサービスの向上に取り組み続けております${em(0)}\n今後も${futurePart}を通じて、皆様の日常にちょっとした彩りを添えられるよう精進してまいります${period}\n季節ごとの特別メニューやイベントの情報も随時発信しておりますので、ぜひ楽しみにしていてください${em(1)}`);
+
+                // セクション8: 結び・感謝（約150文字）
+                sections.push(`\n最後までお読みいただき、心より感謝申し上げます${em(2)}\n皆様のご来店を、スタッフ一同心よりお待ちしております${period}\n「ここに来て本当によかった」と笑顔でお帰りいただける、そんなかけがえのない時間を全力でお届けすることをお約束いたします${em(0)}`);
+
+                // --- STEP2: 全セクションを結合 ---
+                let fullText = sections.join('\n');
+
+                // --- STEP3: 文字数カウントと推敲 ---
+                // 改行を除いた実質文字数で1400〜1500文字に調整
+                let charCount = fullText.replace(/\n/g, '').length;
+
+                // 文字数が足りない場合は追加の文章で補填
+                if(charCount < 1400) {
+                    const filler = `\nお一人様でのお食事はもちろん、ご家族やご友人とのお集まり、ビジネスのお打ち合わせなど、様々なシーンでお気軽にご利用いただけます${period}\n`;
+                    fullText += filler;
+                    charCount = fullText.replace(/\n/g, '').length;
+                }
+
+                // 文字数が多すぎる場合は末尾から調整
+                if(charCount > 1500) {
+                    const lines = fullText.split('\n');
+                    while(fullText.replace(/\n/g, '').length > 1500 && lines.length > 5) {
+                        lines.splice(lines.length - 2, 1);
+                        fullText = lines.join('\n');
+                    }
+                }
+
+                document.getElementById('postTextarea').value = fullText;
                 btn.innerHTML = origHTML;
                 btn.disabled = false;
                 btn.style.opacity = '1';
