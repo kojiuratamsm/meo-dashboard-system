@@ -2420,134 +2420,94 @@
             input.value = '';
         }
 
-        function generateAIPost() {
+        async function generateAIPost() {
             const btn = document.getElementById('aiGenerateBtn');
             const origHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Googleポリシー準拠チェック＆プロライター執筆中...';
+            
+            // APIキーの取得（初回はプロンプトで入力させる）
+            let apiKey = localStorage.getItem('openai_api_key');
+            if (!apiKey) {
+                apiKey = prompt("OpenAI APIキーを入力してください (sk-...):\n※このキーはお使いのブラウザにのみ安全に保存されます。");
+                if (!apiKey) return;
+                localStorage.setItem('openai_api_key', apiKey.trim());
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> OpenAIと通信して執筆中...';
             btn.disabled = true;
             btn.style.opacity = '0.7';
 
-            setTimeout(() => {
-                const emojis = Array.from(document.getElementById('postEmojisContainer').querySelectorAll('.tag')).map(t => t.innerText.replace(' ', ''));
-                const keywords = Array.from(document.getElementById('postKeywordsContainer').querySelectorAll('.tag')).map(t => t.innerText.replace(' ', ''));
-                const hpValue = document.getElementById('postHpUrlInput').value.trim();
-                const extValue = document.getElementById('postExternalUrlInput').value.trim();
-                const myGbpUrl = document.getElementById('myGbpUrlInput').value.trim() || 'https://maps.app.goo.gl/xxx';
+            try {
+                const emojis = Array.from(document.getElementById('postEmojisContainer').querySelectorAll('.tag')).map(t => t.innerText.replace(' ', '').replace('×', ''));
+                const keywords = Array.from(document.getElementById('postKeywordsContainer').querySelectorAll('.tag')).map(t => t.innerText.replace(' ', '').replace('×', ''));
                 
-                const shopName = document.getElementById('myShopName') ? document.getElementById('myShopName').innerText : "店舗名(設定未登録)";
-                const shopAddress = document.getElementById('myShopAddress') ? document.getElementById('myShopAddress').innerText : "住所(設定未登録)";
+                const shopName = document.getElementById('myShopName') ? document.getElementById('myShopName').innerText : "店舗名(未設定)";
+                const shopAddress = document.getElementById('myShopAddress') ? document.getElementById('myShopAddress').innerText : "住所(未設定)";
 
-                // ===================================================================
-                // 【AIプロンプト設計】Googleマップ投稿文 生成エンジン v2.0
-                // 
-                // ■ 絶対遵守ルール（Googleポリシー準拠）:
-                //   1. 実体験に基づく情報価値の高い内容であること
-                //   2. 本文中にURL・電話番号・メールアドレス・住所を一切含めない
-                //   3. 虚偽のエンゲージメント・ステルスマーケティングに該当しない表現
-                //   4. 規制商品（アルコール等）の販売促進となる表現の排除
-                //   5. 個人情報（スタッフ名等）を含めない
-                //   6. 不実表示・誤解を招く表現の排除
-                //   7. 関連性のないコンテンツ（政治・社会論評）の排除
-                //   8. 宣伝・勧誘を目的とした表現の排除
-                //
-                // ■ 文字数制約: 厳密に1400文字以上〜1500文字以内
-                //   →「構成案の作成→執筆→文字数カウントと推敲」の思考プロセス
-                //
-                // ■ 絵文字ルール:
-                //   - 入力された絵文字のみ使用（未入力なら一切使用しない）
-                //   - 不自然にならないよう文末や段落の区切りに配置
-                // ===================================================================
+                const systemPrompt = `あなたはプロのMEOライターです。以下の店舗に向けて、来店意欲を高める魅力的なGoogleマップの「最新情報」投稿文を作成してください。
 
-                const useEmoji = emojis.length > 0;
-                
-                // 絵文字のサイクル関数（入力がなければ空文字を返す）
-                function getEmoji(index) {
-                    if (!useEmoji) return '';
-                    return emojis[index % emojis.length];
+========================================
+【絶対遵守ルール（Googleポリシー準拠）】
+1. 厳密に1400文字以上〜1500文字以内で出力すること。
+2. 本文中にURL・電話番号・メールアドレス・住所・個人名を一切含めないこと。
+3. 虚偽のエンゲージメント・ステルスマーケティングに該当しない表現にすること。
+4. 規制商品（アルコール等）の販売促進となる表現は排除すること。
+5. 不実表示や誤解を招く表現の排除。
+6. 宣伝・勧誘を目的とした過度な表現は排除すること。
+
+【文字数確保の思考プロセス】
+約1500文字を満たすため、以下の8つの要素を各180文字程度で深く、臨場感を持って具体的に描写してください：
+「導入の挨拶部分」→「空間・内装の居心地の良さ」→「食材・素材への異常なこだわり」→「具体的な調理法や五感に訴える表現」→「接客・おもてなしの精神」→「よくあるお客様からの喜びの声」→「これからの季節の提案や将来の展望」→「結びの温かいメッセージ」
+
+【指定キーワード】
+${keywords.length > 0 ? keywords.join(', ') : 'なし'}
+これらを自然な文脈に溶け込ませてくださいこと。
+
+【使用可能絵文字】
+${emojis.length > 0 ? emojis.join(' ') : 'なし'}
+絵文字は不自然でないように段落の区切り等の文末にのみ配置し、これら以外の絵文字は絶対に使わないでください（入力がない場合は一切絵文字を使わないこと）。
+========================================`;
+
+                const userPrompt = `【店舗情報】\n店舗名: ${shopName}\n住所: ${shopAddress}\n\n上記のすべての条件に従って投稿文を作成してください。構成案や思考プロセスといった余計な文章は一切出力せず、投稿文の完成形のみをそのまま出力してください。`;
+
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userPrompt }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 2500
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || 'APIリクエストに失敗しました');
                 }
 
-                // キーワードのサイクル関数
-                function getKeyword(index) {
-                    if (keywords.length === 0) return '';
-                    return keywords[index % keywords.length];
-                }
-
-                // --- STEP1: 構成案の作成 ---
-                // 全8セクション構成で約1400〜1500文字を達成
-                // 各セクション約170〜190文字 × 8 = 1360〜1520文字
-
-                let sections = [];
-                const em = (i) => getEmoji(i) ? ` ${getEmoji(i)}` : '';
-                const period = useEmoji ? '' : '。';
-
-                // セクション1: 導入・季節感のある挨拶（約180文字）
-                const kw0 = getKeyword(0);
-                if(kw0) {
-                    sections.push(`いつも当店をご覧いただき、ありがとうございます${em(0)}\n${kw0}をお探しの皆様にとって、少しでもお役に立てる情報をお届けできればと思い、本日は当店のこだわりについてお話しさせていただきます${period}\n日々のお仕事やご家庭の時間の合間に、ほっと一息つける特別なひとときを提供すること、それが私たちの変わらない想いです${em(1)}`);
-                } else {
-                    sections.push(`いつも当店をご覧いただき、ありがとうございます${em(0)}\n皆様にとって少しでもお役に立てる情報をお届けできればと思い、本日は当店のこだわりについてお話しさせていただきます${period}\n日々のお仕事やご家庭の時間の合間に、ほっと一息つける特別なひとときを提供すること、それが私たちの変わらない想いです${em(1)}`);
-                }
-
-                // セクション2: 空間・内装へのこだわり（約180文字）
-                const kw1 = getKeyword(1);
-                const scenePart = kw1 ? `${kw1}のシーンにふさわしい` : 'どなたにも心地よい';
-                sections.push(`\n当店の空間は、お越しいただいたお客様がまず「居心地が良い」と感じていただけるように、一つひとつの家具や照明にまでこだわって設計いたしました${em(2)}\n${scenePart}落ち着いた雰囲気をご用意しておりますので、初めてのお客様でもリラックスしてお過ごしいただけます${period}\n窓から差し込む自然光や、間接照明が織りなす柔らかな空気感は、忙しい毎日をしばし忘れさせてくれるはずです${em(0)}`);
-
-                // セクション3: 食材・素材へのこだわり（約180文字）
-                const kw2 = getKeyword(2);
-                const materialPart = kw2 ? `${kw2}にこだわりたい方にも自信を持ってお届けできる` : '妥協なく厳選した';
-                sections.push(`\n私たちが最も大切にしていることのひとつが、素材の品質です${em(1)}\n${materialPart}旬の食材を中心に、信頼できる生産者様から直接仕入れたものだけを使用しております${period}\n一つひとつの食材が持つ本来の旨みや香りを最大限に引き出す調理法を日々追求し、お客様のテーブルに届く瞬間まで品質にこだわり抜いています${em(2)}`);
-
-                // セクション4: 調理技術・メニューの魅力（約180文字）
-                const kw3 = getKeyword(3) || getKeyword(0);
-                const menuPart = kw3 ? `${kw3}をお求めの方にもきっとご満足いただける` : '幅広いお客様にお楽しみいただける';
-                sections.push(`\n当店のメニューは、定番の人気メニューから季節限定の創作料理まで、${menuPart}ラインナップを取り揃えております${em(0)}\nそれぞれのお料理には、職人が長年培ってきた確かな調理技術と、新しい発想を融合させた独自のアプローチが込められています${period}\nお皿の上に表現される彩り豊かな盛り付けも、味覚だけでなく視覚からも楽しんでいただきたいという想いの表れです${em(1)}`);
-
-                // セクション5: スタッフのおもてなし精神（約180文字）
-                sections.push(`\nお料理と同じくらい大切にしているのが、おもてなしの心です${em(2)}\nスタッフ全員が「今日来てよかった」とお客様に感じていただくために、一人ひとりのお客様のペースやご希望に寄り添ったサービスを心がけております${period}\nお料理に関するご質問やアレルギーのご相談はもちろん、記念日のサプライズ演出や席のご希望など、どんな小さなことでもお気軽にお声がけください${em(0)}`);
-
-                // セクション6: お客様の声・エピソード（約180文字）
-                const kw4 = getKeyword(4) || getKeyword(1);
-                const voicePart = kw4 ? `${kw4}にぴったりだった` : 'とても素敵な時間だった';
-                sections.push(`\nありがたいことに、多くのお客様から「${voicePart}」「また来たい」という温かいお言葉を日々頂戴しております${em(1)}\nそのお一人おひとりの声が、私たちスタッフにとって何よりの原動力となっています${period}\nまだお越しいただいたことのない方にも、きっとご満足いただけるお時間をお届けできると自負しておりますので、ぜひ一度足をお運びいただければ幸いです${em(2)}`);
-
-                // セクション7: 今後の展望・季節情報（約180文字）
-                const kw5 = getKeyword(5) || getKeyword(2);
-                const futurePart = kw5 ? `${kw5}に関する新しいご提案` : '新たなメニューやサービスのご提案';
-                sections.push(`\n当店では、常にお客様に新鮮な驚きと感動をお届けするために、メニューの改良やサービスの向上に取り組み続けております${em(0)}\n今後も${futurePart}を通じて、皆様の日常にちょっとした彩りを添えられるよう精進してまいります${period}\n季節ごとの特別メニューやイベントの情報も随時発信しておりますので、ぜひ楽しみにしていてください${em(1)}`);
-
-                // セクション8: 結び・感謝（約150文字）
-                sections.push(`\n最後までお読みいただき、心より感謝申し上げます${em(2)}\n皆様のご来店を、スタッフ一同心よりお待ちしております${period}\n「ここに来て本当によかった」と笑顔でお帰りいただける、そんなかけがえのない時間を全力でお届けすることをお約束いたします${em(0)}`);
-
-                // --- STEP2: 全セクションを結合 ---
-                let fullText = sections.join('\n');
-
-                // --- STEP3: 文字数カウントと推敲 ---
-                // 改行を除いた実質文字数で1400〜1500文字に調整
-                let charCount = fullText.replace(/\n/g, '').length;
-
-                // 文字数が足りない場合は追加の文章で補填
-                if(charCount < 1400) {
-                    const filler = `\nお一人様でのお食事はもちろん、ご家族やご友人とのお集まり、ビジネスのお打ち合わせなど、様々なシーンでお気軽にご利用いただけます${period}\n`;
-                    fullText += filler;
-                    charCount = fullText.replace(/\n/g, '').length;
-                }
-
-                // 文字数が多すぎる場合は末尾から調整
-                if(charCount > 1500) {
-                    const lines = fullText.split('\n');
-                    while(fullText.replace(/\n/g, '').length > 1500 && lines.length > 5) {
-                        lines.splice(lines.length - 2, 1);
-                        fullText = lines.join('\n');
-                    }
-                }
+                const data = await response.json();
+                let fullText = data.choices[0].message.content.trim();
 
                 document.getElementById('postTextarea').value = fullText;
+
+            } catch (error) {
+                console.error(error);
+                alert("AIの生成中にエラーが発生しました。\nAPIキーが間違っていないか、または残高不足でないか確認してください。\n詳細: " + error.message);
+                // キーが無効な場合は次回再入力させるためにリセット
+                if (error.message.includes('API key') || error.message.includes('Incorrect API key') || error.message.includes('401')) {
+                    localStorage.removeItem('openai_api_key');
+                }
+            } finally {
                 btn.innerHTML = origHTML;
                 btn.disabled = false;
                 btn.style.opacity = '1';
-                
-            }, 2500);
+            }
         }
 
         function registerMyGbpUrl() {
