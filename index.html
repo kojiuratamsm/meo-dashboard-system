@@ -191,6 +191,9 @@
         <a class="nav-item" id="nav-reservations-btn" onclick="switchMainView('reservations', this)">
             <i class="fa-solid fa-calendar-check"></i> 予約管理
         </a>
+        <a class="nav-item" id="nav-customers-btn" onclick="switchMainView('customers', this)">
+            <i class="fa-solid fa-address-book"></i> 顧客管理
+        </a>
         <a class="nav-item" id="nav-settings-btn" onclick="switchMainView('settings', this)">
             <i class="fa-solid fa-gear"></i> 設定
         </a>
@@ -753,6 +756,8 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <h2 style="margin:0;"><span id="cal-month-title">2026年 4月</span> の予約カレンダー</h2>
                         <div>
+                            <button class="btn-primary" style="padding:4px 10px; font-size:12px; margin-right:5px; background:#4A5568;" onclick="document.getElementById('calendarEditModal').style.display='flex'"><i class="fa-solid fa-pen"></i> 枠・シフト等編集</button>
+                            <button class="btn-primary" style="padding:4px 10px; font-size:12px; margin-right:15px;" onclick="document.getElementById('manualReservationModal').style.display='flex'"><i class="fa-solid fa-plus"></i> 手入力追加</button>
                             <button class="btn-outline" style="padding:4px 10px; font-size:12px; margin-right:5px;">＜ 前月</button>
                             <button class="btn-outline" style="padding:4px 10px; font-size:12px;">次月 ＞</button>
                         </div>
@@ -895,62 +900,262 @@
                     <ul style="list-style:none; padding:0; margin:0; font-size:14px; line-height:3;">
                         <li style="border-bottom:1px solid #eee; cursor:pointer; color:var(--text-main);" onclick="switchMainView('staff-form')"><i class="fa-solid fa-users" style="width:25px; color:var(--primary-blue);"></i> スタッフ登録 <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
                         <li style="border-bottom:1px solid #eee; cursor:pointer; color:var(--text-main);" onclick="switchMainView('menu-form')"><i class="fa-solid fa-utensils" style="width:25px; color:var(--primary-blue);"></i> メニュー登録 <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
-                        <li style="border-bottom:1px solid #eee; cursor:pointer; color:var(--text-main);" onclick="switchMainView('price-desc-form')"><i class="fa-solid fa-yen-sign" style="width:25px; color:var(--primary-blue);"></i> 金額(税抜/税込)・メニュー説明文<span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
                         <li style="cursor:pointer; color:var(--text-main);" onclick="switchMainView('reservation-form')"><i class="fa-solid fa-link" style="width:25px; color:var(--primary-blue);"></i> 予約フォーム設定 <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
                     </ul>
                 </div>
             </div>
         </section>
 
-        <!-- STAFF FORM VIEW (予約管理の詳細) -->
+        <!-- STAFF FORM VIEW -->
         <section id="view-staff-form" class="view-section">
             <header class="header">
                 <div>
                     <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
-                    <h1>スタッフ登録</h1>
+                    <h1>スタッフ登録 (最大100名)</h1>
                 </div>
             </header>
             <div class="card" style="animation: fadeIn 0.3s ease;">
-                <p style="color:var(--text-muted); font-size:14px;"><i class="fa-solid fa-circle-info"></i> スタッフの顔写真や名前、指名オプションなどを登録する専用ページが構築されます。</p>
+                <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;"><i class="fa-solid fa-circle-info"></i> スタッフの顔写真、名前、長所を登録します（予約フォームの指名に反映されます）。</p>
+                <div id="staffListContainer" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:15px; margin-bottom:20px;">
+                    <!-- サンプルスタッフ -->
+                    <div class="card" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px;">
+                        <div style="display:flex; justify-content:flex-end;"><button class="btn-outline" style="border:none; color:#EA4335; padding:2px;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-trash"></i></button></div>
+                        <div style="text-align:center; margin-bottom:10px;">
+                            <div style="width:70px; height:70px; border-radius:50%; background:#E2E8F0; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image"></i></div>
+                            <button class="btn-outline" style="font-size:10px; padding:2px 8px;">写真を選択</button>
+                        </div>
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label style="font-size:11px;">名前</label>
+                            <input type="text" class="form-control" style="font-size:12px; padding:6px;" value="山田 太郎">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11px;">長所</label>
+                            <input type="text" class="form-control" style="font-size:12px; padding:6px;" value="丁寧な接客、ワインの知識">
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align:center;">
+                    <button class="btn-outline" style="width:100%; max-width:300px; padding:10px; border-style:dashed;" onclick="addStaffCard()"><i class="fa-solid fa-plus"></i> スタッフを追加</button>
+                </div>
+                <div style="margin-top:30px; text-align:right;">
+                    <button class="btn-primary">保存する</button>
+                </div>
             </div>
+            <script>
+                function addStaffCard() {
+                    const c = document.getElementById('staffListContainer');
+                    if (c.children.length >= 100) { alert('スタッフは最大100名まで登録可能です。'); return; }
+                    c.insertAdjacentHTML('beforeend', `
+                    <div class="card" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px; animation: fadeIn 0.2s;">
+                        <div style="display:flex; justify-content:flex-end;"><button class="btn-outline" style="border:none; color:#EA4335; padding:2px;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-trash"></i></button></div>
+                        <div style="text-align:center; margin-bottom:10px;">
+                            <div style="width:70px; height:70px; border-radius:50%; background:#E2E8F0; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image"></i></div>
+                            <button class="btn-outline" style="font-size:10px; padding:2px 8px;">写真を選択</button>
+                        </div>
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label style="font-size:11px;">名前</label>
+                            <input type="text" class="form-control" style="font-size:12px; padding:6px;" placeholder="例: 佐藤 花子">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11px;">長所</label>
+                            <input type="text" class="form-control" style="font-size:12px; padding:6px;" placeholder="得意なことなど">
+                        </div>
+                    </div>`);
+                }
+            </script>
         </section>
 
-        <!-- MENU FORM VIEW (予約管理の詳細) -->
+        <!-- MENU FORM VIEW -->
         <section id="view-menu-form" class="view-section">
             <header class="header">
                 <div>
                     <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
-                    <h1>メニュー登録</h1>
+                    <h1>メニュー登録 (最大100種)</h1>
                 </div>
             </header>
             <div class="card" style="animation: fadeIn 0.3s ease;">
-                <p style="color:var(--text-muted); font-size:14px;"><i class="fa-solid fa-circle-info"></i> コースや単品メニューのカテゴリ分け、画像アップロードが可能な専用ページが構築されます。</p>
-            </div>
-        </section>
-
-        <!-- PRICE DESC FORM VIEW (予約管理の詳細) -->
-        <section id="view-price-desc-form" class="view-section">
-            <header class="header">
-                <div>
-                    <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
-                    <h1>金額(税抜/税込)・メニュー説明文設定</h1>
+                <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;"><i class="fa-solid fa-circle-info"></i> 提供するメニューを設定します。担当可能なスタッフを選ぶことで、予約時の連動が可能になります。</p>
+                <div id="menuListContainer" style="display:grid; grid-template-columns: 1fr; gap:15px; margin-bottom:20px;">
+                    <!-- サンプルメニュー -->
+                    <div class="card" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px;">
+                        <div style="display:grid; grid-template-columns: 100px 1fr; gap:15px;">
+                            <div style="text-align:center;">
+                                <div style="width:100%; aspect-ratio:1; border-radius:8px; background:#E2E8F0; margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image fa-2x"></i></div>
+                                <button class="btn-outline" style="font-size:10px; padding:2px 8px; width:100%;">写真選択</button>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:start;">
+                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                                    <label style="font-size:11px;">メニュー名 <span style="float:right; color:#EA4335; cursor:pointer;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-trash"></i> 削除</span></label>
+                                    <input type="text" class="form-control" style="font-size:12px; padding:6px;" value="プレミアム焼肉コース">
+                                </div>
+                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                                    <label style="font-size:11px;">メニュー詳細</label>
+                                    <textarea class="form-control" rows="2" style="font-size:12px; padding:6px;">最高級黒毛和牛を堪能できる贅沢なコースです。</textarea>
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label style="font-size:11px;">価格 (税込)</label>
+                                    <input type="text" class="form-control" style="font-size:12px; padding:6px;" value="¥8,000">
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label style="font-size:11px;">所要時間</label>
+                                    <select class="form-control" style="font-size:12px; padding:6px;">
+                                        <option>30分</option><option>60分</option><option>90分</option><option selected>120分</option><option>150分</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                                    <label style="font-size:11px;">担当可能なスタッフ (複数選択可)</label>
+                                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                                        <label style="font-size:11px; display:flex; align-items:center; gap:4px;"><input type="checkbox" checked> やまもと</label>
+                                        <label style="font-size:11px; display:flex; align-items:center; gap:4px;"><input type="checkbox" checked> さとう</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </header>
-            <div class="card" style="animation: fadeIn 0.3s ease;">
-                <p style="color:var(--text-muted); font-size:14px;"><i class="fa-solid fa-circle-info"></i> 金額の税計算設定や、魅力的なメニュー説明文を一元管理する編集ページが構築されます。</p>
+                <div style="text-align:center;">
+                    <button class="btn-outline" style="width:100%; padding:10px; border-style:dashed;" onclick="addMenuCard()"><i class="fa-solid fa-plus"></i> メニューを追加</button>
+                </div>
+                <div style="margin-top:30px; text-align:right;">
+                    <button class="btn-primary">保存する</button>
+                </div>
             </div>
+            <script>
+                function addMenuCard() {
+                    const c = document.getElementById('menuListContainer');
+                    if (c.children.length >= 100) { alert('メニューは最大100種まで登録可能です。'); return; }
+                    c.insertAdjacentHTML('beforeend', `
+                    <div class="card" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px; animation: fadeIn 0.2s;">
+                        <div style="display:grid; grid-template-columns: 100px 1fr; gap:15px;">
+                            <div style="text-align:center;">
+                                <div style="width:100%; aspect-ratio:1; border-radius:8px; background:#E2E8F0; margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image fa-2x"></i></div>
+                                <button class="btn-outline" style="font-size:10px; padding:2px 8px; width:100%;">写真選択</button>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:start;">
+                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                                    <label style="font-size:11px;">メニュー名 <span style="float:right; color:#EA4335; cursor:pointer;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-trash"></i> 削除</span></label>
+                                    <input type="text" class="form-control" style="font-size:12px; padding:6px;">
+                                </div>
+                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                                    <label style="font-size:11px;">メニュー詳細</label>
+                                    <textarea class="form-control" rows="2" style="font-size:12px; padding:6px;"></textarea>
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label style="font-size:11px;">価格 (税込)</label>
+                                    <input type="text" class="form-control" style="font-size:12px; padding:6px;">
+                                </div>
+                                <div class="form-group" style="margin-bottom:0;">
+                                    <label style="font-size:11px;">所要時間</label>
+                                    <select class="form-control" style="font-size:12px; padding:6px;">
+                                        <option>30分</option><option>60分</option><option>90分</option><option>120分</option><option>150分</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                                    <label style="font-size:11px;">担当可能なスタッフ (複数選択可)</label>
+                                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                                        <label style="font-size:11px; display:flex; align-items:center; gap:4px;"><input type="checkbox"> やまもと</label>
+                                        <label style="font-size:11px; display:flex; align-items:center; gap:4px;"><input type="checkbox"> さとう</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`);
+                }
+            </script>
         </section>
         
-        <!-- RESERVATION FORM VIEW (予約管理の詳細) -->
+        <!-- RESERVATION FORM VIEW -->
         <section id="view-reservation-form" class="view-section">
             <header class="header">
                 <div>
                     <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
-                    <h1>予約フォーム設定</h1>
+                    <h1>予約フォーム設定・連携</h1>
                 </div>
             </header>
             <div class="card" style="animation: fadeIn 0.3s ease;">
-                <p style="color:var(--text-muted); font-size:14px;"><i class="fa-solid fa-circle-info"></i> お客様向けに発行される予約フォームのURLコピーや、フォームのカラーや埋め込みタグ変更機能が構築されます。</p>
+                <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;"><i class="fa-solid fa-circle-info"></i> 保存済みのマスターデータ（メニュー・スタッフ）に基づき、予約カレンダーの空き枠と連動したオンラインフォームが生成されています。</p>
+                
+                <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:300px; border:1px solid #E2E8F0; padding:15px; border-radius:10px; background:#F8FAFC;">
+                        <h3 style="font-size:14px; margin-bottom:10px; color:var(--text-main);">連携中データ（自動反映）</h3>
+                        <ul style="font-size:13px; color:#4A5568; line-height:2;">
+                            <li>✅ メニュー登録：<b style="color:var(--primary-blue)">1件</b>（プレミアム焼肉コース 等）</li>
+                            <li>✅ スタッフ登録：<b style="color:var(--primary-blue)">1件</b>（山田 太郎 等）</li>
+                            <li>✅ カレンダー空き枠：<b style="color:#059669">同期有効</b>（営業日・シフト連動）</li>
+                        </ul>
+                        <div style="margin-top:20px;">
+                            <label style="font-size:12px; font-weight:bold;">お客様用予約フォームURL</label>
+                            <div style="display:flex; gap:10px; margin-top:5px;">
+                                <input type="text" class="form-control" value="https://mapon.jp/reserve/shop-id" readonly style="font-size:12px; background:white;">
+                                <button class="btn-primary" style="font-size:12px; white-space:nowrap;">コピー</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="flex:1; min-width:300px;">
+                        <div style="border:12px solid #2D3748; border-radius:25px; height:400px; overflow:hidden; position:relative; background:white; display:flex; align-items:center; justify-content:center;">
+                            <div style="position: absolute; top:0; left:50%; transform:translateX(-50%); width:40%; height:15px; background:#2D3748; border-bottom-left-radius:10px; border-bottom-right-radius:10px;"></div>
+                            <div style="text-align:center; padding:20px;">
+                                <i class="fa-solid fa-calendar-days" style="font-size:40px; color:#A0AEC0; margin-bottom:10px;"></i>
+                                <p style="font-size:13px; color:#4A5568; font-weight:bold;">予約フォーム プレビュー表示</p>
+                                <p style="font-size:11px; color:#A0AEC0;">※お客様はメニュー選択後、カレンダーから空き日時を選び予約します。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CUSTOMERS VIEW -->
+        <section id="view-customers" class="view-section">
+            <header class="header">
+                <div>
+                    <h1>顧客管理</h1>
+                    <p>一度来店・予約されたお客様の情報を一覧で管理できます。</p>
+                </div>
+            </header>
+            
+            <div class="card" style="animation: fadeIn 0.4s ease;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="text" class="form-control" placeholder="顧客名・電話番号で検索..." style="width:250px;">
+                        <button class="btn-outline"><i class="fa-solid fa-magnifying-glass"></i> 検索</button>
+                    </div>
+                    <button class="btn-primary" style="padding:8px 15px; font-size:13px;" onclick="openAddCustomerModal()"><i class="fa-solid fa-user-plus"></i> 新規手動登録</button>
+                </div>
+                
+                <div class="data-table-wrapper" style="overflow-x:auto;">
+                    <table class="data-table" style="width:100%; text-align:left; font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th>顧客名</th>
+                                <th>電話番号</th>
+                                <th>来店数</th>
+                                <th>最終(前回)予約メニュー</th>
+                                <th style="width:30%;">メモ</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight:bold; color:var(--primary-blue);">佐藤 健一</td>
+                                <td>090-1234-5678</td>
+                                <td><span style="background:#E8F0FE; color:#1A73E8; padding:2px 8px; border-radius:10px; font-weight:bold;">3回</span></td>
+                                <td>プレミアム焼肉コース</td>
+                                <td><input type="text" class="form-control" value="窓際の席を希望されることが多い。アレルギーなし。" style="font-size:11px; padding:4px;" onchange="alert('メモを保存しました。')"></td>
+                                <td><button class="btn-outline" style="font-size:11px; padding:2px 8px;">詳細表示</button></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight:bold; color:var(--primary-blue);">鈴木 花子</td>
+                                <td>080-9876-5432</td>
+                                <td><span style="background:#FEECEB; color:#EA4335; padding:2px 8px; border-radius:10px; font-weight:bold;">1回</span></td>
+                                <td>スタンダード飲み放題</td>
+                                <td><input type="text" class="form-control" value="会社の宴会利用。" style="font-size:11px; padding:4px;" onchange="alert('メモを保存しました。')"></td>
+                                <td><button class="btn-outline" style="font-size:11px; padding:2px 8px;">詳細表示</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
@@ -1203,13 +1408,132 @@
                     <label>Channel Secret <span style="color:red;">*</span></label>
                     <input type="text" class="form-control" placeholder="例: abcdef1234567890abcdef1234567890">
                 </div>
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label>Channel Access Token <span style="color:red;">*</span> <span style="font-size:10px; color:#A0AEC0;">(メッセージ送受信に必須)</span></label>
+                    <textarea class="form-control" rows="2" placeholder="例: WkH3Xy..."></textarea>
+                </div>
+                
+                <div style="background:#F0FDF4; border:1px dashed #34A853; padding:15px; border-radius:12px; margin-bottom:25px;">
+                    <div style="font-size:13px; font-weight:bold; color:#166534; margin-bottom:10px;">Webhookエンドポイント（開発基盤用）</div>
+                    <div style="font-size:11px; color:#4A5568; margin-bottom:8px;">自動LINE配信、リマインド送信、公式LINEアプリでの個別返信を行うためのWebhook URLです。LINE DevelopersのWebhook URLに設定してください。</div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" class="form-control" value="https://example.com/api/line/webhook" readonly style="background:white; color:#4A5568;">
+                        <button class="btn-outline" style="border:1px solid #34A853; color:#166534; flex-shrink:0;">コピー</button>
+                    </div>
+                </div>
 
+                <div class="form-group" style="margin-bottom:25px;">
+                    <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" checked>
+                        <span>公式LINEアプリからお客様へ個別返信できるようにする</span>
+                    </label>
+                    <div style="font-size:11px; color:#A0AEC0; margin-left:22px;">※連携後、システムから送信した自動メッセージに対し、お客様が返信した場合にLINE公式アプリで直接対応可能になります。</div>
+                </div>
                 <div style="text-align:center;">
                     <button class="btn-primary" style="width:100%; box-shadow:none; padding:12px; font-size:15px; font-weight:bold; background:#00B900;" onclick="alert('指定の公式LINEアカウントとのAPI連携を確立しました！'); closeLineSettingsModal()">この設定でLINEと連携する</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- CALENDAR EDIT MODAL (枠・シフト等の編集) -->
+    <div id="calendarEditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="max-width: 500px; width:90%; position:relative; padding:0; overflow:hidden;">
+            <div style="background:#4A5568; padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">カレンダー枠・シフト編集 (6ヶ月先まで)</h2>
+                <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('calendarEditModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding:20px;">
+                <div class="form-group">
+                    <label>適用する期間</label>
+                    <input type="month" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>営業時間設定</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="time" class="form-control" value="10:00"> ～ <input type="time" class="form-control" value="22:00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>定休日・特別休業</label>
+                    <input type="text" class="form-control" placeholder="例: 毎週水曜日、4/15">
+                </div>
+                <div class="form-group">
+                    <label>スタッフシフト (担当割当)</label>
+                    <textarea class="form-control" rows="2" placeholder="例: Aさんは10:00-18:00、Bさんは13:00-22:00"></textarea>
+                </div>
+                <button class="btn-primary" style="width:100%; background:#4285F4;" onclick="alert('設定を保存しました。'); document.getElementById('calendarEditModal').style.display='none'">設定を反映</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MANUAL RESERVATION MODAL (手入力追加) -->
+    <div id="manualReservationModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="max-width: 500px; width:90%; position:relative; padding:0; overflow:hidden;">
+            <div style="background:var(--primary-blue); padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">予約の手動追加</h2>
+                <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('manualReservationModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding:20px;">
+                <div class="form-group">
+                    <label>顧客名</label>
+                    <input type="text" class="form-control" placeholder="お名前を入力">
+                </div>
+                <div class="form-group">
+                    <label>時間</label>
+                    <input type="datetime-local" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>担当スタッフ</label>
+                    <input type="text" class="form-control" placeholder="例: やまもと (未定の場合は空欄)">
+                </div>
+                <div class="form-group">
+                    <label>メニュー</label>
+                    <select class="form-control">
+                        <option>プレミアム焼肉コース</option>
+                        <option>スタンダード飲み放題</option>
+                        <option style="background:#f0f0f0; font-weight:bold;">なし (席のみ・未定)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>メモ</label>
+                    <textarea class="form-control" rows="2" placeholder="注意事項や要望など"></textarea>
+                </div>
+                <button class="btn-primary" style="width:100%;" onclick="alert('手動で予約を追加しました。'); document.getElementById('manualReservationModal').style.display='none'">予約を登録</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD CUSTOMER MODAL (顧客の新規手動登録) -->
+    <div id="addCustomerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="max-width: 500px; width:90%; position:relative; padding:0; overflow:hidden;">
+            <div style="background:var(--primary-blue); padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">顧客の新規手動登録</h2>
+                <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('addCustomerModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding:20px;">
+                <div class="form-group">
+                    <label>顧客名</label>
+                    <input type="text" class="form-control" placeholder="お名前を入力">
+                </div>
+                <div class="form-group">
+                    <label>電話番号</label>
+                    <input type="tel" class="form-control" placeholder="090-1234-5678">
+                </div>
+                <div class="form-group">
+                    <label>メモ</label>
+                    <textarea class="form-control" rows="3" placeholder="顧客の特徴や注意事項など"></textarea>
+                </div>
+                <button class="btn-primary" style="width:100%;" onclick="alert('顧客を新規登録しました。'); document.getElementById('addCustomerModal').style.display='none'">登録する</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openAddCustomerModal() {
+            document.getElementById('addCustomerModal').style.display = 'flex';
+        }
+    </script>
 
     <!-- RESERVATION DETAIL MODAL -->
     <div id="reservationDetailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
