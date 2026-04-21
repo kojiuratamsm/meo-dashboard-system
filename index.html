@@ -755,10 +755,11 @@
                 <div class="card" style="grid-column: span 2; animation: fadeIn 0.4s ease;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <h2 style="margin:0;"><span id="cal-month-title">2026年 4月</span> の予約カレンダー</h2>
-                        <div>
-                            <button class="btn-primary" style="padding:4px 10px; font-size:12px; margin-right:5px; background:#4A5568;" onclick="document.getElementById('calendarEditModal').style.display='flex'"><i class="fa-solid fa-pen"></i> 枠・シフト等編集</button>
-                            <button class="btn-primary" style="padding:4px 10px; font-size:12px; margin-right:15px;" onclick="document.getElementById('manualReservationModal').style.display='flex'"><i class="fa-solid fa-plus"></i> 手入力追加</button>
-                            <button class="btn-outline" style="padding:4px 10px; font-size:12px; margin-right:5px;">＜ 前月</button>
+                        <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                            <button class="btn-primary" style="padding:4px 10px; font-size:12px; background:#4A5568;" onclick="document.getElementById('calendarEditModal').style.display='flex'"><i class="fa-solid fa-pen"></i> シフト編集</button>
+                            <button class="btn-primary" style="padding:4px 10px; font-size:12px; background:#EA4335;" onclick="document.getElementById('holidayModal').style.display='flex'"><i class="fa-solid fa-calendar-xmark"></i> 休業日設定</button>
+                            <button class="btn-primary" style="padding:4px 10px; font-size:12px;" onclick="document.getElementById('manualReservationModal').style.display='flex'"><i class="fa-solid fa-plus"></i> 手入力追加</button>
+                            <button class="btn-outline" style="padding:4px 10px; font-size:12px; margin-left:10px;">＜ 前月</button>
                             <button class="btn-outline" style="padding:4px 10px; font-size:12px;">次月 ＞</button>
                         </div>
                     </div>
@@ -922,7 +923,7 @@
                         <div style="display:flex; justify-content:flex-end;"><button class="btn-outline" style="border:none; color:#EA4335; padding:2px;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-trash"></i></button></div>
                         <div style="text-align:center; margin-bottom:10px;">
                             <div style="width:70px; height:70px; border-radius:50%; background:#E2E8F0; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image"></i></div>
-                            <button class="btn-outline" style="font-size:10px; padding:2px 8px;">写真を選択</button>
+                            <button class="btn-outline" style="font-size:10px; padding:2px 8px;" onclick="let f=document.createElement('input');f.type='file';f.accept='image/*';f.click();">写真を選択</button>
                         </div>
                         <div class="form-group" style="margin-bottom:10px;">
                             <label style="font-size:11px;">名前</label>
@@ -950,7 +951,7 @@
                         <div style="display:flex; justify-content:flex-end;"><button class="btn-outline" style="border:none; color:#EA4335; padding:2px;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-trash"></i></button></div>
                         <div style="text-align:center; margin-bottom:10px;">
                             <div style="width:70px; height:70px; border-radius:50%; background:#E2E8F0; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image"></i></div>
-                            <button class="btn-outline" style="font-size:10px; padding:2px 8px;">写真を選択</button>
+                            <button class="btn-outline" style="font-size:10px; padding:2px 8px;" onclick="let f=document.createElement('input');f.type='file';f.accept='image/*';f.click();">写真を選択</button>
                         </div>
                         <div class="form-group" style="margin-bottom:10px;">
                             <label style="font-size:11px;">名前</label>
@@ -981,7 +982,7 @@
                         <div style="display:grid; grid-template-columns: 100px 1fr; gap:15px;">
                             <div style="text-align:center;">
                                 <div style="width:100%; aspect-ratio:1; border-radius:8px; background:#E2E8F0; margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image fa-2x"></i></div>
-                                <button class="btn-outline" style="font-size:10px; padding:2px 8px; width:100%;">写真選択</button>
+                                <button class="btn-outline" style="font-size:10px; padding:2px 8px; width:100%;" onclick="let f=document.createElement('input');f.type='file';f.accept='image/*';f.click();">写真を選択</button>
                             </div>
                             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:start;">
                                 <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
@@ -1029,7 +1030,7 @@
                         <div style="display:grid; grid-template-columns: 100px 1fr; gap:15px;">
                             <div style="text-align:center;">
                                 <div style="width:100%; aspect-ratio:1; border-radius:8px; background:#E2E8F0; margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image fa-2x"></i></div>
-                                <button class="btn-outline" style="font-size:10px; padding:2px 8px; width:100%;">写真選択</button>
+                                <button class="btn-outline" style="font-size:10px; padding:2px 8px; width:100%;" onclick="let f=document.createElement('input');f.type='file';f.accept='image/*';f.click();">写真を選択</button>
                             </div>
                             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:start;">
                                 <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
@@ -1119,9 +1120,9 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <div style="display:flex; gap:10px; align-items:center;">
                         <input type="text" class="form-control" placeholder="顧客名・電話番号で検索..." style="width:250px;">
-                        <button class="btn-outline"><i class="fa-solid fa-magnifying-glass"></i> 検索</button>
+                        <button class="btn-outline" style="white-space:nowrap;"><i class="fa-solid fa-magnifying-glass"></i> 検索</button>
                     </div>
-                    <button class="btn-primary" style="padding:8px 15px; font-size:13px;" onclick="openAddCustomerModal()"><i class="fa-solid fa-user-plus"></i> 新規手動登録</button>
+                    <button class="btn-primary" style="padding:8px 15px; font-size:13px; white-space:nowrap;" onclick="openAddCustomerModal()"><i class="fa-solid fa-user-plus"></i> 新規手動登録</button>
                 </div>
                 
                 <div class="data-table-wrapper" style="overflow-x:auto;">
@@ -1267,10 +1268,6 @@
         </div>
     </div>
 
-    <!-- LINE SETTINGS MODAL -->
-    <div id="lineSettingsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
-// ...existing lineSettingsModal code is preserved up to end of tag
-    </div>
 
     <!-- MY SHOP URL HELP MODAL -->
     <div id="myShopUrlHelpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
@@ -1436,33 +1433,59 @@
         </div>
     </div>
 
-    <!-- CALENDAR EDIT MODAL (枠・シフト等の編集) -->
+    <!-- CALENDAR EDIT MODAL (シフト編集) -->
     <div id="calendarEditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
         <div class="card" style="max-width: 500px; width:90%; position:relative; padding:0; overflow:hidden;">
             <div style="background:#4A5568; padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
-                <h2 style="margin:0; font-size:16px;">カレンダー枠・シフト編集 (6ヶ月先まで)</h2>
+                <h2 style="margin:0; font-size:16px;">シフト編集 (6ヶ月先まで)</h2>
                 <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('calendarEditModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div style="padding:20px;">
                 <div class="form-group">
-                    <label>適用する期間</label>
-                    <input type="month" class="form-control">
+                    <label>日付選択</label>
+                    <input type="date" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label>営業時間設定</label>
+                    <label>シフト時間</label>
                     <div style="display:flex; gap:10px; align-items:center;">
                         <input type="time" class="form-control" value="10:00"> ～ <input type="time" class="form-control" value="22:00">
                     </div>
                 </div>
+                <div class="form-group" style="margin-bottom:20px;">
+                    <label>担当スタッフ</label>
+                    <div style="display:flex; gap:10px;">
+                        <select class="form-control">
+                            <option>山田 太郎</option>
+                            <option>佐藤 花子</option>
+                        </select>
+                        <button class="btn-outline" style="white-space:nowrap;"><i class="fa-solid fa-plus"></i> 追加</button>
+                    </div>
+                    <div style="margin-top:10px; font-size:12px; color:#4A5568;">
+                        <div>✓ 山田 太郎 (10:00 - 22:00) <button class="btn-outline" style="padding:2px 5px; font-size:10px; border:none; color:red;"><i class="fa-solid fa-trash"></i></button></div>
+                    </div>
+                </div>
+                <button class="btn-primary" style="width:100%; background:#4285F4;" onclick="alert('シフトを設定しました。'); document.getElementById('calendarEditModal').style.display='none'">シフトを保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOLIDAY MODAL (休業日設定) -->
+    <div id="holidayModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="max-width: 500px; width:90%; position:relative; padding:0; overflow:hidden;">
+            <div style="background:#EA4335; padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">休業日設定</h2>
+                <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('holidayModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding:20px;">
                 <div class="form-group">
-                    <label>定休日・特別休業</label>
-                    <input type="text" class="form-control" placeholder="例: 毎週水曜日、4/15">
+                    <label>休業日 日付選択</label>
+                    <input type="date" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label>スタッフシフト (担当割当)</label>
-                    <textarea class="form-control" rows="2" placeholder="例: Aさんは10:00-18:00、Bさんは13:00-22:00"></textarea>
+                    <label>メモ・理由 (任意)</label>
+                    <input type="text" class="form-control" placeholder="例: お盆休み、臨時休業">
                 </div>
-                <button class="btn-primary" style="width:100%; background:#4285F4;" onclick="alert('設定を保存しました。'); document.getElementById('calendarEditModal').style.display='none'">設定を反映</button>
+                <button class="btn-primary" style="width:100%; background:#EA4335;" onclick="alert('休業日を設定しました。'); document.getElementById('holidayModal').style.display='none'">休業日として登録</button>
             </div>
         </div>
     </div>
@@ -1478,6 +1501,10 @@
                 <div class="form-group">
                     <label>顧客名</label>
                     <input type="text" class="form-control" placeholder="お名前を入力">
+                </div>
+                <div class="form-group">
+                    <label>電話番号</label>
+                    <input type="tel" class="form-control" placeholder="090-1234-5678">
                 </div>
                 <div class="form-group">
                     <label>時間</label>
