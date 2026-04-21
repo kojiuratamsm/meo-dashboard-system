@@ -316,9 +316,14 @@
                 </div>
             </header>
 
-            <div class="metric-tabs">
-                <button class="metric-tab active-tab" id="tab-btn-settings" onclick="switchReviewSubView('settings')">アンケート設定・QR発行</button>
-                <button class="metric-tab" id="tab-btn-data" onclick="switchReviewSubView('data')">アンケート回答データ一覧</button>
+            <div class="metric-tabs" style="display:flex; justify-content:space-between; align-items:center; gap:15px;">
+                <div style="display:flex; flex:1;">
+                    <button class="metric-tab active-tab" id="tab-btn-settings" onclick="switchReviewSubView('settings')" style="flex:none; border-radius:12px 0 0 12px;">アンケート設定・QR発行</button>
+                    <button class="metric-tab" id="tab-btn-data" onclick="switchReviewSubView('data')" style="flex:none; border-radius:0 12px 12px 0; border-left:none;">アンケート回答データ一覧</button>
+                </div>
+                <button class="btn-primary" style="padding:8px 20px; font-size:13px; border-radius:10px; flex:none; width:auto; height:40px; background:var(--primary-blue); box-shadow:0 4px 12px rgba(66,133,244,0.2);" onclick="createNewSurvey()">
+                    <i class="fa-solid fa-circle-plus"></i> 新規作成
+                </button>
             </div>
 
             <!-- サブ：設定 -->
@@ -411,11 +416,6 @@
                             </button>
                             <p style="font-size:12px; color:var(--primary-blue); font-weight:bold; margin-top:8px;">新しい質問を追加</p>
                         </div>
-
-                        <!-- 新規作成ボタン -->
-                        <button class="btn-primary" style="width:100%; margin-bottom:40px; padding:15px; background:white; color:var(--primary-blue); border:2px solid var(--primary-blue); font-weight:800; border-radius:12px; cursor:pointer;" onclick="createNewSurvey()">
-                            <i class="fa-solid fa-circle-plus"></i> まっさらな状態で新しく作る
-                        </button>
 
                         <!-- STEP 2: キーワード -->
                         <h2 class="card-title" style="border-bottom: 2px solid #F4F7FE; padding-bottom:15px;"><span style="color:var(--primary-blue)">STEP 2</span> 口コミに含める「MEOキーワード」</h2>
