@@ -366,16 +366,24 @@
                         <!-- 質問エリア -->
                         <div id="questionsContainer">
                             <!-- 質問1 (必須) -->
-                            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px; background:#F8FAFC;">
+                            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px; background:white;">
                                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                                    <span style="font-weight:bold; color:var(--primary-blue);">質問1（必須固定）</span>
+                                    <span style="font-weight:bold; color:var(--primary-blue);">質問1</span>
+                                    <button class="btn-outline" style="border:none; color:#EA4335;" onclick="this.closest('.question-block-admin').remove()"><i class="fa-solid fa-trash"></i></button>
                                 </div>
                                 <div class="form-group">
                                     <label>質問タイトル</label>
-                                    <input type="text" class="form-control question-title" value="本日の評価をお願いします。" readonly style="background:#E2E8F0;">
+                                    <input type="text" class="form-control question-title" value="本日の評価をお願いします。">
                                 </div>
-                                <select class="question-type" style="display:none;"><option value="stars">stars</option></select>
-                                <div class="options-container" style="display:none;"><div class="options-tags"></div></div>
+                                <div class="form-group">
+                                    <label>回答形式</label>
+                                    <select class="form-control question-type" onchange="handleTypeChange(this)">
+                                        <option value="stars" selected>星評価（5段階）</option>
+                                        <option value="radio">選択式（単一）</option>
+                                        <option value="checkbox">選択式（複数）</option>
+                                        <option value="text">自由記述</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <!-- 質問2 (デフォルト) -->
@@ -1480,12 +1488,14 @@
             filteredAnswers.forEach(ans => {
                 tbodyHTML += `<tr><td>${ans.date}</td>`;
                 baseConfig.questions.forEach(q => {
-                    let text = ans.answers[q.id] || '-';
-                    if (text === '-' && ans.answers[q.title]) text = ans.answers[q.title];
+                    let text = ans.answers[q.id] || ans.answers[q.title] || '-';
                     
-                    if (text && text.includes('星')) {
+                    // 星評価の表示 (数値・または「星」という文字が含まれる場合)
+                    if (q.type === 'stars' || (text && text.toString().includes('星'))) {
                         const num = parseInt(text);
-                        text = `<span style="color:#FBBC05; font-size:16px;">` + '★'.repeat(num) + `</span>`;
+                        if (!isNaN(num)) {
+                            text = `<span style="color:#FBBC05; font-size:16px;">` + '★'.repeat(num).padEnd(5, '☆') + `</span>`;
+                        }
                     }
                     tbodyHTML += `<td>${text}</td>`;
                 });
@@ -1594,7 +1604,7 @@
                 alert("既に同じMEOキーワードが追加されています。別の言葉を選んでください。");
                 return;
             }
-            const html = `<span class="tag deletable" style="justify-content:space-between;" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
+            const html = `<span class="tag deletable" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
             container.insertAdjacentHTML('beforeend', html);
             input.value = ''; 
         }
