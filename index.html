@@ -755,12 +755,14 @@
                 <div class="card" style="grid-column: span 2; animation: fadeIn 0.4s ease;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                         <h2 style="margin:0;"><span id="cal-month-title">2026年 4月</span> の予約カレンダー</h2>
-                        <div style="display:flex; flex-wrap:wrap; gap:5px;">
-                            <button class="btn-primary" style="padding:4px 10px; font-size:12px; background:#4A5568;" onclick="document.getElementById('calendarEditModal').style.display='flex'"><i class="fa-solid fa-pen"></i> シフト編集</button>
-                            <button class="btn-primary" style="padding:4px 10px; font-size:12px; background:#EA4335;" onclick="document.getElementById('holidayModal').style.display='flex'"><i class="fa-solid fa-calendar-xmark"></i> 休業日設定</button>
-                            <button class="btn-primary" style="padding:4px 10px; font-size:12px;" onclick="document.getElementById('manualReservationModal').style.display='flex'"><i class="fa-solid fa-plus"></i> 手入力追加</button>
-                            <button class="btn-outline" style="padding:4px 10px; font-size:12px; margin-left:10px;">＜ 前月</button>
-                            <button class="btn-outline" style="padding:4px 10px; font-size:12px;">次月 ＞</button>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; color:#4A5568; border-color:#CBD5E1;" onclick="document.getElementById('calendarEditModal').style.display='flex'">シフト編集</button>
+                            <button class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; color:#4A5568; border-color:#CBD5E1;" onclick="document.getElementById('manualReservationModal').style.display='flex'">手入力設定</button>
+                            <button class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; color:#4A5568; border-color:#CBD5E1;" onclick="document.getElementById('holidayModal').style.display='flex'">休業日設定</button>
+                            <div style="display:flex; align-items:center; gap:0; margin-left:10px; border:1px solid #CBD5E1; border-radius:6px; overflow:hidden;">
+                                <button class="btn-outline" style="padding:6px 12px; font-size:12px; border:none; border-right:1px solid #CBD5E1; border-radius:0;">前月</button>
+                                <button class="btn-outline" style="padding:6px 12px; font-size:12px; border:none; border-radius:0;">次月</button>
+                            </div>
                         </div>
                     </div>
                     
