@@ -1030,13 +1030,11 @@
                     </div>
                     
                     <div style="flex:1; min-width:300px;">
-                        <div style="border:12px solid #2D3748; border-radius:25px; height:400px; overflow:hidden; position:relative; background:white; display:flex; align-items:center; justify-content:center;">
-                            <div style="position: absolute; top:0; left:50%; transform:translateX(-50%); width:40%; height:15px; background:#2D3748; border-bottom-left-radius:10px; border-bottom-right-radius:10px;"></div>
-                            <div style="text-align:center; padding:20px;">
-                                <i class="fa-solid fa-calendar-days" style="font-size:40px; color:#A0AEC0; margin-bottom:10px;"></i>
-                                <p style="font-size:13px; color:#4A5568; font-weight:bold;">予約フォーム プレビュー表示</p>
-                                <p style="font-size:11px; color:#A0AEC0;">※お客様はメニュー選択後、カレンダーから空き日時を選び予約します。</p>
-                            </div>
+                        <div style="border:12px solid #2D3748; border-radius:25px; height:450px; overflow:hidden; position:relative; background:white; display:flex; align-items:center; justify-content:center;">
+                            <div style="position: absolute; top:0; left:50%; transform:translateX(-50%); width:40%; height:15px; background:#2D3748; border-bottom-left-radius:10px; border-bottom-right-radius:10px; z-index:10;"></div>
+                            
+                            <!-- ここに実際の予約フォームをプレビュー表示 -->
+                            <iframe id="reservationPreviewFrame" src="" style="width:100%; height:100%; border:none; border-radius:10px; background:#F8FAFC;"></iframe>
                         </div>
                     </div>
                 </div>
@@ -2977,17 +2975,21 @@
         window.switchMainView = function(viewId) {
             origSwitchMainView(viewId);
             if (viewId === 'staff-form') { loadStaffList(); }
-            if (viewId === 'view-menu-form') { loadMenuList(); }
-            if (viewId === 'view-reservation-form') { updateReservationURL(); }
+            if (viewId === 'menu-form') { loadMenuList(); }
+            if (viewId === 'reservation-form') { updateReservationURL(); }
         };
 
         // 予約URLの自動生成
         function updateReservationURL() {
             const urlInput = document.getElementById('reservationURL');
+            const previewFrame = document.getElementById('reservationPreviewFrame');
             if (urlInput) {
                 const baseURL = window.location.origin;
-                // reserve.html へのフルパスを生成
-                urlInput.value = baseURL + '/reserve.html';
+                const finalUrl = baseURL + '/reserve.html';
+                urlInput.value = finalUrl;
+                if (previewFrame && previewFrame.src !== finalUrl) {
+                    previewFrame.src = finalUrl;
+                }
             }
         }
 
