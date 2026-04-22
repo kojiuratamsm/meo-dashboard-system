@@ -255,7 +255,7 @@
                 </div>
             </div>
 
-            <div class="card" style="margin-bottom:20px; animation: fadeIn 0.3s ease; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+            <div id="reservationWidget" class="card" style="margin-bottom:20px; animation: fadeIn 0.3s ease; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
                 <h2 style="font-size:16px; margin-bottom:15px; border-left:4px solid var(--primary-blue); padding-left:10px;"><i class="fa-solid fa-bell" style="color:var(--primary-blue);"></i> 本日の予約一覧（リアルタイム）</h2>
                 <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
@@ -278,6 +278,19 @@
                             <td style="padding:12px 10px;">高橋</td>
                         </tr>
                     </table>
+                </div>
+            </div>
+
+            <!-- ブログ一覧ウィジェット (運用代行プランのみ表示) -->
+            <div id="blogWidget" class="card" style="display:none; margin-bottom:20px; animation: fadeIn 0.3s ease; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid #F4F7FE; padding-bottom:10px;">
+                    <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-pen-nib" style="color:#059669;"></i> 作成済みブログ一覧</h2>
+                    <select id="blogMonthSelector" class="form-control" style="width:auto; padding:6px 12px; font-size:12px; font-weight:bold; border-radius:8px;" onchange="renderBlogList()">
+                        <option value="all">すべての月を表示</option>
+                    </select>
+                </div>
+                <div id="blogListContainer" style="display:flex; flex-direction:column; gap:10px;">
+                    <!-- JSで動的生成 -->
                 </div>
             </div>
 
@@ -2590,14 +2603,30 @@
                         el.textContent = storeName;
                     });
 
-                    // プラン別の機能制限（Aプランの場合は「投稿作成」のみ非表示にする）
+                    // プラン別の機能制限
                     const postsBtn = document.getElementById('nav-posts-btn');
+                    const resBtn = document.getElementById('nav-reservations-btn');
+                    const custBtn = document.getElementById('nav-customers-btn');
                     
-                    if (userData.plan === 'A') {
+                    const resWidget = document.getElementById('reservationWidget');
+                    const blogWidget = document.getElementById('blogWidget');
+                    
+                    if (userData.plan === 'A') { // 運用代行プラン
                         if (postsBtn) postsBtn.style.display = 'none';
-                    } else {
-                        // プランA以外は、もし非表示にされていたら元に戻す（再表示）
+                        if (resBtn) resBtn.style.display = 'none';
+                        if (custBtn) custBtn.style.display = 'none';
+                        if (resWidget) resWidget.style.display = 'none';
+                        if (blogWidget) {
+                            blogWidget.style.display = 'block';
+                            window.agencyBlogs = userData.blogs || []; 
+                            initBlogWidget();
+                        }
+                    } else { // MapOn, MapOnモニタープラン
                         if (postsBtn) postsBtn.style.display = 'flex';
+                        if (resBtn) resBtn.style.display = 'flex';
+                        if (custBtn) custBtn.style.display = 'flex';
+                        if (resWidget) resWidget.style.display = 'block';
+                        if (blogWidget) blogWidget.style.display = 'none';
                     }
 
                 } catch(e) {
@@ -2616,6 +2645,57 @@
     <!-- Supabase連携：設定画面でのパスワード変更処理 -->
     <script type="module">
         import { supabase } from './supabase-config.js';
+
+        // --- ブログウィジェット機能 ---
+        window.initBlogWidget = function() {
+            const selector = document.getElementById('blogMonthSelector');
+            const blogs = window.agencyBlogs || [];
+            
+            // 存在する月を抽出
+            const months = [...new Set(blogs.map(b => b.month))].sort((a,b) => b.localeCompare(a));
+            months.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                selector.appendChild(opt);
+            });
+            window.renderBlogList();
+        }
+
+        window.renderBlogList = function() {
+            const container = document.getElementById('blogListContainer');
+            const selectedMonth = document.getElementById('blogMonthSelector').value;
+            const blogs = window.agencyBlogs || [];
+            
+            let filtered = blogs;
+            if (selectedMonth !== 'all') {
+                filtered = blogs.filter(b => b.month === selectedMonth);
+            }
+            // 最新順（追加順の逆）
+            filtered = filtered.reverse();
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="font-size:13px; color:var(--text-muted); text-align:center; padding:10px;">ブログ記事がまだありません。</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            filtered.forEach((b, i) => {
+                let badge = '';
+                if(i===0) badge = '<span style="font-size:10px; background:#FEF3C7; color:#D97706; padding:2px 8px; border-radius:10px; margin-right:10px;">一番最新</span>';
+                else if(i===1) badge = '<span style="font-size:10px; background:#E2E8F0; color:#4A5568; padding:2px 8px; border-radius:10px; margin-right:10px;">前回</span>';
+
+                container.insertAdjacentHTML('beforeend', `
+                    <div style="display:flex; align-items:center; border:1px solid #E2E8F0; border-radius:10px; padding:12px; background:#fff; transition:0.2s;">
+                        <div style="flex:1;">
+                            ${badge}<a href="${b.url}" target="_blank" style="color:var(--text-main); font-weight:bold; font-size:14px; text-decoration:none;">${b.title}</a>
+                        </div>
+                        <div style="font-size:12px; color:var(--text-muted);">${b.month}</div>
+                        <a href="${b.url}" target="_blank" style="margin-left:15px; color:var(--primary-blue);"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                `);
+            });
+        }
 
         // --- スタッフ管理機能 (Supabase連携) ---
 

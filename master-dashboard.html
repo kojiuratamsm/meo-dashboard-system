@@ -159,6 +159,33 @@
             </div>
         </div>
 
+        <!-- BLOG ADD MODAL (運用代行プラン用) -->
+        <div id="addBlogModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
+            <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:400px; position:relative;">
+                <h2 style="font-size:18px; margin-bottom:20px; border-bottom:2px solid #F4F7FE; padding-bottom:10px;"><i class="fa-solid fa-pen-nib" style="color:#059669;"></i> ブログ記事の追加</h2>
+                <input type="hidden" id="blogTargetClientId">
+                <input type="hidden" id="blogTargetClientBlogs">
+                
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">年月</label>
+                    <input type="text" id="newBlogMonth" class="form-control" placeholder="例: 2026年4月" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">ブログのタイトル</label>
+                    <input type="text" id="newBlogTitle" class="form-control" placeholder="タイトルを入力" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
+                </div>
+                <div style="margin-bottom:25px;">
+                    <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">リンク先 URL</label>
+                    <input type="url" id="newBlogUrl" class="form-control" placeholder="https://" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
+                </div>
+                
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button onclick="document.getElementById('addBlogModal').style.display='none'" style="padding:10px 15px; border-radius:8px; border:none; background:#F8FAFC; color:#64748B; font-weight:bold; cursor:pointer;">キャンセル</button>
+                    <button id="saveBlogBtn" style="padding:10px 15px; border-radius:8px; border:none; background:#059669; color:white; font-weight:bold; cursor:pointer;">記事を追加する</button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <script>
@@ -232,8 +259,18 @@
                     ? '<span class="status-badge">稼働中</span>' 
                     : '<span class="status-badge" style="background:#FEECEB; color:#EA4335;">一時停止</span>';
 
+                // 運用代行プランの場合は会社名をクリックできるように
+                let companyDisplay = `<i class="fa-solid fa-shop" style="color:var(--text-muted);"></i> ${client.company_name}`;
+                if (client.plan === 'A') {
+                    // ブログ情報をJSON文字列にしてonclickで渡す（クォーティングをエスケープ）
+                    const blogsStr = encodeURIComponent(JSON.stringify(client.blogs || []));
+                    companyDisplay = `<a href="javascript:void(0)" onclick="openBlogModal('${client.id}', '${blogsStr}')" style="color:var(--primary-blue); font-weight:bold; text-decoration:underline;">
+                        <i class="fa-solid fa-shop"></i> ${client.company_name} <span class="status-badge" style="background:#FEF3C7; color:#D97706; padding:2px 4px; font-size:10px;">ブログ追加</span>
+                    </a>`;
+                }
+
                 tr.innerHTML = `
-                    <td class="search-target"><i class="fa-solid fa-shop" style="color:var(--text-muted);"></i> ${client.company_name}</td>
+                    <td class="search-target">${companyDisplay}</td>
                     <td class="search-target">${client.email}</td>
                     <td style="font-family:monospace; color:#4A5568;">${client.temp_password || '未設定'}</td>
                     <td>- 件</td>
@@ -275,8 +312,56 @@
             }
         });
 
-        // ページ開いた瞬間に自動実行
-        loadClients();
+        // --- ブログ登録ロジック ---
+        window.openBlogModal = function(clientId, blogsStrEncoded) {
+            document.getElementById('blogTargetClientId').value = clientId;
+            document.getElementById('blogTargetClientBlogs').value = decodeURIComponent(blogsStrEncoded);
+            document.getElementById('newBlogMonth').value = '';
+            document.getElementById('newBlogTitle').value = '';
+            document.getElementById('newBlogUrl').value = '';
+            document.getElementById('addBlogModal').style.display = 'flex';
+        };
+
+        document.getElementById('saveBlogBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('saveBlogBtn');
+            const clientId = document.getElementById('blogTargetClientId').value;
+            let blogsArr = JSON.parse(document.getElementById('blogTargetClientBlogs').value || '[]');
+            
+            const month = document.getElementById('newBlogMonth').value.trim();
+            const title = document.getElementById('newBlogTitle').value.trim();
+            const url = document.getElementById('newBlogUrl').value.trim();
+
+            if(!month || !title || !url) {
+                alert("全ての項目を入力してください。");
+                return;
+            }
+
+            // 新規ブログを追加
+            blogsArr.push({ month, title, url });
+
+            btn.innerText = '保存中...';
+            btn.disabled = true;
+
+            const { error } = await supabase.from('clients').update({ blogs: blogsArr }).eq('id', clientId);
+
+            if (error) {
+                console.error("更新エラー:", error);
+                alert("エラーが発生しました: " + error.message);
+                btn.innerText = '記事を追加する';
+                btn.disabled = false;
+                return;
+            }
+
+            alert("ブログ記事を追加しました！");
+            document.getElementById('addBlogModal').style.display = 'none';
+            btn.innerText = '記事を追加する';
+            btn.disabled = false;
+            
+            // リロード
+            loadClients();
+        });
+
+        window.onload = loadClients;
     </script>
 </body>
 </html>
