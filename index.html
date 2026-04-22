@@ -1023,8 +1023,8 @@
                         <div style="margin-top:20px;">
                             <label style="font-size:12px; font-weight:bold;">お客様用予約フォームURL</label>
                             <div style="display:flex; gap:10px; margin-top:5px;">
-                                <input type="text" class="form-control" value="https://mapon.jp/reserve/shop-id" readonly style="font-size:12px; background:white;">
-                                <button class="btn-primary" style="font-size:12px; white-space:nowrap;">コピー</button>
+                                <input type="text" id="reservationURL" class="form-control" value="" readonly style="font-size:12px; background:white;">
+                                <button class="btn-primary" id="copyBtn" style="font-size:12px; white-space:nowrap;" onclick="copyReservationURL()">コピー</button>
                             </div>
                         </div>
                     </div>
@@ -2978,6 +2978,39 @@
             origSwitchMainView(viewId);
             if (viewId === 'staff-form') { loadStaffList(); }
             if (viewId === 'view-menu-form') { loadMenuList(); }
+            if (viewId === 'view-reservation-form') { updateReservationURL(); }
+        };
+
+        // 予約URLの自動生成
+        function updateReservationURL() {
+            const urlInput = document.getElementById('reservationURL');
+            if (urlInput) {
+                const baseURL = window.location.origin;
+                // reserve.html へのフルパスを生成
+                urlInput.value = baseURL + '/reserve.html';
+            }
+        }
+
+        // 予約URLのコピー機能
+        window.copyReservationURL = function() {
+            const urlInput = document.getElementById('reservationURL');
+            const copyBtn = document.getElementById('copyBtn');
+            
+            urlInput.select();
+            urlInput.setSelectionRange(0, 99999); // スマホ対応
+
+            navigator.clipboard.writeText(urlInput.value).then(() => {
+                const originalText = copyBtn.innerText;
+                copyBtn.innerText = 'コピー済！';
+                copyBtn.style.background = '#059669';
+                setTimeout(() => {
+                    copyBtn.innerText = originalText;
+                    copyBtn.style.background = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('コピー失敗:', err);
+                alert('コピーに失敗しました。');
+            });
         };
 
     </script>
