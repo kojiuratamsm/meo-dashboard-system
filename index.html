@@ -953,29 +953,19 @@
                     <button class="btn-outline" style="width:100%; max-width:300px; padding:10px; border-style:dashed;" onclick="addStaffCard()"><i class="fa-solid fa-plus"></i> スタッフを追加</button>
                 </div>
                 <div style="margin-top:30px; text-align:right;">
-                    <button class="btn-primary">保存する</button>
+                    <button class="btn-primary" onclick="saveStaffList()">保存する</button>
                 </div>
             </div>
             <script>
                 function addStaffCard() {
                     const c = document.getElementById('staffListContainer');
                     if (c.children.length >= 100) { alert('スタッフは最大100名まで登録可能です。'); return; }
-                    c.insertAdjacentHTML('beforeend', `
-                    <div class="card" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px; animation: fadeIn 0.2s;">
-                        <div style="display:flex; justify-content:flex-end;"><button class="btn-outline" style="border:none; color:#EA4335; padding:2px;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-trash"></i></button></div>
-                        <div style="text-align:center; margin-bottom:10px;">
-                            <div style="width:70px; height:70px; border-radius:50%; background:#E2E8F0; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image"></i></div>
-                            <button class="btn-outline" style="font-size:10px; padding:2px 8px;" onclick="let f=document.createElement('input');f.type='file';f.accept='image/*';f.click();">写真を選択</button>
-                        </div>
-                        <div class="form-group" style="margin-bottom:10px;">
-                            <label style="font-size:11px;">名前</label>
-                            <input type="text" class="form-control" style="font-size:12px; padding:6px;" placeholder="例: 佐藤 花子">
-                        </div>
-                        <div class="form-group" style="margin-bottom:0;">
-                            <label style="font-size:11px;">長所</label>
-                            <input type="text" class="form-control" style="font-size:12px; padding:6px;" placeholder="得意なことなど">
-                        </div>
-                    </div>`);
+                    
+                    // 「登録されていません」の文字があれば消す
+                    if(c.querySelector('p')) { c.innerHTML = ''; }
+                    
+                    // 新規カードを描画
+                    renderStaffCard();
                 }
             </script>
         </section>
@@ -991,21 +981,6 @@
             <div class="card" style="animation: fadeIn 0.3s ease;">
                 <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;"><i class="fa-solid fa-circle-info"></i> 提供するメニューを設定します。担当可能なスタッフを選ぶことで、予約時の連動が可能になります。</p>
                 <div id="menuListContainer" style="display:grid; grid-template-columns: 1fr; gap:15px; margin-bottom:20px;">
-                    <!-- サンプルメニュー -->
-                    <div class="card" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px;">
-                        <div style="display:grid; grid-template-columns: 100px 1fr; gap:15px;">
-                            <div style="text-align:center;">
-                                <div style="width:100%; aspect-ratio:1; border-radius:8px; background:#E2E8F0; margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image fa-2x"></i></div>
-                                <button class="btn-outline" style="font-size:10px; padding:2px 8px; width:100%;" onclick="let f=document.createElement('input');f.type='file';f.accept='image/*';f.click();">写真を選択</button>
-                            </div>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:start;">
-                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
-                                    <label style="font-size:11px;">メニュー名 <span style="float:right; color:#EA4335; cursor:pointer;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-trash"></i> 削除</span></label>
-                                    <input type="text" class="form-control" style="font-size:12px; padding:6px;" value="プレミアム焼肉コース">
-                                </div>
-                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
-                                    <label style="font-size:11px;">メニュー詳細</label>
-                                    <textarea class="form-control" rows="2" style="font-size:12px; padding:6px;">最高級黒毛和牛を堪能できる贅沢なコースです。</textarea>
                                 </div>
                                 <div class="form-group" style="margin-bottom:0;">
                                     <label style="font-size:11px;">価格 (税込)</label>
@@ -1032,49 +1007,17 @@
                     <button class="btn-outline" style="width:100%; padding:10px; border-style:dashed;" onclick="addMenuCard()"><i class="fa-solid fa-plus"></i> メニューを追加</button>
                 </div>
                 <div style="margin-top:30px; text-align:right;">
-                    <button class="btn-primary">保存する</button>
+                    <button class="btn-primary" onclick="saveMenuList()">保存する</button>
                 </div>
             </div>
             <script>
                 function addMenuCard() {
                     const c = document.getElementById('menuListContainer');
                     if (c.children.length >= 100) { alert('メニューは最大100種まで登録可能です。'); return; }
-                    c.insertAdjacentHTML('beforeend', `
-                    <div class="card" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px; animation: fadeIn 0.2s;">
-                        <div style="display:grid; grid-template-columns: 100px 1fr; gap:15px;">
-                            <div style="text-align:center;">
-                                <div style="width:100%; aspect-ratio:1; border-radius:8px; background:#E2E8F0; margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image fa-2x"></i></div>
-                                <button class="btn-outline" style="font-size:10px; padding:2px 8px; width:100%;" onclick="let f=document.createElement('input');f.type='file';f.accept='image/*';f.click();">写真を選択</button>
-                            </div>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:start;">
-                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
-                                    <label style="font-size:11px;">メニュー名 <span style="float:right; color:#EA4335; cursor:pointer;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-trash"></i> 削除</span></label>
-                                    <input type="text" class="form-control" style="font-size:12px; padding:6px;">
-                                </div>
-                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
-                                    <label style="font-size:11px;">メニュー詳細</label>
-                                    <textarea class="form-control" rows="2" style="font-size:12px; padding:6px;"></textarea>
-                                </div>
-                                <div class="form-group" style="margin-bottom:0;">
-                                    <label style="font-size:11px;">価格 (税込)</label>
-                                    <input type="text" class="form-control" style="font-size:12px; padding:6px;">
-                                </div>
-                                <div class="form-group" style="margin-bottom:0;">
-                                    <label style="font-size:11px;">所要時間</label>
-                                    <select class="form-control" style="font-size:12px; padding:6px;">
-                                        <option>30分</option><option>60分</option><option>90分</option><option>120分</option><option>150分</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
-                                    <label style="font-size:11px;">担当可能なスタッフ (複数選択可)</label>
-                                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                                        <label style="font-size:11px; display:flex; align-items:center; gap:4px;"><input type="checkbox"> やまもと</label>
-                                        <label style="font-size:11px; display:flex; align-items:center; gap:4px;"><input type="checkbox"> さとう</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`);
+                    
+                    if(c.querySelector('p')) { c.innerHTML = ''; }
+                    
+                    renderMenuCard(); 
                 }
             </script>
         </section>
@@ -2694,50 +2637,330 @@
     </script>
 
     <!-- Supabase連携：設定画面でのパスワード変更処理 -->
-    <script type="module">
-        import { supabase } from './supabase-config.js';
+        // --- スタッフ管理機能 (Supabase連携) ---
 
-        window.changePassword = async function() {
-            const pwInput = document.getElementById('newPasswordInput');
-            const newPassword = pwInput.value.trim();
+        // --- 画像アップロードヘルパー ---
+        window.handleImageSelect = function(btn) {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
 
-            if (!newPassword) {
-                alert('新しいパスワードを入力してください。');
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const base64Str = ev.target.result;
+                    // 画像プレビューの更新
+                    const card = btn.closest('.card');
+                    const previewContainer = card.querySelector('.photo-preview');
+                    if (previewContainer) {
+                        previewContainer.innerHTML = `<img src="${base64Str}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+                    // hidden inputへの値セット
+                    const hiddenInput = card.querySelector('input[type="hidden"]');
+                    if (hiddenInput) {
+                        hiddenInput.value = base64Str;
+                    }
+                };
+                reader.readAsDataURL(file);
+            };
+            fileInput.click();
+        };
+
+        // --- スタッフ管理機能 (Supabase連携) ---
+
+        window.currentStaffList = []; // メニュー連携用に保持
+
+        // スタッフ一覧をSupabaseから読み込む
+        window.loadStaffList = async function() {
+            const container = document.getElementById('staffListContainer');
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...</div>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('staff')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+
+                if (error) throw error;
+
+                window.currentStaffList = data || []; // キャッシュ保存
+
+                container.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(member => {
+                        window.renderStaffCard(member);
+                    });
+                } else {
+                    container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#A0AEC0; font-size:13px; padding:20px;">スタッフが登録されていません。</p>';
+                }
+            } catch (e) {
+                console.error("スタッフ読み込みエラー:", e);
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#EA4335; font-size:13px; padding:20px;">読み込みに失敗しました。</p>';
+            }
+        };
+
+        // 画面上のカードを描画するヘルパー
+        window.renderStaffCard = function(member = {}) {
+            const container = document.getElementById('staffListContainer');
+            if(container.querySelector('div.fa-spinner')) container.innerHTML = ''; // ローディング消去
+
+            const cardHtml = `
+            <div class="card staff-card" data-id="${member.id || ''}" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px; animation: fadeIn 0.2s;">
+                <div style="display:flex; justify-content:flex-end;"><button class="btn-outline" style="border:none; color:#EA4335; padding:2px;" onclick="deleteStaffConfirm(this)"><i class="fa-solid fa-trash"></i></button></div>
+                <div style="text-align:center; margin-bottom:10px;">
+                    <div class="photo-preview" style="width:70px; height:70px; border-radius:50%; background:#E2E8F0; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; color:#A0AEC0; overflow:hidden;">
+                        ${member.photo_url ? `<img src="${member.photo_url}" style="width:100%; height:100%; object-fit:cover;">` : '<i class="fa-solid fa-image"></i>'}
+                    </div>
+                    <button class="btn-outline" style="font-size:10px; padding:2px 8px;" onclick="handleImageSelect(this)">写真を選択</button>
+                    <input type="hidden" class="staff-photo-url" value="${member.photo_url || ''}">
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label style="font-size:11px;">名前</label>
+                    <input type="text" class="form-control staff-name" style="font-size:12px; padding:6px;" value="${member.name || ''}" placeholder="例: 佐藤 花子">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:11px;">長所</label>
+                    <input type="text" class="form-control staff-strength" style="font-size:12px; padding:6px;" value="${member.strength || ''}" placeholder="得意なことなど">
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', cardHtml);
+        }
+
+        // スタッフ情報を保存する
+        window.saveStaffList = async function() {
+            const btn = document.querySelector('button[onclick="saveStaffList()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中...';
+            btn.disabled = true;
+
+            const cards = document.querySelectorAll('.staff-card');
+            const staffData = [];
+
+            cards.forEach(card => {
+                const name = card.querySelector('.staff-name').value.trim();
+                if (name) {
+                    staffData.push({
+                        id: card.dataset.id || undefined, // 新規の場合はundefinedにして自動生成させる
+                        name: name,
+                        strength: card.querySelector('.staff-strength').value.trim(),
+                        photo_url: card.querySelector('.staff-photo-url').value.trim()
+                    });
+                }
+            });
+
+            if (staffData.length === 0) {
+                alert('登録するスタッフ情報を1名以上入力してください。');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
                 return;
             }
 
-            const confirmMsg = `入力されたパスワードは【 ${newPassword} 】です。\nこちらに変更しても宜しいでしょうか？`;
-            if (confirm(confirmMsg)) {
-                // ローカルストレージのユーザー情報を取得
-                const userDataStr = localStorage.getItem('currentUser');
-                if (!userDataStr) {
-                    alert('ユーザー情報が見つかりません。再ログインしてください。');
-                    return;
-                }
+            try {
+                // Upsert（存在すれば更新、なければ追加）を実行
+                const { error } = await supabase
+                    .from('staff')
+                    .upsert(staffData);
 
+                if (error) throw error;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> 保存しました';
+                setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+                
+                await loadStaffList(); // 画面とキャッシュをリフレッシュ
+            } catch (e) {
+                console.error("保存エラー:", e);
+                alert('保存に失敗しました。');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        // スタッフ削除の確認
+        window.deleteStaffConfirm = async function(btn) {
+            const card = btn.closest('.card');
+            const staffId = card.dataset.id;
+
+            if (!staffId) {
+                card.remove(); // まだ保存されていないカードは即座に消す
+                return;
+            }
+
+            if (confirm('このスタッフを削除してもよろしいですか？（この操作は取り消せません）')) {
                 try {
-                    const userData = JSON.parse(userDataStr);
-                    
-                    // Supabaseのデータを更新
                     const { error } = await supabase
-                        .from('clients')
-                        .update({ temp_password: newPassword })
-                        .eq('id', userData.id);
+                        .from('staff')
+                        .delete()
+                        .eq('id', staffId);
 
                     if (error) throw error;
-
-                    // ローカルのデータも更新しておく
-                    userData.temp_password = newPassword;
-                    localStorage.setItem('currentUser', JSON.stringify(userData));
-
-                    alert('パスワードの変更が完了しました。\n次回以降はこの新しいパスワードでログインしてください。');
-                    pwInput.value = ''; // フォームをクリア
+                    card.remove();
                 } catch (e) {
-                    console.error("パスワード更新エラー:", e);
-                    alert('パスワードの更新に失敗しました。時間をおいて再度お試しください。');
+                    console.error("削除エラー:", e);
+                    alert('削除に失敗しました。');
                 }
             }
         };
+
+        // --- メニュー管理機能 (Supabase連携) ---
+
+        window.loadMenuList = async function() {
+            const container = document.getElementById('menuListContainer');
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...</div>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('menus')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+
+                if (error) throw error;
+
+                container.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(item => renderMenuCard(item));
+                } else {
+                    container.innerHTML = '<p style="text-align:center; color:#A0AEC0; font-size:13px; padding:20px;">メニューが登録されていません。</p>';
+                }
+            } catch (e) {
+                console.error("メニュー読み込みエラー:", e);
+                container.innerHTML = '<p style="text-align:center; color:#EA4335; font-size:13px; padding:20px;">読み込みに失敗しました。</p>';
+            }
+        };
+
+        window.renderMenuCard = function(item = {}) {
+            const container = document.getElementById('menuListContainer');
+            if(container.querySelector('div.fa-spinner')) container.innerHTML = ''; // ローディング消去
+
+            // 現在登録されているスタッフのチェックボックスを生成
+            let staffCheckboxesHTML = '';
+            if (window.currentStaffList && window.currentStaffList.length > 0) {
+                window.currentStaffList.forEach(staff => {
+                    staffCheckboxesHTML += `
+                        <label style="font-size:11px; display:flex; align-items:center; gap:4px;">
+                            <input type="checkbox" value="${staff.name}" checked> ${staff.name}
+                        </label>
+                    `;
+                });
+            } else {
+                staffCheckboxesHTML = '<span style="font-size:10px; color:#A0AEC0;">※先にスタッフを登録してください</span>';
+            }
+
+            const cardHtml = `
+            <div class="card menu-card" data-id="${item.id || ''}" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px; animation: fadeIn 0.2s;">
+                <div style="display:grid; grid-template-columns: 100px 1fr; gap:15px;">
+                    <div style="text-align:center;">
+                        <div class="photo-preview" style="width:100%; aspect-ratio:1; border-radius:8px; background:#E2E8F0; margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#A0AEC0; overflow:hidden;">
+                            ${item.photo_url ? `<img src="${item.photo_url}" style="width:100%; height:100%; object-fit:cover;">` : '<i class="fa-solid fa-image fa-2x"></i>'}
+                        </div>
+                        <button class="btn-outline" style="font-size:10px; padding:2px 8px; width:100%;" onclick="handleImageSelect(this)">写真を選択</button>
+                        <input type="hidden" class="menu-photo-url" value="${item.photo_url || ''}">
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:start;">
+                        <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                            <label style="font-size:11px;">メニュー名 <span style="float:right; color:#EA4335; cursor:pointer;" onclick="deleteMenuConfirm(this)"><i class="fa-solid fa-trash"></i> 削除</span></label>
+                            <input type="text" class="form-control menu-name" style="font-size:12px; padding:6px;" value="${item.item_name || ''}" placeholder="例: プレミアム焼肉コース">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                            <label style="font-size:11px;">メニュー詳細</label>
+                            <textarea class="form-control menu-description" rows="2" style="font-size:12px; padding:6px;" placeholder="内容の説明文">${item.description || ''}</textarea>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11px;">価格 (税込)</label>
+                            <input type="number" class="form-control menu-price" style="font-size:12px; padding:6px;" value="${item.price || ''}" placeholder="8000">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11px;">所要時間</label>
+                            <select class="form-control menu-duration" style="font-size:12px; padding:6px;">
+                                <option value="30" ${item.duration == 30 ? 'selected' : ''}>30分</option>
+                                <option value="60" ${item.duration == 60 ? 'selected' : ''}>60分</option>
+                                <option value="90" ${item.duration == 90 ? 'selected' : ''}>90分</option>
+                                <option value="120" ${item.duration == 120 ? 'selected' : ''}>120分</option>
+                                <option value="150" ${item.duration == 150 ? 'selected' : ''}>150分</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                            <label style="font-size:11px;">担当可能なスタッフ (複数選択可)</label>
+                            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                                ${staffCheckboxesHTML}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', cardHtml);
+        }
+
+        window.saveMenuList = async function() {
+            const btn = document.querySelector('button[onclick="saveMenuList()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中...';
+            btn.disabled = true;
+
+            const cards = document.querySelectorAll('.menu-card');
+            const menuData = [];
+
+            cards.forEach(card => {
+                const name = card.querySelector('.menu-name').value.trim();
+                if (name) {
+                    menuData.push({
+                        id: card.dataset.id || undefined,
+                        item_name: name,
+                        description: card.querySelector('.menu-description').value.trim(),
+                        price: parseInt(card.querySelector('.menu-price').value) || 0,
+                        duration: parseInt(card.querySelector('.menu-duration').value) || 60,
+                        photo_url: card.querySelector('.menu-photo-url').value.trim()
+                    });
+                }
+            });
+
+            if (menuData.length === 0) {
+                alert('登録するメニューを1つ以上入力してください。');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                const { error } = await supabase.from('menus').upsert(menuData);
+                if (error) throw error;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> 保存しました';
+                setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+                
+                await loadMenuList();
+            } catch (e) {
+                console.error("メニュー保存エラー:", e);
+                alert('保存に失敗しました。');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        window.deleteMenuConfirm = async function(btn) {
+            const card = btn.closest('.menu-card');
+            const menuId = card.dataset.id;
+            if (!menuId) { card.remove(); return; }
+
+            if (confirm('このメニューを削除しますか？')) {
+                try {
+                    const { error } = await supabase.from('menus').delete().eq('id', menuId);
+                    if (error) throw error;
+                    card.remove();
+                } catch (e) {
+                    console.error("メニュー削除エラー:", e);
+                    alert('削除に失敗しました。');
+                }
+            }
+        };
+
+        // ビュー切り替え時の連動
+        const origSwitchMainView = window.switchMainView;
+        window.switchMainView = function(viewId) {
+            origSwitchMainView(viewId);
+            if (viewId === 'staff-form') { loadStaffList(); }
+            if (viewId === 'view-menu-form') { loadMenuList(); }
+        };
+
     </script>
 </body>
 </html>
