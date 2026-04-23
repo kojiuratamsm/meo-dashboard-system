@@ -50,7 +50,6 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         .header h1 { font-size: 28px; font-weight: 700; }
         .header p { color: var(--text-muted); margin-top: 5px; font-size: 14px; }
-        .user-profile { display: flex; align-items: center; gap: 15px; background: var(--card-bg); padding: 10px 20px; border-radius: 30px; box-shadow: var(--shadow); font-weight: 600; }
         .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
         .card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: var(--shadow); margin-bottom: 20px; }
@@ -135,7 +134,6 @@
             .mobile-only-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px 20px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
             .header { flex-direction: column; align-items: flex-start; gap: 15px; margin-bottom: 20px; }
             .header h1 { font-size: 20px; line-height: 1.4; }
-            .user-profile { display: none !important; }
             
             /* グリッドとカードのレイアウト崩れ補正 */
             .kpi-grid, .kpi-grid-4, .dashboard-grid { grid-template-columns: 1fr; gap: 15px; }
@@ -232,9 +230,6 @@
                             <option value="prev5">5ヶ月前（2025年11月）</option>
                         </select>
                     </div>
-                </div>
-                <div class="user-profile" style="display:none;">
-                    <div class="avatar">店</div> 管理者
                 </div>
             </header>
 
@@ -660,10 +655,6 @@
         <section id="view-posts" class="view-section">
             <header class="header">
                 <h1>AI自動投稿・予約投稿</h1>
-                <div class="user-profile">
-                    <div class="user-icon"><i class="fa-solid fa-user"></i></div>
-                    <span style="font-weight:600;"><span class="dynamic-store-name">焼肉 新宿本店</span> 様</span>
-                </div>
             </header>
             
             <div class="dashboard-grid">
@@ -771,10 +762,6 @@
         <section id="view-reservations" class="view-section">
             <header class="header">
                 <h1>予約管理カレンダー・LINE連携</h1>
-                <div class="user-profile">
-                    <div class="user-icon"><i class="fa-solid fa-user"></i></div>
-                    <span style="font-weight:600;"><span class="dynamic-store-name">焼肉 新宿本店</span> 様</span>
-                </div>
             </header>
 
             <div class="dashboard-grid">
@@ -2536,24 +2523,7 @@
             window.getSelection().removeAllRanges();
         }
 
-        // --- 全画面統一: 右上プロフィール表示の動的挿入（競合分析等での表示ブレ対策） ---
-        document.addEventListener("DOMContentLoaded", () => {
-            const globalProfileHtml = `
-                <div class="user-profile global-user-profile" style="display:flex !important; align-items:center; gap:12px; background:var(--card-bg); padding:8px 16px; border-radius:30px; box-shadow:var(--shadow);">
-                    <div style="width:32px; height:32px; background:var(--primary-blue); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px;">店舗</div>
-                    <span style="font-weight:600; font-size:14px; color:var(--text-main);"><span class="dynamic-store-name">株式会社MSM</span> 様</span>
-                </div>
-            `;
-            document.querySelectorAll('.header').forEach(header => {
-                // 古いプロフィール表記があれば削除して統一
-                const oldProfile = header.querySelector('.user-profile');
-                if (oldProfile) {
-                    oldProfile.remove();
-                }
-                // グローバルプロフィールを再配置
-                header.insertAdjacentHTML('beforeend', globalProfileHtml);
-            });
-        });
+
 
         // --- オンボーディング関連のJS ---
         function checkOnboardForm() {
