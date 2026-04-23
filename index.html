@@ -135,12 +135,12 @@
             .mobile-only-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px 20px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
             .header { flex-direction: column; align-items: flex-start; gap: 15px; margin-bottom: 20px; }
             .header h1 { font-size: 20px; line-height: 1.4; }
-            .user-profile { align-self: flex-start; font-size: 13px; padding: 5px 15px; }
+            .user-profile { display: none !important; }
             
             /* グリッドとカードのレイアウト崩れ補正 */
             .kpi-grid, .kpi-grid-4, .dashboard-grid { grid-template-columns: 1fr; gap: 15px; }
-            .kpi-card { flex-wrap: wrap; justify-content: center; text-align: center; padding: 20px; }
-            .kpi-icon { margin-bottom: 5px; }
+            .kpi-card { flex-wrap: nowrap; justify-content: flex-start; text-align: left; padding: 20px; }
+            .kpi-icon { margin-bottom: 0; flex-shrink: 0; }
             .chart-wrapper { height: 250px; }
             .ai-card { font-size: 13px; padding: 20px; }
             
@@ -208,8 +208,10 @@
         <!-- モバイル専用ヘッダー -->
         <div class="mobile-only-header">
             <div class="msm-logo" style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;" onclick="switchMainView('dashboard', document.querySelector('.nav-item'))">
-                <i class="fa-solid fa-chart-line" style="color:#a855f7; font-size:18px;"></i>
-                <span style="font-size:20px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">MSM</span>
+                <div style="background:linear-gradient(135deg, #a855f7, #6366f1); color:white; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px rgba(99,102,241,0.3);">
+                    <i class="fa-solid fa-map-location-dot" style="font-size:14px;"></i>
+                </div>
+                <span style="font-size:20px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px;">MapOn</span>
             </div>
             <button onclick="toggleMobileMenu()" style="background:none; border:none; font-size:26px; color:var(--text-main); cursor:pointer;"><i class="fa-solid fa-bars"></i></button>
         </div>
@@ -231,7 +233,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="user-profile">
+                <div class="user-profile" style="display:none;">
                     <div class="avatar">店</div> 管理者
                 </div>
             </header>
@@ -296,8 +298,8 @@
 
             <div class="dashboard-grid">
                 <div class="card chart-card">
-                    <div style="display: flex; justify-content: space-between; align-items:center; margin-bottom:15px;">
-                        <h2 class="card-title" style="margin:0;">パフォーマンス推移</h2>
+                    <div style="display: flex; justify-content: space-between; align-items:center; margin-bottom:15px; flex-wrap: nowrap;">
+                        <h2 class="card-title" style="margin:0; white-space: nowrap; flex-shrink: 0; padding-right: 10px;">パフォーマンス推移</h2>
                         <select id="monthSelector" class="month-selector">
                             <option value="6months">過去半年（デフォルト）</option>
                             <option value="daily">2026年 3月</option>
@@ -465,12 +467,12 @@
                         </div>
 
                         <!-- 保存・発行ボタン -->
-                        <div style="display:flex; gap:15px;">
-                            <button class="btn-primary" style="flex:1; background:#A0AEC0; box-shadow:none; border-radius:10px;" onclick="saveSurveyAsDraft()">
-                                <i class="fa-solid fa-floppy-disk"></i> 下書き保存
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-primary" style="flex:1; background:#A0AEC0; box-shadow:none; border-radius:10px; padding:12px 10px; font-size:14px; min-height:60px;" onclick="saveSurveyAsDraft()">
+                                <i class="fa-solid fa-floppy-disk"></i> 下書き/保存
                             </button>
-                            <button class="btn-primary" style="flex:2;" onclick="generateQR()">
-                                <i class="fa-solid fa-rocket"></i> 今すぐ発行（公開・更新）
+                            <button class="btn-primary" style="flex:2; padding:12px 10px; font-size:14px; min-height:60px;" onclick="generateQR()">
+                                <i class="fa-solid fa-rocket"></i> 今すぐ発行<br>(公開・更新)
                             </button>
                         </div>
                     </div>
