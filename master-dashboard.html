@@ -104,14 +104,15 @@
                 <h2 style="margin:0;">契約クライアント一覧</h2>
                 <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                     <!-- 絞り込みタブ -->
-                    <select id="planFilterSelect" style="padding:10px; border-radius:8px; border:1px solid var(--border-color); font-weight:bold; color:var(--primary-blue); outline:none; cursor:pointer;" onchange="alert('データベースに「プラン種別」を追加後、このフィルターが稼働します！')">
+                    <select id="planFilterSelect" style="padding:10px; border-radius:8px; border:1px solid var(--border-color); font-weight:bold; color:var(--primary-blue); outline:none; cursor:pointer;" onchange="filterClients()">
                         <option value="all">すべてのクライアント</option>
-                        <option value="agency">運用代行プランのみ</option>
-                        <option value="mapon">MapOn (有料/モニター)のみ</option>
+                        <option value="A">運用代行プラン</option>
+                        <option value="B">MapOn</option>
+                        <option value="C">MapOnモニター</option>
                     </select>
                     <!-- 検索バー -->
                     <div style="position:relative;">
-                        <input type="text" id="clientSearchInput" placeholder="店舗名/法人名/メールを検索..." style="padding:10px 15px 10px 35px; border-radius:8px; border:1px solid var(--border-color); width:260px; font-size:14px; outline:none;" onkeyup="searchClients()">
+                        <input type="text" id="clientSearchInput" placeholder="店舗名/法人名/メールを検索..." style="padding:10px 15px 10px 35px; border-radius:8px; border:1px solid var(--border-color); width:260px; font-size:14px; outline:none;" onkeyup="filterClients()">
                         <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#A0AEC0;"></i>
                     </div>
                     <!-- 追加ボタン -->
@@ -194,15 +195,25 @@
             document.getElementById('mobileOverlay').classList.toggle('active');
         }
 
-        // クライアントを検索する機能
-        function searchClients() {
+        // プラン絞り込み・検索を同時に行う機能
+        window.filterClients = function() {
+            let filterPlan = document.getElementById('planFilterSelect').value;
             let input = document.getElementById('clientSearchInput').value.toLowerCase();
             let rows = document.getElementsByClassName('client-row');
             for (let i = 0; i < rows.length; i++) {
                 let text = rows[i].innerText.toLowerCase();
-                rows[i].style.display = text.includes(input) ? "" : "none";
+                let plan = rows[i].dataset.plan;
+                
+                let matchesSearch = text.includes(input);
+                let matchesPlan = (filterPlan === 'all' || plan === filterPlan);
+                
+                if (matchesSearch && matchesPlan) {
+                    rows[i].style.display = "";
+                } else {
+                    rows[i].style.display = "none";
+                }
             }
-        }
+        };
 
         // モーダルを開く処理をグローバル関数のままにしておく（onclick動作用）
         window.openAddClientModal = function() {
@@ -253,6 +264,7 @@
             data.forEach(client => {
                 const tr = document.createElement('tr');
                 tr.className = 'client-row';
+                tr.dataset.plan = client.plan || '';
                 
                 // ステータスバッジの小技
                 const statusHtml = client.status === '稼働中' 
