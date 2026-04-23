@@ -20,7 +20,7 @@ export function getCurrentUser() {
 export function logout() {
   localStorage.removeItem('currentUser')
   localStorage.removeItem('masterAdmin')
-  window.location.href = '/login.html'
+  window.location.href = '/login'
 }
 
 /**
@@ -31,7 +31,7 @@ export function requireAuth() {
   const isMaster = localStorage.getItem('masterAdmin')
   const isDemo = sessionStorage.getItem('demoBypass')
   if (!user && !isMaster && !isDemo) {
-    window.location.replace('/login.html')
+    window.location.replace('/login')
     return null
   }
   return user

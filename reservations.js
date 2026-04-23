@@ -274,7 +274,7 @@ export function updateReservationURL() {
   const previewFrame = document.getElementById('reservationPreviewFrame')
   if (!urlInput) return
 
-  const finalUrl = window.location.origin + '/reserve.html'
+  const finalUrl = window.location.origin + '/reserve'
   urlInput.value = finalUrl
   if (previewFrame && previewFrame.src !== finalUrl) {
     previewFrame.src = finalUrl

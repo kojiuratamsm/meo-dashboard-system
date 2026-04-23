@@ -133,7 +133,7 @@
             // 1. マスター権限の判定（これだけは絶対パス）
             if (email === 'urata@msm-jap.com' && pass === 'Koji2819') {
                 localStorage.setItem('masterAdmin', 'true');
-                window.location.href = 'master-dashboard.html';
+                window.location.href = '/master-dashboard';
                 return;
             } 
 
@@ -160,7 +160,7 @@
             // 認証成功！ブラウザにこの顧客の情報を記憶させる
             localStorage.setItem('currentUser', JSON.stringify(data));
             // 本番ダッシュボードへ遷移
-            window.location.href = 'index.html';
+            window.location.href = '/';
         };
 
         // パスワードランダム発行 & メール送信のモックアップ（変更なし）

@@ -8,7 +8,7 @@
     <script>
         const isMaster = localStorage.getItem('masterAdmin');
         if (!isMaster) {
-            window.location.replace('login.html');
+            window.location.replace('/master-login');
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -80,9 +80,9 @@
         
         <div style="margin-top:20px; padding:0 15px;">
             <p style="font-size:11px; color:#A0AEC0; margin-bottom:10px; font-weight:bold;">申し込みフォームURL取得</p>
-            <button class="btn-action" style="background:#4A5568; margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('signup-a.html')">運用代行プラン</button>
-            <button class="btn-action" style="background:var(--primary-blue); margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('signup-b.html')">MapOn</button>
-            <button class="btn-action" style="background:#34A853; width:100%; font-size:11px;" onclick="copySignupUrl('signup-c.html')">MapOn(モニター)</button>
+            <button class="btn-action" style="background:#4A5568; margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('/signup-a')">運用代行プラン</button>
+            <button class="btn-action" style="background:var(--primary-blue); margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('/signup-b')">MapOn</button>
+            <button class="btn-action" style="background:#34A853; width:100%; font-size:11px;" onclick="copySignupUrl('/signup-c')">MapOn(モニター)</button>
         </div>
 
         <a href="login.html" class="nav-item" style="margin-top:auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
@@ -320,7 +320,7 @@
             // 本人としてログイン済みのフラグ立て（localStorageのcurrentUserを書き換え）
             localStorage.setItem('currentUser', JSON.stringify(client));
             // ダッシュボードへリダイレクト
-            window.location.href = 'index.html';
+            window.location.href = '/';
         };
 
         window.openBlogModal = function(clientId, blogsStrEncoded) {
