@@ -3060,5 +3060,37 @@
 
     <!-- ★ Vite管理のメインエントリーポイント（新しいモジュールシステム） -->
     <script type="module" src="/src/main.js"></script>
+
+    <!-- GBP Connection Wizard (API申請中用モックアップ) -->
+    <div id="gbpConnectWizard" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); backdrop-filter:blur(8px); z-index:99999; justify-content:center; align-items:center; animation: fadeIn 0.4s ease;">
+        <div style="background:white; border-radius:24px; width:90%; max-width:550px; padding:40px; text-align:center; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+            <div style="background:#F0F9FF; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+                <i class="fa-brands fa-google" style="color:#4285F4; font-size:40px;"></i>
+            </div>
+            <h2 style="font-size:24px; font-weight:800; color:#0F172A; margin-bottom:15px;">Googleビジネス連携</h2>
+            <p style="font-size:14px; color:#64748B; line-height:1.6; margin-bottom:30px;">
+                MapOnのすべての機能（口コミ収集、自動投稿、ダッシュボード分析など）を利用するには、あなたのお店の「Googleビジネスプロフィール」との連携が必要です。
+            </p>
+            
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:20px; text-align:left; margin-bottom:30px;">
+                <h4 style="font-size:12px; color:#475569; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:700;">連携でできるようになること</h4>
+                <ul style="list-style:none; padding:0; margin:0; font-size:13px; color:#334155; display:flex; flex-direction:column; gap:8px;">
+                    <li><i class="fa-solid fa-circle-check" style="color:#059669; margin-right:8px;"></i> 予約や口コミの情報をダッシュボードに一元化</li>
+                    <li><i class="fa-solid fa-circle-check" style="color:#059669; margin-right:8px;"></i> Googleマップへの定期自動投稿</li>
+                    <li><i class="fa-solid fa-circle-check" style="color:#059669; margin-right:8px;"></i> お客様のアクション（閲覧数・検索数）の自動分析</li>
+                </ul>
+            </div>
+
+            <!-- API連携用の本番ボタン (現在は準備中アラート) -->
+            <button onclick="alert('【近日公開予定！】\nGoogle APIの審査が通過し次第、ここから実際のGoogleログイン画面が開き、店舗の連携を安全に行えるようになります。\n※現在は「あとで連携する」からダッシュボードをお試しください。')" style="width:100%; background:#4285F4; color:white; font-size:16px; font-weight:bold; padding:15px; border:none; border-radius:12px; cursor:pointer; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px; transition:0.2s;">
+                <i class="fa-brands fa-google"></i> Googleアカウント名で連携する
+            </button>
+            
+            <!-- APIが通るまでの「仮の回避ボタン」 -->
+            <button onclick="document.getElementById('gbpConnectWizard').style.display='none'" style="background:none; border:none; color:#94A3B8; font-size:13px; text-decoration:underline; cursor:pointer;">
+                あとで連携する（仮のダッシュボードへ）
+            </button>
+        </div>
+    </div>
 </body>
 </html>

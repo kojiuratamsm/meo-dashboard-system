@@ -16,7 +16,13 @@ async function bootstrap() {
   // 3. プランに応じてメニューを制限
   applyPlanRestrictions(user)
 
-  // 4. 各ページモジュールを遅延ロードで初期化
+  // 4. GBP連携状況チェック (API実装前は仮ウィザード表示)
+  if (user && !user.gbp_location_id) {
+    const wizard = document.getElementById('gbpConnectWizard')
+    if (wizard) wizard.style.display = 'flex'
+  }
+
+  // 5. 各ページモジュールを遅延ロードで初期化
   const { initDashboard } = await import('./pages/dashboard.js')
   initDashboard(user)
 }
