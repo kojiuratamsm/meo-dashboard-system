@@ -170,7 +170,7 @@
             `;
         }
 
-        function submitSurvey() {
+        async function submitSurvey() {
             const groups = document.querySelectorAll('.survey-input-group');
             let answersObj = {};
             
@@ -213,134 +213,62 @@
             storedAnswers.unshift(newAnswerData);
             localStorage.setItem('msmSurveyAnswers', JSON.stringify(storedAnswers));
 
+            // --- 本物のAI口コミ生成ロジック（Vercel API経由） ---
             document.getElementById('step1').style.display = 'none';
             document.getElementById('step2').style.display = 'block';
 
-            // --- 高品質な口コミ文章生成ロジック（プロンプト改善版） ---
-            // 方針：質問の「意図」とユーザーの「回答」の文脈を深く理解し、
-            // MEOキーワードは自然な文脈で適切な位置にのみ配置。
-            // 「人間が書いたような自然で説得力のある口コミ文章」を生成する。
-            setTimeout(() => {
-                
-                // --- 星評価の表示処理 ---
-                let userStarStr = answersObj['1']; 
-                if(!userStarStr) {
-                    const starsInput = Object.entries(answersObj).find(([k,v]) => typeof v === 'string' && v.includes('星'));
-                    if(starsInput) userStarStr = starsInput[1];
-                }
-                if(userStarStr) {
-                    const starNum = parseInt(userStarStr);
-                    const starsHtml = '★'.repeat(starNum) + '☆'.repeat(5 - starNum);
-                    document.getElementById('displayUserStar').innerHTML = starsHtml;
-                } else {
-                    document.getElementById('displayUserStar').style.display = 'none';
-                }
+            // 星評価の抽出と表示
+            let userStarStr = answersObj['1']; 
+            if(!userStarStr) {
+                const starsInput = Object.entries(answersObj).find(([k,v]) => typeof v === 'string' && v.includes('星'));
+                if(starsInput) userStarStr = starsInput[1];
+            }
+            if(userStarStr) {
+                const starNum = parseInt(userStarStr);
+                document.getElementById('displayUserStar').innerHTML = '★'.repeat(starNum) + '☆'.repeat(5 - starNum);
+            } else {
+                document.getElementById('displayUserStar').style.display = 'none';
+            }
 
-                // === AIプロンプト：文脈理解型の口コミ生成 ===
-                // STEP1: 回答データを意味カテゴリに分類
-                const context = { star: null, food: [], scene: [], service: [], freeText: [], other: [] };
-
-                questionsData.forEach(q => {
-                    const val = answersObj[q.id];
-                    if(!val) return;
-                    const title = (q.title || '').toLowerCase();
+            // アンケート回答を文字列としてまとめる
+            let answersText = "";
+            questionsData.forEach(q => {
+                const val = answersObj[q.id];
+                if(val) {
                     const valStr = Array.isArray(val) ? val.join('、') : String(val);
+                    answersText += `Q: ${q.title}\nA: ${valStr}\n\n`;
+                }
+            });
 
-                    if (q.type === 'stars') {
-                        context.star = parseInt(val);
-                    } else if (title.includes('味') || title.includes('料理') || title.includes('メニュー') || title.includes('食')) {
-                        context.food.push(valStr);
-                    } else if (title.includes('雰囲気') || title.includes('シーン') || title.includes('利用') || title.includes('目的') || title.includes('用途')) {
-                        context.scene.push(valStr);
-                    } else if (title.includes('接客') || title.includes('スタッフ') || title.includes('対応') || title.includes('サービス')) {
-                        context.service.push(valStr);
-                    } else if (q.type === 'text') {
-                        if(valStr.trim()) context.freeText.push(valStr);
-                    } else {
-                        context.other.push({ question: q.title, answer: valStr });
-                    }
+            // Vercelバックエンドへリクエスト送信（APIキーは一切露出しない）
+            try {
+                const response = await fetch('/api/generateReviewDraft', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        shopName: currentConfig.title || '当店',
+                        keywords: savedKeywords,
+                        answersText: answersText,
+                        starRating: userStarStr ? parseInt(userStarStr) : 5
+                    })
                 });
 
-                // STEP2: MEOキーワードを文脈に自然に溶け込ませる
-                const kw = savedKeywords.length > 0 ? savedKeywords[Math.floor(Math.random() * savedKeywords.length)] : '';
-                const kwSub = savedKeywords.length > 1 ? savedKeywords.find(k => k !== kw) : '';
-
-                // STEP3: 文脈に基づいた自然な文章を構築
-                let paragraphs = [];
-
-                // ■ 導入（来店動機 + ワード自然配置）
-                if(kw && context.scene.length > 0) {
-                    paragraphs.push(`${context.scene.join('や')}で使えるお店を${kw}エリアで探していたところ、こちらのお店を見つけて伺いました。結論から言うと、大正解でした。`);
-                } else if(kw) {
-                    paragraphs.push(`${kw}で評判が良かったので気になって訪問しました。実際に行ってみると、評判以上の素敵なお店で感動しました。`);
-                } else if(context.scene.length > 0) {
-                    paragraphs.push(`${context.scene.join('や')}で利用できるお店を探していて、こちらに伺いました。雰囲気も含めてとても良い選択でした。`);
-                } else {
-                    paragraphs.push(`以前から気になっていたこちらのお店にようやく行くことができました。想像以上に素敵なお店でした。`);
+                if (!response.ok) {
+                    throw new Error('API request failed');
                 }
 
-                // ■ 料理・メニューへの言及
-                if(context.food.length > 0) {
-                    const foods = context.food.join('、');
-                    const foodPhrases = [
-                        `お料理は${foods}をいただきましたが、どれも丁寧に作られていて、素材の良さがしっかり伝わってきました。見た目も美しく、写真を撮る手が止まりませんでした。`,
-                        `${foods}を注文しましたが、一品一品に手間暇がかけられているのが分かる味わいで、最後まで美味しくいただけました。`,
-                        `いただいた${foods}はどれも絶品で、特に味付けのバランスが絶妙でした。次回は他のメニューも試してみたいです。`
-                    ];
-                    paragraphs.push(foodPhrases[Math.floor(Math.random() * foodPhrases.length)]);
-                }
-
-                // ■ 雰囲気・シーンへの言及（導入で使っていない場合）
-                if(context.scene.length > 0 && !paragraphs[0].includes(context.scene[0])) {
-                    paragraphs.push(`${context.scene.join('や')}にもぴったりな落ち着いた空間で、時間を忘れてゆったりと過ごすことができました。`);
-                }
-
-                // ■ 接客・スタッフへの言及
-                if(context.service.length > 0) {
-                    const svc = context.service.join('、');
-                    paragraphs.push(`スタッフの方の対応も${svc}で、細やかな気配りが嬉しかったです。おかげで終始リラックスして楽しめました。`);
-                }
-
-                // ■ 星評価に基づく総合印象
-                if(context.star !== null) {
-                    if(context.star >= 4) {
-                        paragraphs.push(`総合的にとても満足度が高く、全てにおいて期待を上回るクオリティでした。`);
-                    } else if(context.star === 3) {
-                        paragraphs.push(`全体的にバランスの取れた良いお店だと感じました。価格と内容のコスパも納得です。`);
-                    } else if(context.star <= 2) {
-                        paragraphs.push(`今回は少し気になる点もありましたが、ポテンシャルのあるお店だと思うので、次回に期待しています。`);
-                    }
-                }
-
-                // ■ 自由記述の反映
-                if(context.freeText.length > 0) {
-                    const ft = context.freeText[0];
-                    if(ft.length > 5) {
-                        paragraphs.push(`個人的には「${ft}」という点がとても印象的で、この体験があったからこそ再訪したいと強く感じました。`);
-                    }
-                }
-
-                // ■ その他の質問への対応
-                context.other.forEach(item => {
-                    paragraphs.push(`${item.question}については「${item.answer}」と感じており、こちらも好印象でした。`);
-                });
-
-                // ■ 結び（サブキーワードの自然な配置 + リピート意欲）
-                const closings = [
-                    kwSub ? `${kwSub}周辺で迷っている方にもぜひおすすめしたいお店です。またすぐにでも伺いたいと思います！` : `友人にも自信を持っておすすめできるお店です。近いうちにまた伺います！`,
-                    `大切な人を連れてまた来たいと思える、そんな温かいお店でした。ごちそうさまでした！`,
-                    `期待以上の時間を過ごせました。次回はぜひ別のメニューも楽しみたいです。`,
-                    `心地よい空間と美味しいお料理で、最高のひとときでした。リピート確定です！`
-                ];
-                paragraphs.push(closings[Math.floor(Math.random() * closings.length)]);
-
-                // STEP4: 自然な改行で結合して出力
-                const aiText = paragraphs.join('\n');
+                const data = await response.json();
                 
-                document.getElementById('generatedText').innerText = aiText;
+                document.getElementById('generatedText').innerText = data.reply;
                 document.getElementById('step2').style.display = 'none';
                 document.getElementById('step3').style.display = 'block';
-            }, 2000);
+
+            } catch (error) {
+                console.error("口コミ生成エラー:", error);
+                document.getElementById('generatedText').innerText = "申し訳ありません、口コミ文章の生成に失敗しました。もう一度お試しください。";
+                document.getElementById('step2').style.display = 'none';
+                document.getElementById('step3').style.display = 'block';
+            }
         }
 
         function copyAndJump() {
