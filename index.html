@@ -488,7 +488,7 @@
                                     </div>
                                     <div style="width: 100%; max-width: 280px; height: 500px; margin: 0 auto; border: 12px solid #2D3748; border-radius: 35px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; background: #fff;">
                                         <div style="position: absolute; top:0; left:50%; transform:translateX(-50%); width:40%; height:15px; background:#2D3748; border-bottom-left-radius:10px; border-bottom-right-radius:10px; z-index:10;"></div>
-                                        <iframe id="surveyIframe" src="survey-mockup.html" style="width:100%; height:100%; border:none;" title="アンケートプレビュー"></iframe>
+                                        <iframe id="surveyIframe" src="/survey-mockup.html" style="width:100%; height:100%; border:none;" title="アンケートプレビュー"></iframe>
                                     </div>
                                 </div>
                                 <div id="qrContent" style="display:none; padding-top:20px;">
@@ -3054,51 +3054,6 @@
                     alert('削除に失敗しました。');
                 }
             }
-        };
-
-        // ビュー切り替え時の連動
-        const origSwitchMainView = window.switchMainView;
-        window.switchMainView = function(viewId) {
-            origSwitchMainView(viewId);
-            if (viewId === 'staff-form') { loadStaffList(); }
-            if (viewId === 'menu-form') { loadMenuList(); }
-            if (viewId === 'reservation-form') { updateReservationURL(); }
-        };
-
-        // 予約URLの自動生成
-        function updateReservationURL() {
-            const urlInput = document.getElementById('reservationURL');
-            const previewFrame = document.getElementById('reservationPreviewFrame');
-            if (urlInput) {
-                const baseURL = window.location.origin;
-                const finalUrl = baseURL + '/reserve.html';
-                urlInput.value = finalUrl;
-                if (previewFrame && previewFrame.src !== finalUrl) {
-                    previewFrame.src = finalUrl;
-                }
-            }
-        }
-
-        // 予約URLのコピー機能
-        window.copyReservationURL = function() {
-            const urlInput = document.getElementById('reservationURL');
-            const copyBtn = document.getElementById('copyBtn');
-            
-            urlInput.select();
-            urlInput.setSelectionRange(0, 99999); // スマホ対応
-
-            navigator.clipboard.writeText(urlInput.value).then(() => {
-                const originalText = copyBtn.innerText;
-                copyBtn.innerText = 'コピー済！';
-                copyBtn.style.background = '#059669';
-                setTimeout(() => {
-                    copyBtn.innerText = originalText;
-                    copyBtn.style.background = '';
-                }, 2000);
-            }).catch(err => {
-                console.error('コピー失敗:', err);
-                alert('コピーに失敗しました。');
-            });
         };
 
     </script>
