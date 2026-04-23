@@ -269,13 +269,15 @@
                     </a>`;
                 }
 
+                const clientEncoded = encodeURIComponent(JSON.stringify(client));
+                
                 tr.innerHTML = `
                     <td class="search-target">${companyDisplay}</td>
                     <td class="search-target">${client.email}</td>
                     <td style="font-family:monospace; color:#4A5568;">${client.temp_password || '未設定'}</td>
                     <td>- 件</td>
                     <td>${statusHtml}</td>
-                    <td><a href="index.html" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a></td>
+                    <td><a href="javascript:void(0)" onclick="masterLoginAs('${clientEncoded}')" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a></td>
                 `;
                 tableBody.appendChild(tr);
             });
@@ -313,6 +315,14 @@
         });
 
         // --- ブログ登録ロジック ---
+        window.masterLoginAs = function(clientEncoded) {
+            const client = JSON.parse(decodeURIComponent(clientEncoded));
+            // 本人としてログイン済みのフラグ立て（localStorageのcurrentUserを書き換え）
+            localStorage.setItem('currentUser', JSON.stringify(client));
+            // ダッシュボードへリダイレクト
+            window.location.href = 'index.html';
+        };
+
         window.openBlogModal = function(clientId, blogsStrEncoded) {
             document.getElementById('blogTargetClientId').value = clientId;
             document.getElementById('blogTargetClientBlogs').value = decodeURIComponent(blogsStrEncoded);

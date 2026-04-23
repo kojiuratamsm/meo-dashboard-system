@@ -2031,7 +2031,13 @@
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 発行処理中...';
             setTimeout(() => {
-                document.getElementById('qrArea').classList.add('active');
+                document.getElementById('qrOverlay').style.display = 'none';
+                document.getElementById('qrContent').style.display = 'block';
+                
+                const publishUrl = window.location.origin + '/survey-mockup.html';
+                document.getElementById('surveyUrlText').innerText = publishUrl;
+                document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publishUrl)}`;
+
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> 発行・更新されました！';
                 btn.style.background = 'var(--primary-green)';
                 setTimeout(() => {
