@@ -165,11 +165,14 @@
     <!-- Sidebar -->
     <nav class="sidebar">
         <div class="logo-area" style="cursor:pointer;" onclick="switchMainView('dashboard', document.querySelector('.nav-item'))">
-            <div class="msm-logo" style="display:flex; align-items:center; gap:8px;">
-                <div style="background:linear-gradient(135deg, #a855f7, #6366f1); color:white; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(99,102,241,0.4);">
-                    <i class="fa-solid fa-map-location-dot" style="font-size:18px;"></i>
-                </div>
-                <span style="font-size:24px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px;">MapOn</span>
+            <div class="msm-logo" style="display:flex; align-items:center; gap:4px;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C12 22 5 15.3137 5 10C5 6.13401 8.13401 3 12 3" stroke="#4285F4" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M12 22C12 22 19 15.3137 19 10C19 9.5 18.9 9 18.8 8.6" stroke="#34A853" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="12" cy="10" r="3" stroke="#FBBC05" stroke-width="2.5"/>
+                    <path d="M14 6L20 2M20 2L15 2M20 2L20 7" stroke="#EA4335" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span style="font-size:24px; font-weight:900; color:#0F172A; letter-spacing:1px;">MapOn</span>
             </div>
         </div>
 
@@ -205,11 +208,14 @@
         
         <!-- モバイル専用ヘッダー -->
         <div class="mobile-only-header">
-            <div class="msm-logo" style="display:flex; align-items:center; gap:8px; margin:0; cursor:pointer;" onclick="switchMainView('dashboard', document.querySelector('.nav-item'))">
-                <div style="background:linear-gradient(135deg, #a855f7, #6366f1); color:white; width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px rgba(99,102,241,0.3);">
-                    <i class="fa-solid fa-map-location-dot" style="font-size:14px;"></i>
-                </div>
-                <span style="font-size:20px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; letter-spacing:1px;">MapOn</span>
+            <div class="msm-logo" style="display:flex; align-items:center; gap:4px; margin:0; cursor:pointer;" onclick="switchMainView('dashboard', document.querySelector('.nav-item'))">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C12 22 5 15.3137 5 10C5 6.13401 8.13401 3 12 3" stroke="#4285F4" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M12 22C12 22 19 15.3137 19 10C19 9.5 18.9 9 18.8 8.6" stroke="#34A853" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="12" cy="10" r="3" stroke="#FBBC05" stroke-width="2.5"/>
+                    <path d="M14 6L20 2M20 2L15 2M20 2L20 7" stroke="#EA4335" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span style="font-size:20px; font-weight:900; color:#0F172A; letter-spacing:1px;">MapOn</span>
             </div>
             <button onclick="toggleMobileMenu()" style="background:none; border:none; font-size:26px; color:var(--text-main); cursor:pointer;"><i class="fa-solid fa-bars"></i></button>
         </div>
