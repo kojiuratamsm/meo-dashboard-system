@@ -158,7 +158,7 @@
 
                 <div id="csvDropZone" style="border: 2px dashed var(--primary-blue); padding: 50px; text-align: center; cursor: pointer; transition: all 0.3s; background: #F8FAFC;">
                     <i class="fa-solid fa-file-csv" style="font-size: 50px; color: var(--primary-blue); margin-bottom: 15px;"></i>
-                    <h2>ここにラッコキーワード等のCSVをドロップ</h2>
+                    <h2>ここにGoogle Analytics DataのCSVをドロップ</h2>
                     <p style="color: var(--text-muted); margin-top: 10px;">またはクリックしてファイルを選択</p>
                     <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
                 </div>
@@ -183,18 +183,15 @@
                     
                     <p style="margin-bottom:20px; color:var(--text-muted); font-size:14px;">※独自のAI評価ロジックに基づき、検索ボリュームと競合性を掛け合わせて狙い目のキーワードを算出しています。</p>
 
-                    <table class="client-table" id="keywordTable" style="margin-bottom: 20px;">
-                        <thead>
-                            <tr style="background:#F8FAFC;">
-                                <th style="cursor:pointer; width:30%;" onclick="sortKeywordData('keyword')">キーワード <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
-                                <th style="cursor:pointer; width:25%;" onclick="sortKeywordData('volume')">月間検索ボリューム <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
-                                <th style="cursor:pointer; width:20%;" onclick="sortKeywordData('competition')">競合性 <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
-                                <th style="cursor:pointer; width:25%;" onclick="sortKeywordData('score')">弊社独自のAI評価 <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
-                            </tr>
-                        </thead>
-                        <tbody id="keywordTableBody">
-                        </tbody>
-                    </table>
+                    <div style="overflow-x: auto;">
+                        <table class="client-table" id="keywordTable" style="margin-bottom: 20px;">
+                            <thead>
+                                <!-- Thead is dynamically generated to hold ALL columns from CSV -->
+                            </thead>
+                            <tbody id="keywordTableBody">
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -554,17 +551,15 @@
         function processRakkoData(data, storeName) {
             parsedKeywordData = [];
             data.forEach(row => {
-                // 列名が定まっていない場合の推測ロジック強め
                 let keys = Object.keys(row);
-                let keywordKey = keys.find(k => k.includes('キーワード') || k.includes('Keyword')) || keys[0];
-                let volumeKey = keys.find(k => k.includes('月間検索数') || k.includes('ボリューム') || k.includes('Volume')) || keys[1] || keys[2];
-                let compKey = keys.find(k => k.includes('競合性') || k.includes('Competition')) || keys[2] || keys[3];
+                if (keys.length === 0 || !keys[0]) return; // Skip completely empty rows
+                
+                // 独自のAIロジック対象のボリュームと競合性の列を推定
+                let volumeKey = keys.find(k => k.includes('月間検索数') || k.includes('ボリューム') || String(k).toUpperCase().includes('VOLUME')) || keys[1] || keys[2];
+                let compKey = keys.find(k => k.includes('競合性') || String(k).toUpperCase().includes('COMPETITION')) || keys[2] || keys[3];
 
-                const keyword = row[keywordKey];
                 let volumeStr = row[volumeKey] ? String(row[volumeKey]) : "0";
                 let compStr = row[compKey] ? String(row[compKey]) : "-";
-
-                if(!keyword) return;
 
                 const volume = parseInt(volumeStr.replace(/[^0-9]/g, '')) || 0;
                 
@@ -572,29 +567,29 @@
                 let evaluationHtml = "";
                 let score = 0;
                 if(volume >= 1000 && (compStr.includes("低") || compStr.includes("Low"))) {
-                    evaluationHtml = '<span class="status-badge" style="background:#E6F4EA;color:#34A853;">SS (超穴場)</span>';
+                    evaluationHtml = '<span class="status-badge" style="background:#E6F4EA;color:#34A853; white-space:nowrap;">SS (超穴場)</span>';
                     score = 5;
                 } else if(volume >= 100 && (compStr.includes("低") || compStr.includes("Low"))) {
-                    evaluationHtml = '<span class="status-badge" style="background:#E6F4EA;color:#34A853;">S (狙い目)</span>';
+                    evaluationHtml = '<span class="status-badge" style="background:#E6F4EA;color:#34A853; white-space:nowrap;">S (狙い目)</span>';
                     score = 4;
                 } else if(volume >= 500 && (compStr.includes("中") || compStr.includes("Medium"))) {
-                    evaluationHtml = '<span class="status-badge" style="background:#FEF3C7;color:#D97706;">A (要対策)</span>';
+                    evaluationHtml = '<span class="status-badge" style="background:#FEF3C7;color:#D97706; white-space:nowrap;">A (要対策)</span>';
                     score = 3;
                 } else if(volume >= 100) {
-                    evaluationHtml = '<span class="status-badge" style="background:#FEF3C7;color:#D97706;">B (競合あり)</span>';
+                    evaluationHtml = '<span class="status-badge" style="background:#FEF3C7;color:#D97706; white-space:nowrap;">B (競合あり)</span>';
                     score = 2;
                 } else {
-                    evaluationHtml = '<span class="status-badge" style="background:#FEECEB;color:#EA4335;">C (様子見)</span>';
+                    evaluationHtml = '<span class="status-badge" style="background:#FEECEB;color:#EA4335; white-space:nowrap;">C (様子見)</span>';
                     score = 1;
                 }
 
-                parsedKeywordData.push({
-                    keyword: keyword,
-                    volume: volume,
-                    competition: compStr,
-                    evaluation: evaluationHtml,
-                    score: score
-                });
+                // CSV情報の全取得（破壊的変更を行わない）
+                row['__evaluation'] = evaluationHtml;
+                row['__score'] = score;
+                // 初期ソート用の基準をセット（数値があれば）
+                row['__sort_volume'] = volume;
+                
+                parsedKeywordData.push(row);
             });
 
             // LocalStorageに保存
@@ -611,7 +606,8 @@
         function showReport(storeName, data) {
             parsedKeywordData = data;
             document.getElementById('reportStoreTitle').innerText = `【${storeName}】キーワード分析診断レポート`;
-            sortKeywordData('volume'); // 初期ソートはボリューム降順
+            // 後方互換と新規向けの初期ソート
+            sortKeywordData(parsedKeywordData[0] && parsedKeywordData[0]['__sort_volume'] !== undefined ? '__sort_volume' : 'volume');
             document.getElementById('analysisReportCard').style.display = 'block';
         }
 
@@ -626,9 +622,15 @@
             parsedKeywordData.sort((a, b) => {
                 let valA = a[col];
                 let valB = b[col];
-                
-                if (col === 'volume' || col === 'score') {
-                    return sortAsc ? valA - valB : valB - valA;
+
+                // Remove commas and check if purely numeric
+                let numA = parseFloat(String(valA).replace(/,/g, ''));
+                let numB = parseFloat(String(valB).replace(/,/g, ''));
+                let isNumA = !isNaN(numA) && String(valA).trim() !== '';
+                let isNumB = !isNaN(numB) && String(valB).trim() !== '';
+
+                if (isNumA && isNumB) {
+                    return sortAsc ? numA - numB : numB - numA;
                 } else {
                     return sortAsc ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
                 }
@@ -637,16 +639,91 @@
         };
 
         function renderKeywordTable() {
+            const thead = document.querySelector('#keywordTable thead');
             const tbody = document.getElementById('keywordTableBody');
+            thead.innerHTML = '';
             tbody.innerHTML = '';
+
+            if (parsedKeywordData.length === 0) return;
+
+            let isLegacy = !!parsedKeywordData[0].keyword; // Check if older format exist
+
+            // CSVの全カラム名を抽出 (__で始まる内部変数をのぞく)
+            let columns = Object.keys(parsedKeywordData[0]).filter(k => !k.startsWith('__'));
+            
+            // ---------------------------
+            // 動的テーブルヘッダーの生成
+            // ---------------------------
+            let trHead = document.createElement('tr');
+            trHead.style.background = '#F8FAFC';
+            
+            columns.forEach(col => {
+                let th = document.createElement('th');
+                th.style.cursor = 'pointer';
+                th.style.whiteSpace = 'nowrap';
+                th.style.padding = '12px 15px';
+                th.onclick = () => sortKeywordData(col);
+                
+                // Make search volume column distinct
+                if(col.includes('月間検索数') || col.includes('ボリューム') || col === 'volume') {
+                    th.style.color = 'var(--primary-blue)';
+                    th.innerHTML = `${col} <i class="fa-solid fa-sort" style="color:var(--primary-blue);"></i>`;
+                } else {
+                    th.innerHTML = `${col} <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i>`;
+                }
+                trHead.appendChild(th);
+            });
+
+            // 最後の拡張カラム: AI評価
+            let evalTh = document.createElement('th');
+            evalTh.style.cursor = 'pointer';
+            evalTh.style.whiteSpace = 'nowrap';
+            evalTh.style.padding = '12px 15px';
+            evalTh.innerHTML = `弊社独自のAI評価 <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i>`;
+            // Compatibility mapping
+            evalTh.onclick = () => sortKeywordData(isLegacy ? 'score' : '__score');
+            trHead.appendChild(evalTh);
+            
+            thead.appendChild(trHead);
+
+            // ---------------------------
+            // 動的テーブルボディの生成
+            // ---------------------------
             parsedKeywordData.forEach(item => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="font-weight:700; color:var(--text-main); font-size:16px;">${item.keyword}</td>
-                    <td style="font-weight:800; color:var(--primary-blue); font-size:16px;">${item.volume.toLocaleString()}</td>
-                    <td>${item.competition}</td>
-                    <td>${item.evaluation}</td>
-                `;
+                
+                columns.forEach(col => {
+                    let td = document.createElement('td');
+                    td.style.whiteSpace = 'nowrap';
+                    td.style.padding = '12px 15px';
+                    
+                    let val = item[col] || '';
+                    
+                    // デザイン強調ロジック
+                    if(col.includes('キーワード') || col.includes('keyword') || col.toLowerCase() === 'keyword') {
+                        td.style.fontWeight = '700';
+                        td.style.color = 'var(--text-main)';
+                        td.style.fontSize = '15px';
+                    } else if (col.includes('月間検索数') || col.includes('ボリューム') || col.toLowerCase() === 'volume') {
+                        td.style.fontWeight = '800';
+                        td.style.color = 'var(--primary-blue)';
+                        td.style.fontSize = '15px';
+                        let num = parseInt(String(val).replace(/[^0-9]/g, ''));
+                        // 数値と判定できた場合のみカンマを入れる（もともとカンマありなら問題ない）
+                        if(!isNaN(num) && String(val).replace(/[^0-9]/g, '').length > 0) val = num.toLocaleString();
+                    }
+                    
+                    td.innerText = val;
+                    tr.appendChild(td);
+                });
+
+                // AI評価のTD
+                let tdEval = document.createElement('td');
+                tdEval.style.whiteSpace = 'nowrap';
+                tdEval.style.padding = '12px 15px';
+                tdEval.innerHTML = isLegacy ? item.evaluation : item.__evaluation;
+                tr.appendChild(tdEval);
+
                 tbody.appendChild(tr);
             });
         }
