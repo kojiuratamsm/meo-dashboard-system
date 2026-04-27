@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MapOn | 店舗集客を自動化する次世代MEOツール</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-blue: #4285F4;
+            --navy-dark: #0F172A;
+            --text-main: #1E293B;
+            --text-muted: #475569;
+            --bg-light: #F8FAFC;
+            --bg-white: #FFFFFF;
+            --accent-red: #EA4335;
+            --accent-green: #34A853;
+            --accent-yellow: #FBBC05;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+
+        body {
+            color: var(--text-main);
+            background-color: var(--bg-light);
+            line-height: 1.6;
+        }
+
+        /* --- ヘッダー・ナビゲーション --- */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--navy-dark);
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+        .logo img {
+            height: 40px;
+            margin-right: -5px;
+            mix-blend-mode: multiply;
+        }
+        .nav-cta {
+            background: var(--navy-dark);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .nav-cta:hover {
+            background: var(--primary-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+        }
+
+        /* --- セクション共通 --- */
+        section {
+            padding: 100px 5%;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .section-title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            color: var(--navy-dark);
+            position: relative;
+        }
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: var(--primary-blue);
+            margin: 15px auto 50px;
+            border-radius: 2px;
+        }
+        .section-subtitle {
+            text-align: center;
+            font-size: 16px;
+            color: var(--text-muted);
+            margin-bottom: 50px;
+            font-weight: 500;
+        }
+
+        /* --- 1. 究極の未来 (Hero) --- */
+        .hero {
+            padding-top: 150px;
+            padding-bottom: 120px;
+            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+            text-align: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 900;
+            line-height: 1.4;
+            color: var(--navy-dark);
+            margin-bottom: 25px;
+        }
+        .hero h1 span {
+            color: var(--primary-blue);
+        }
+        .hero p {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 40px;
+            font-weight: 500;
+        }
+        .hero-cta {
+            display: inline-block;
+            background: var(--primary-blue);
+            color: white;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 10px 25px rgba(66, 133, 244, 0.4);
+            transition: all 0.3s;
+        }
+        .hero-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(66, 133, 244, 0.5);
+        }
+
+        /* --- 2. MapOnとは --- */
+        .about {
+            background: var(--bg-white);
+        }
+        .about-content {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+        .about-text {
+            flex: 1;
+        }
+        .about-text p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .about-text h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: var(--primary-blue);
+        }
+        .about-image {
+            flex: 1;
+            background: var(--bg-light);
+            border-radius: 20px;
+            height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #E2E8F0;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .about-image img {
+            width: 80%;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* --- 3. よくあるお悩み --- */
+        .problems {
+            background: var(--bg-light);
+        }
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+        .problem-card {
+            background: var(--bg-white);
+            padding: 40px 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+            border-top: 5px solid var(--accent-red);
+        }
+        .problem-card i {
+            font-size: 40px;
+            color: var(--accent-red);
+            margin-bottom: 20px;
+        }
+        .problem-card h4 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        /* --- 4. 全て解決できます --- */
+        .solution {
+            background: var(--navy-dark);
+            color: white;
+            text-align: center;
+        }
+        .solution .section-title {
+            color: white;
+        }
+        .solution .section-title::after {
+            background: white;
+        }
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin-top: 50px;
+        }
+        .solution-item {
+            background: rgba(255,255,255,0.05);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: left;
+        }
+        .solution-item h4 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #60A5FA;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .solution-item h4 i {
+            font-size: 24px;
+        }
+
+        /* --- 5. MapOnで叶う事 --- */
+        .benefits {
+            background: var(--bg-white);
+        }
+        .benefit-steps {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .benefit-step {
+            flex: 1;
+            text-align: center;
+            padding: 30px;
+        }
+        .benefit-icon {
+            width: 80px;
+            height: 80px;
+            background: #EFF6FF;
+            color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin: 0 auto 20px;
+        }
+        .benefit-step h4 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: var(--navy-dark);
+        }
+
+        /* --- 6. 料金 --- */
+        .pricing {
+            background: var(--bg-light);
+            text-align: center;
+        }
+        .pricing-card {
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            border: 2px solid var(--primary-blue);
+        }
+        .pricing-header {
+            background: var(--primary-blue);
+            color: white;
+            padding: 30px;
+        }
+        .pricing-header h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .price {
+            font-size: 48px;
+            font-weight: 900;
+        }
+        .price span {
+            font-size: 16px;
+            font-weight: normal;
+        }
+        .pricing-features {
+            padding: 40px;
+            text-align: left;
+        }
+        .pricing-features ul {
+            list-style: none;
+            margin-bottom: 40px;
+        }
+        .pricing-features li {
+            padding: 12px 0;
+            border-bottom: 1px solid #E2E8F0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .pricing-features li i {
+            color: var(--accent-green);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--navy-dark);
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .about-content, .solution-grid, .benefit-steps {
+                flex-direction: column;
+            }
+            .problem-grid, .solution-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 {
+                font-size: 32px;
+            }
+            .hero {
+                padding-top: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ヘッダー -->
+    <header>
+        <a href="#" class="logo">
+            <img src="mapon-logo.png" alt="MapOn Logo" style="height: 38px;">
+        </a>
+        <a href="#pricing" class="nav-cta">お申し込みはこちら</a>
+    </header>
+
+    <!-- 1. ヒーローセクション -->
+    <section class="hero">
+        <div class="container">
+            <h1>Googleマップ集客を完全自動化。<br>店舗ビジネスに<span>圧倒的な活気</span>を。</h1>
+            <p>MEO対策に必要な「分析」「クチコミ促進」「AI投稿」を全て一つに。<br>明日からあなたの店舗の見え方が、そして来店数が変わります。</p>
+            <a href="#pricing" class="hero-cta">今すぐMapOnを導入する</a>
+        </div>
+    </section>
+
+    <!-- 2. MapOnとは？ -->
+    <section class="about" id="about">
+        <div class="container about-content">
+            <div class="about-text">
+                <h3>MapOn（マップオン）とは？</h3>
+                <p>MapOnは、飲食店やサロンなどの実店舗ビジネスに向けた**次世代型MEO（Googleマップ上位表示）管理ツール**です。</p>
+                <p>これまで手間がかかっていた「競合順位のチェック」「クチコミの収集と自動返信」「Googleへの最新情報の投稿」を、独自のシステムとAIによって一元管理・自動化します。</p>
+                <p>専門的な知識がなくても、まるで専属のWebマーケターを雇ったかのように、Googleマップ経由の新規顧客を安定して獲得し続けることが可能です。</p>
+            </div>
+            <div class="about-image">
+                <!-- 管理画面のスクショ差し替え用 -->
+                <div style="background: white; width: 80%; height: 60%; border-radius: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: flex; align-items:center; justify-content:center; color:#A0AEC0; font-weight:bold;">管理画面イメージ</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. よくあるお悩み -->
+    <section class="problems" id="problems">
+        <div class="container">
+            <h2 class="section-title">こんなお悩みはありませんか？</h2>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <i class="fa-solid fa-store-slash"></i>
+                    <h4>検索順位が上がらない</h4>
+                    <p>近くで検索されても自分のお店が表示されず、見込み客をライバル店に奪われている。</p>
+                </div>
+                <div class="problem-card">
+                    <i class="fa-solid fa-comment-dots"></i>
+                    <h4>クチコミが集まらない</h4>
+                    <p>お客さんにお願いしてもなかなかクチコミを書いてもらえず、お店の魅力が伝わっていない。</p>
+                </div>
+                <div class="problem-card">
+                    <i class="fa-solid fa-pen-nib"></i>
+                    <h4>運用する時間がない</h4>
+                    <p>本業が忙しく、Googleビジネスプロフィールの更新や分析まで手が回らない。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. 全て解決できます -->
+    <section class="solution" id="solution">
+        <div class="container">
+            <h2 class="section-title">MapOnなら、全て解決できます</h2>
+            <p style="color: rgba(255,255,255,0.8); font-size: 18px;">圧倒的な機能で、あなたのお店のMEO対策を全自動サポート。</p>
+            
+            <div class="solution-grid">
+                <div class="solution-item">
+                    <h4><i class="fa-solid fa-robot"></i> AIによる自動投稿・生成</h4>
+                    <p>検索キーワードを考慮した自然なアピール文をAIが1タップで作成。さらに指定した日時に自動で予約投稿されるため、更新の手間がゼロになります。</p>
+                </div>
+                <div class="solution-item">
+                    <h4><i class="fa-solid fa-qrcode"></i> 独自アンケート＆クチコミ誘導</h4>
+                    <p>お客様に専用のQRコードを読み込んでもらうだけで、高評価はGoogleマップへ直接誘導、低評価は内部アンケートのみに留める画期的な仕組みを搭載。</p>
+                </div>
+                <div class="solution-item">
+                    <h4><i class="fa-solid fa-chess-knight"></i> ライバル店との競合分析</h4>
+                    <p>周辺の競合店舗がどのキーワードで強いのか、自店舗の順位はどう推移しているのかを直感的なグラフで完全可視化します。</p>
+                </div>
+                <div class="solution-item">
+                    <h4><i class="fa-solid fa-magnifying-glass-chart"></i> パフォーマンスの見える化</h4>
+                    <p>検索回数やルート検索数など「どれだけの人がお店に興味を持ったか」を分かりやすいダッシュボードで一目で確認できます。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. MapOnで叶う事 -->
+    <section class="benefits" id="benefits">
+        <div class="container">
+            <h2 class="section-title">MapOnで叶う、究極の未来</h2>
+            <div class="benefit-steps">
+                <div class="benefit-step">
+                    <div class="benefit-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <h4>検索表示回数が激増</h4>
+                    <p>常に最新情報と高い関連性が維持されるため、エリア検索で上位に表示されやすくなります。</p>
+                </div>
+                <div class="benefit-step">
+                    <div class="benefit-icon"><i class="fa-solid fa-users"></i></div>
+                    <h4>新規来店客の獲得</h4>
+                    <p>良いクチコミと上位表示との相乗効果で、「行ってみよう」と思う新規顧客が自動的に集まります。</p>
+                </div>
+                <div class="benefit-step">
+                    <div class="benefit-icon"><i class="fa-solid fa-heart"></i></div>
+                    <h4>店舗のブランド確立</h4>
+                    <p>豊富なレビューと丁寧な対応が見えるお店として地域の信頼を獲得し、リピーター定着に繋がります。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. 料金 -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2 class="section-title">料金プラン</h2>
+            <p class="section-subtitle">シンプルでわかりやすい、圧倒的なコストパフォーマンス。</p>
+            
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3>MapOn 通常プラン</h3>
+                    <div class="price">19,800<span>円 / 月額(税抜)</span></div>
+                </div>
+                <div class="pricing-features">
+                    <ul>
+                        <li><i class="fa-solid fa-circle-check"></i> ダッシュボードでの高度な分析機能</li>
+                        <li><i class="fa-solid fa-circle-check"></i> AIを活用した記事の自動生成・予約投稿</li>
+                        <li><i class="fa-solid fa-circle-check"></i> クチコミ誘導アンケートQR即時発行</li>
+                        <li><i class="fa-solid fa-circle-check"></i> 周辺競合店舗のMEO順位モニタリング</li>
+                        <li><i class="fa-solid fa-circle-check"></i> LINE予約管理との連携機能（オプション）</li>
+                    </ul>
+                    <a href="#" class="hero-cta" style="width:100%; text-align:center;">今すぐ申し込む</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- フッター -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 株式会社MSM MapOn All Rights Reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

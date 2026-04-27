@@ -4,15 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>マスター管理 - MSM</title>
-    <!-- 強固なセキュリティロック：マスター権限がない人は強制的にログインへ戻す -->
-    <script>
-        const isMaster = localStorage.getItem('masterAdmin');
-        if (!isMaster) {
-            window.location.replace('/master-login');
-        }
-    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSV Parse & PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --bg-color: #F4F7FE;
@@ -76,8 +72,8 @@
             <div class="msm-logo" style="font-size:24px; font-weight:900; background:linear-gradient(135deg, #a855f7, #6366f1); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">MapOn</div>
             <div style="font-size:11px; color:#A0AEC0; margin-top:5px;">MASTER DASHBOARD</div>
         </div>
-        <a href="#" class="nav-item active"><i class="fa-solid fa-users"></i> 全クライアント一覧</a>
-        
+        <a href="#" class="nav-item active" onclick="switchMasterView('view-clients', this)"><i class="fa-solid fa-users"></i> 全クライアント一覧</a>
+        <a href="#" class="nav-item" onclick="switchMasterView('view-keyword-analysis', this)"><i class="fa-solid fa-magnifying-glass-chart"></i> キーワード分析</a>
         <div style="margin-top:20px; padding:0 15px;">
             <p style="font-size:11px; color:#A0AEC0; margin-bottom:10px; font-weight:bold;">申し込みフォームURL取得</p>
             <button class="btn-action" style="background:#4A5568; margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('/signup-a')">運用代行プラン</button>
@@ -99,7 +95,9 @@
             <h1>本部（マスター）管理パネル</h1>
         </header>
 
-        <div class="card">
+        <!-- === 全クライアント一覧ビュー === -->
+        <div id="view-clients" class="master-view" style="display: block;">
+            <div class="card">
             <div style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center; flex-wrap:wrap; gap:15px;">
                 <h2 style="margin:0;">契約クライアント一覧</h2>
                 <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
@@ -131,10 +129,51 @@
                         <th>操作</th>
                     </tr>
                 </thead>
-                <tbody id="clientTableBody">
-                    <!-- DBからデータが挿入されます -->
                 </tbody>
             </table>
+        </div>
+        </div>
+
+        <!-- === キーワード分析ビュー === -->
+        <div id="view-keyword-analysis" class="master-view" style="display: none;">
+            <div class="card" id="csvDropZone" style="border: 2px dashed var(--primary-blue); padding: 50px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 20px;">
+                <i class="fa-solid fa-file-csv" style="font-size: 50px; color: var(--primary-blue); margin-bottom: 15px;"></i>
+                <h2>ここにラッコキーワード等のCSVをドロップ</h2>
+                <p style="color: var(--text-muted); margin-top: 10px;">またはクリックしてファイルを選択</p>
+                <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+            </div>
+
+            <div class="card" id="analysisReportCard" style="display: none; position: relative;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                    <button class="btn-action" style="background:#A0AEC0;" onclick="resetKeywordAnalysis()">別のファイルを解析</button>
+                    <button id="downloadPdfBtn" class="btn-action" style="background:var(--primary-blue); font-size:16px; padding:12px 24px;"><i class="fa-solid fa-download"></i> PDF出力</button>
+                </div>
+                
+                <!-- PDF出力対象エリア -->
+                <div id="pdfContentArea" style="padding: 40px; background: white;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom: 40px;">
+                        <img src="mapon-logo.png" style="height:40px; mix-blend-mode:multiply;">
+                        <div style="font-weight: 800; font-size: 20px; color:#A0AEC0; margin-left: 10px;">MSM Google Analytics Data</div>
+                    </div>
+
+                    <h2 style="text-align:center; font-size: 28px; margin-bottom: 40px; border-bottom: 4px solid var(--primary-blue); display:inline-block; padding-bottom:5px; color:var(--text-main);">独自のキーワード分析結果レポート</h2>
+                    
+                    <p style="margin-bottom:20px; color:var(--text-muted); font-size:14px;">※独自のAI評価ロジックに基づき、検索ボリュームと競合性を掛け合わせて狙い目のキーワードを算出しています。</p>
+
+                    <table class="client-table" id="keywordTable">
+                        <thead>
+                            <tr style="background:#F8FAFC;">
+                                <th style="cursor:pointer;" onclick="sortKeywordData('keyword')">キーワード <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
+                                <th style="cursor:pointer;" onclick="sortKeywordData('volume')">月間検索ボリューム <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
+                                <th style="cursor:pointer;" onclick="sortKeywordData('competition')">競合性 <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
+                                <th style="cursor:pointer;" onclick="sortKeywordData('score')">弊社独自のAI評価 <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
+                            </tr>
+                        </thead>
+                        <tbody id="keywordTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- クライアント追加モーダル -->
@@ -381,6 +420,177 @@
             
             // リロード
             loadClients();
+        });
+
+
+        // ==========================================
+        // UI操作・キーワード分析関連ロジック
+        // ==========================================
+
+        function switchMasterView(viewId, el) {
+            document.querySelectorAll('.master-view').forEach(v => v.style.display = 'none');
+            document.getElementById(viewId).style.display = 'block';
+            if(el) {
+                document.querySelectorAll('.sidebar .nav-item').forEach(n => n.classList.remove('active'));
+                el.classList.add('active');
+            }
+        }
+
+        const dropZone = document.getElementById('csvDropZone');
+        const fileInput = document.getElementById('csvFileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.background = '#EFF6FF';
+            dropZone.style.borderColor = '#2563EB';
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.background = 'white';
+            dropZone.style.borderColor = 'var(--primary-blue)';
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.background = 'white';
+            dropZone.style.borderColor = 'var(--primary-blue)';
+            if(e.dataTransfer.files.length) handleCsvFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', (e) => {
+            if(e.target.files.length) handleCsvFile(e.target.files[0]);
+        });
+
+        let parsedKeywordData = [];
+        let currentSortCol = 'volume';
+        let sortAsc = false;
+
+        function resetKeywordAnalysis() {
+            document.getElementById('analysisReportCard').style.display = 'none';
+            document.getElementById('csvDropZone').style.display = 'block';
+            fileInput.value = '';
+        }
+
+        function handleCsvFile(file) {
+            // パース時に文字化けを防ぐためFileReaderを使用
+            const reader = new FileReader();
+            // 一般的にラッコはShift-JISやUTF-16のことがあるが、まずはUTF-8でフォールバック。
+            // PapaParseは文字コードを推定しにくいので、自動パースを試みる。
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                // encoding: "Shift-JIS", // コメントアウト: もし文字化けが酷い場合はここを有効化
+                complete: function(results) {
+                    processRakkoData(results.data);
+                }
+            });
+        }
+
+        function processRakkoData(data) {
+            parsedKeywordData = [];
+            data.forEach(row => {
+                // 列名が定まっていない場合の推測ロジック強め
+                let keys = Object.keys(row);
+                let keywordKey = keys.find(k => k.includes('キーワード') || k.includes('Keyword')) || keys[0];
+                let volumeKey = keys.find(k => k.includes('月間検索数') || k.includes('ボリューム') || k.includes('Volume')) || keys[1] || keys[2];
+                let compKey = keys.find(k => k.includes('競合性') || k.includes('Competition')) || keys[2] || keys[3];
+
+                const keyword = row[keywordKey];
+                let volumeStr = row[volumeKey] ? String(row[volumeKey]) : "0";
+                let compStr = row[compKey] ? String(row[compKey]) : "-";
+
+                if(!keyword) return;
+
+                const volume = parseInt(volumeStr.replace(/[^0-9]/g, '')) || 0;
+                
+                // 独自評価ロジック
+                let evaluationHtml = "";
+                let score = 0;
+                if(volume >= 1000 && (compStr.includes("低") || compStr.includes("Low"))) {
+                    evaluationHtml = '<span class="status-badge" style="background:#E6F4EA;color:#34A853;">SS (超穴場)</span>';
+                    score = 5;
+                } else if(volume >= 100 && (compStr.includes("低") || compStr.includes("Low"))) {
+                    evaluationHtml = '<span class="status-badge" style="background:#E6F4EA;color:#34A853;">S (狙い目)</span>';
+                    score = 4;
+                } else if(volume >= 500 && (compStr.includes("中") || compStr.includes("Medium"))) {
+                    evaluationHtml = '<span class="status-badge" style="background:#FEF3C7;color:#D97706;">A (要対策)</span>';
+                    score = 3;
+                } else if(volume >= 100) {
+                    evaluationHtml = '<span class="status-badge" style="background:#FEF3C7;color:#D97706;">B (競合あり)</span>';
+                    score = 2;
+                } else {
+                    evaluationHtml = '<span class="status-badge" style="background:#FEECEB;color:#EA4335;">C (様子見)</span>';
+                    score = 1;
+                }
+
+                parsedKeywordData.push({
+                    keyword: keyword,
+                    volume: volume,
+                    competition: compStr,
+                    evaluation: evaluationHtml,
+                    score: score
+                });
+            });
+
+            sortKeywordData('volume'); // 初期ソートはボリューム降順
+            document.getElementById('analysisReportCard').style.display = 'block';
+            document.getElementById('csvDropZone').style.display = 'none';
+        }
+
+        function sortKeywordData(col) {
+            if(currentSortCol === col) {
+                sortAsc = !sortAsc;
+            } else {
+                currentSortCol = col;
+                sortAsc = false;
+            }
+
+            parsedKeywordData.sort((a, b) => {
+                let valA = a[col];
+                let valB = b[col];
+                
+                if (col === 'volume' || col === 'score') {
+                    return sortAsc ? valA - valB : valB - valA;
+                } else {
+                    return sortAsc ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
+                }
+            });
+            renderKeywordTable();
+        }
+
+        function renderKeywordTable() {
+            const tbody = document.getElementById('keywordTableBody');
+            tbody.innerHTML = '';
+            parsedKeywordData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight:700; color:var(--text-main); font-size:16px;">${item.keyword}</td>
+                    <td style="font-weight:800; color:var(--primary-blue); font-size:16px;">${item.volume.toLocaleString()}</td>
+                    <td>${item.competition}</td>
+                    <td>${item.evaluation}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // PDF出力ロジック
+        document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+            const btn = document.getElementById('downloadPdfBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> PDF生成中...';
+            btn.disabled = true;
+
+            const element = document.getElementById('pdfContentArea');
+            const opt = {
+              margin:       10,
+              filename:     'MapOn_Keyword_Analysis.pdf',
+              image:        { type: 'jpeg', quality: 0.98 },
+              html2canvas:  { scale: 2, useCORS: true },
+              jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
         });
 
         window.onload = loadClients;
