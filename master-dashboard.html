@@ -58,9 +58,28 @@
             .card { padding: 15px; }
             .card > div:first-child { flex-direction: column; align-items: flex-start !important; gap: 10px; } 
             .card h2 { font-size: 18px; }
-            
             .client-table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; margin-top: 10px; }
         }
+
+        /* --- 更新通知トースト --- */
+        #update-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1A202C;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-left: 4px solid #34A853;
+        }
+        #update-toast.show { transform: translateY(0); }
     </style>
 </head>
 <body>
@@ -85,7 +104,18 @@
         </div>
 
         <a href="login.html" class="nav-item" style="margin-top:auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
+        
+        <div style="padding: 15px; border-top: 1px solid #2D3748; margin-top: 10px; opacity: 0.5;">
+            <div style="font-size: 10px; color: #A0AEC0;">SYSTEM VERSION</div>
+            <div style="font-size: 11px; color: #718096; font-family: monospace;">build.2026.04.28.02.08</div>
+        </div>
     </nav>
+    
+    <!-- 更新確認トースト -->
+    <div id="update-toast">
+        <i class="fa-solid fa-circle-check" style="color:#34A853;"></i>
+        <span style="font-size: 13px; font-weight: bold;">最新のシステム（ver 04.28.02）が正常に読み込まれました</span>
+    </div>
 
     <main class="main-content">
         <!-- モバイル専用ヘッダー -->
@@ -732,6 +762,13 @@
         window.onload = () => {
             loadClients();
             initSavedAnalysisDropdown();
+
+            // 更新通知の表示
+            setTimeout(() => {
+                const toast = document.getElementById('update-toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 5000);
+            }, 800);
         };
     </script>
 </body>
