@@ -6,9 +6,8 @@
     <title>マスター管理 - MSM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- CSV Parse & PDF Libraries -->
+    <!-- CSV Parse Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --bg-color: #F4F7FE;
@@ -61,6 +60,38 @@
             .card h2 { font-size: 18px; }
             
             .client-table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; margin-top: 10px; }
+        }
+
+        /* --- PDF出力用 (印刷ダイアログのスタイル) --- */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #pdfContentArea, #pdfContentArea * {
+                visibility: visible;
+            }
+            #pdfContentArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #downloadPdfBtn, .btn-action {
+                display: none !important;
+            }
+            .sidebar, .mobile-only-header, .header {
+                display: none !important;
+            }
+            .client-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .client-table th { background-color: #F8FAFC !important; -webkit-print-color-adjust: exact; }
+            .status-badge { -webkit-print-color-adjust: exact; }
+            /* ページ分割調整 */
+            tr { break-inside: avoid; }
         }
     </style>
 </head>
@@ -578,39 +609,10 @@
             });
         }
 
-        // PDF出力ロジック
+        // PDF出力ロジック（ブラウザ標準の印刷機能を使用）
         document.getElementById('downloadPdfBtn').addEventListener('click', () => {
-            const btn = document.getElementById('downloadPdfBtn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> PDF生成中...';
-            btn.disabled = true;
-
-            const element = document.getElementById('pdfContentArea');
-            // 一時的に全体のスクロール・表示制限を解除（真っ白になるバグ回避）
-            const mainContent = document.querySelector('.main-content');
-            const originalOverflow = mainContent.style.overflowY;
-            mainContent.style.overflowY = 'visible';
-
-            const opt = {
-              margin:       10,
-              filename:     'MapOn_Keyword_Analysis.pdf',
-              image:        { type: 'jpeg', quality: 0.98 },
-              html2canvas:  { 
-                  scale: 2, 
-                  useCORS: true, 
-                  scrollY: 0,
-                  windowWidth: document.documentElement.offsetWidth,
-                  windowHeight: document.documentElement.scrollHeight
-              },
-              jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-              pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-            };
-            
-            html2pdf().set(opt).from(element).save().then(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                mainContent.style.overflowY = originalOverflow; // 元に戻す
-            });
+            // 印刷ダイアログを開く（ここで「PDFとして保存」を選んでもらう）
+            window.print();
         });
 
         window.onload = loadClients;
