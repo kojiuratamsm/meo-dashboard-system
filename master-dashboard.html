@@ -6,9 +6,8 @@
     <title>マスター管理 - MSM</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- CSV Parse & PDF Libraries -->
+    <!-- CSV Parse Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --bg-color: #F4F7FE;
@@ -148,12 +147,11 @@
             </div>
 
             <div class="card" id="analysisReportCard" style="display: none; position: relative;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
                     <button class="btn-action" style="background:#A0AEC0;" onclick="resetKeywordAnalysis()">別のファイルを解析</button>
-                    <button id="downloadPdfBtn" class="btn-action" style="background:var(--primary-blue); font-size:16px; padding:12px 24px;"><i class="fa-solid fa-download"></i> PDF出力</button>
                 </div>
                 
-                <!-- PDF出力対象エリア -->
+                <!-- 分析結果エリア -->
                 <div id="pdfContentArea" style="padding: 40px; background: white;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom: 40px;">
                         <img src="mapon-logo.png" style="height:40px; mix-blend-mode:multiply;">
