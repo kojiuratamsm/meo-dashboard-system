@@ -139,11 +139,29 @@
 
         <!-- === キーワード分析ビュー === -->
         <div id="view-keyword-analysis" class="master-view" style="display: none;">
-            <div class="card" id="csvDropZone" style="border: 2px dashed var(--primary-blue); padding: 50px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 20px;">
-                <i class="fa-solid fa-file-csv" style="font-size: 50px; color: var(--primary-blue); margin-bottom: 15px;"></i>
-                <h2>ここにラッコキーワード等のCSVをドロップ</h2>
-                <p style="color: var(--text-muted); margin-top: 10px;">またはクリックしてファイルを選択</p>
-                <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+            
+            <div class="card" style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-clock-rotate-left"></i> 過去の分析データを読み込む</h3>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <select id="savedAnalysisSelect" style="padding:10px; border-radius:8px; border:1px solid var(--border-color); width:250px; outline:none; font-size:14px;"></select>
+                    <button class="btn-action" style="background:#4A5568;" onclick="loadSavedAnalysis()">データ表示</button>
+                    <button class="btn-action" style="background:#EA4335;" onclick="deleteSavedAnalysis()"><i class="fa-solid fa-trash"></i> 削除</button>
+                </div>
+            </div>
+
+            <div class="card" id="csvDropZoneCard" style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-plus"></i> 新規で分析を行う</h3>
+                <div style="margin-bottom: 20px;">
+                    <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">店舗名（プルダウンに登録される名前）</label>
+                    <input type="text" id="analysisStoreName" placeholder="例: カフェMapOn 渋谷店" style="width:100%; max-width:300px; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
+                </div>
+
+                <div id="csvDropZone" style="border: 2px dashed var(--primary-blue); padding: 50px; text-align: center; cursor: pointer; transition: all 0.3s; background: #F8FAFC;">
+                    <i class="fa-solid fa-file-csv" style="font-size: 50px; color: var(--primary-blue); margin-bottom: 15px;"></i>
+                    <h2>ここにラッコキーワード等のCSVをドロップ</h2>
+                    <p style="color: var(--text-muted); margin-top: 10px;">またはクリックしてファイルを選択</p>
+                    <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+                </div>
             </div>
 
             <div class="card" id="analysisReportCard" style="display: none; position: relative;">
@@ -152,13 +170,16 @@
                 </div>
                 
                 <!-- 分析結果エリア -->
-                <div id="pdfContentArea" style="padding: 40px; background: white;">
+                <div id="pdfContentArea" style="padding: 40px; background: white; border-radius:12px; border:1px solid #E2E8F0;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom: 40px;">
                         <img src="mapon-logo.png" style="height:40px; mix-blend-mode:multiply;">
                         <div style="font-weight: 800; font-size: 20px; color:#A0AEC0; margin-left: 10px;">MSM Google Analytics Data</div>
                     </div>
 
-                    <h2 style="text-align:center; font-size: 28px; margin-bottom: 40px; border-bottom: 4px solid var(--primary-blue); display:inline-block; padding-bottom:5px; color:var(--text-main);">独自のキーワード分析結果レポート</h2>
+                    <h2 id="reportStoreTitle" style="text-align:center; font-size: 24px; margin-bottom: 10px; color:var(--text-main);">独自のキーワード分析結果レポート</h2>
+                    <div style="text-align:center; margin-bottom: 40px;">
+                        <span style="border-bottom: 4px solid var(--primary-blue); display:inline-block; width:100px;"></span>
+                    </div>
                     
                     <p style="margin-bottom:20px; color:var(--text-muted); font-size:14px;">※独自のAI評価ロジックに基づき、検索ボリュームと競合性を掛け合わせて狙い目のキーワードを算出しています。</p>
 
@@ -470,26 +491,67 @@
 
         window.resetKeywordAnalysis = function() {
             document.getElementById('analysisReportCard').style.display = 'none';
-            document.getElementById('csvDropZone').style.display = 'block';
-            fileInput.value = '';
+        };
+
+        function initSavedAnalysisDropdown() {
+            let saved = JSON.parse(localStorage.getItem('mapon_keyword_analyses') || '{}');
+            let select = document.getElementById('savedAnalysisSelect');
+            select.innerHTML = '<option value="">店舗を選択してください</option>';
+            for(let store in saved) {
+                let opt = document.createElement('option');
+                opt.value = store;
+                opt.innerText = store;
+                select.appendChild(opt);
+            }
+        }
+
+        window.loadSavedAnalysis = function() {
+            let storeName = document.getElementById('savedAnalysisSelect').value;
+            if(!storeName) {
+                alert("店舗を選択してください。");
+                return;
+            }
+            let saved = JSON.parse(localStorage.getItem('mapon_keyword_analyses') || '{}');
+            if(saved[storeName]) {
+                showReport(storeName, saved[storeName]);
+            }
+        };
+
+        window.deleteSavedAnalysis = function() {
+            let storeName = document.getElementById('savedAnalysisSelect').value;
+            if(!storeName) {
+                alert("削除する店舗を選択してください。");
+                return;
+            }
+            if(!confirm(`「${storeName}」の分析データを削除しますか？`)) return;
+
+            let saved = JSON.parse(localStorage.getItem('mapon_keyword_analyses') || '{}');
+            delete saved[storeName];
+            localStorage.setItem('mapon_keyword_analyses', JSON.stringify(saved));
+            initSavedAnalysisDropdown();
+            alert("削除しました。");
+            resetKeywordAnalysis();
         };
 
         function handleCsvFile(file) {
-            // パース時に文字化けを防ぐためFileReaderを使用
+            let storeName = document.getElementById('analysisStoreName').value.trim();
+            if(!storeName) {
+                alert("ファイルの読み込み前に「店舗名」を入力してください！");
+                document.getElementById('analysisStoreName').focus();
+                return;
+            }
+
             const reader = new FileReader();
-            // 一般的にラッコはShift-JISやUTF-16のことがあるが、まずはUTF-8でフォールバック。
-            // PapaParseは文字コードを推定しにくいので、自動パースを試みる。
             Papa.parse(file, {
                 header: true,
                 skipEmptyLines: true,
-                // encoding: "Shift-JIS", // コメントアウト: もし文字化けが酷い場合はここを有効化
                 complete: function(results) {
-                    processRakkoData(results.data);
+                    processRakkoData(results.data, storeName);
                 }
             });
         }
 
-        function processRakkoData(data) {
+        function processRakkoData(data, storeName) {
             parsedKeywordData = [];
             data.forEach(row => {
                 // 列名が定まっていない場合の推測ロジック強め
@@ -535,9 +597,22 @@
                 });
             });
 
+            // LocalStorageに保存
+            let saved = JSON.parse(localStorage.getItem('mapon_keyword_analyses') || '{}');
+            saved[storeName] = parsedKeywordData;
+            localStorage.setItem('mapon_keyword_analyses', JSON.stringify(saved));
+            
+            initSavedAnalysisDropdown();
+            showReport(storeName, parsedKeywordData);
+            
+            fileInput.value = ''; // Reset file input
+        }
+
+        function showReport(storeName, data) {
+            parsedKeywordData = data;
+            document.getElementById('reportStoreTitle').innerText = `【${storeName}】キーワード分析診断レポート`;
             sortKeywordData('volume'); // 初期ソートはボリューム降順
             document.getElementById('analysisReportCard').style.display = 'block';
-            document.getElementById('csvDropZone').style.display = 'none';
         }
 
         window.sortKeywordData = function(col) {
@@ -621,7 +696,10 @@
             });
         });
 
-        window.onload = loadClients;
+        window.onload = () => {
+            loadClients();
+            initSavedAnalysisDropdown();
+        };
     </script>
 </body>
 </html>
