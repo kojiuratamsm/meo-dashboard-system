@@ -726,52 +726,7 @@
 
                 tbody.appendChild(tr);
             });
-        }
-
-        // PDF出力ロジック（真っ白回避 ＆ 巨大な1枚の紙として出力）
-        document.getElementById('downloadPdfBtn').addEventListener('click', () => {
-            const btn = document.getElementById('downloadPdfBtn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> PDF生成中...';
-            btn.disabled = true;
-
-            const element = document.getElementById('pdfContentArea');
-            const mainContent = document.querySelector('.main-content');
-            
-            // html2canvasバグ回避：はみ出た部分も全て描画するためCSSを一時変更
-            const originalOverflow = mainContent.style.overflowY;
-            mainContent.style.overflowY = 'visible';
-            window.scrollTo(0, 0); // 描画ズレを防ぐため一番上に戻す
-
-            // A4で分割せず、表がぴったり収まる「巨大なカスタム用紙サイズ」を動的に計算する
-            const w = element.scrollWidth + 40;
-            const h = element.scrollHeight + 40;
-
-            const opt = {
-              margin:       10,
-              filename:     'MapOn_Keyword_Analysis.pdf',
-              image:        { type: 'jpeg', quality: 0.98 },
-              html2canvas:  { 
-                  scale: 2, 
-                  useCORS: true, 
-                  scrollY: 0,
-                  windowWidth: document.documentElement.offsetWidth
-              },
-              jsPDF:        { unit: 'px', format: [w, h], orientation: 'portrait' }
-            };
-            
-            html2pdf().set(opt).from(element).save().then(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                mainContent.style.overflowY = originalOverflow; // 元に戻す
-            }).catch(err => {
-                console.error("PDF生成エラー:", err);
-                alert("PDF生成中にエラーが発生しました。");
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                mainContent.style.overflowY = originalOverflow;
-            });
-        });
+        };
 
         window.onload = () => {
             loadClients();
