@@ -76,7 +76,7 @@
         
         <!-- 目立つキーワード分析ボタン -->
         <a href="#" class="nav-item" onclick="switchMasterView('view-keyword-analysis', this)" style="background: linear-gradient(135deg, #4285F4, #3b82f6); color: white; display:flex; justify-content:center; gap:8px; font-weight: bold; margin-top: 15px; box-shadow: 0 5px 15px rgba(66,133,244,0.4); border:none; transition: all 0.3s;">
-            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 16px;"></i> ラッコGKP 分析
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 16px;"></i> MEO分析診断
         </a>
         <div style="margin-top:20px; padding:0 15px;">
             <p style="font-size:11px; color:#A0AEC0; margin-bottom:10px; font-weight:bold;">申し込みフォームURL取得</p>
@@ -164,13 +164,13 @@
                     
                     <p style="margin-bottom:20px; color:var(--text-muted); font-size:14px;">※独自のAI評価ロジックに基づき、検索ボリュームと競合性を掛け合わせて狙い目のキーワードを算出しています。</p>
 
-                    <table class="client-table" id="keywordTable">
+                    <table class="client-table" id="keywordTable" style="margin-bottom: 20px;">
                         <thead>
                             <tr style="background:#F8FAFC;">
-                                <th style="cursor:pointer;" onclick="sortKeywordData('keyword')">キーワード <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
-                                <th style="cursor:pointer;" onclick="sortKeywordData('volume')">月間検索ボリューム <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
-                                <th style="cursor:pointer;" onclick="sortKeywordData('competition')">競合性 <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
-                                <th style="cursor:pointer;" onclick="sortKeywordData('score')">弊社独自のAI評価 <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
+                                <th style="cursor:pointer; width:30%;" onclick="sortKeywordData('keyword')">キーワード <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
+                                <th style="cursor:pointer; width:25%;" onclick="sortKeywordData('volume')">月間検索ボリューム <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
+                                <th style="cursor:pointer; width:20%;" onclick="sortKeywordData('competition')">競合性 <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
+                                <th style="cursor:pointer; width:25%;" onclick="sortKeywordData('score')">弊社独自のAI評価 <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i></th>
                             </tr>
                         </thead>
                         <tbody id="keywordTableBody">
@@ -586,17 +586,30 @@
             btn.disabled = true;
 
             const element = document.getElementById('pdfContentArea');
+            // 一時的に全体のスクロール・表示制限を解除（真っ白になるバグ回避）
+            const mainContent = document.querySelector('.main-content');
+            const originalOverflow = mainContent.style.overflowY;
+            mainContent.style.overflowY = 'visible';
+
             const opt = {
               margin:       10,
               filename:     'MapOn_Keyword_Analysis.pdf',
               image:        { type: 'jpeg', quality: 0.98 },
-              html2canvas:  { scale: 2, useCORS: true },
-              jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+              html2canvas:  { 
+                  scale: 2, 
+                  useCORS: true, 
+                  scrollY: 0,
+                  windowWidth: document.documentElement.offsetWidth,
+                  windowHeight: document.documentElement.scrollHeight
+              },
+              jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+              pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
             
             html2pdf().set(opt).from(element).save().then(() => {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
+                mainContent.style.overflowY = originalOverflow; // 元に戻す
             });
         });
 
