@@ -251,12 +251,31 @@
             </div>
         </div>
 
-        <!-- BLOG ADD MODAL (運用代行プラン用) -->
-        <div id="addBlogModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
-            <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:400px; position:relative;">
-                <h2 style="font-size:18px; margin-bottom:20px; border-bottom:2px solid #F4F7FE; padding-bottom:10px;"><i class="fa-solid fa-pen-nib" style="color:#059669;"></i> ブログ記事の追加</h2>
-                <input type="hidden" id="blogTargetClientId">
-                <input type="hidden" id="blogTargetClientBlogs">
+        <!-- BLOG LIST MODAL -->
+        <div id="blogListModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9998; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
+            <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:600px; max-height:80vh; display:flex; flex-direction:column;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #F4F7FE; padding-bottom:10px;">
+                    <h2 style="font-size:18px; margin:0;"><i class="fa-solid fa-list" style="color:#059669;"></i> <span id="blogListClientName"></span> のブログ一覧</h2>
+                    <button onclick="document.getElementById('blogListModal').style.display='none'" style="background:none; border:none; font-size:20px; cursor:pointer; color:#A0AEC0;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <div id="blogListContainerInner" style="flex:1; overflow-y:auto; margin-bottom:20px;">
+                    <!-- ブログ一覧がここにレンダリングされる -->
+                </div>
+
+                <div style="display:flex; justify-content:flex-end;">
+                    <button onclick="openBlogFormModal(-1)" style="padding:10px 20px; border-radius:8px; border:none; background:#059669; color:white; font-weight:bold; cursor:pointer;"><i class="fa-solid fa-plus"></i> 新規ブログを追加</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BLOG FORM MODAL (追加・編集兼用) -->
+        <div id="blogFormModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
+            <div style="background:white; padding:30px; border-radius:15px; width:90%; max-width:400px;">
+                <h2 id="blogFormTitle" style="font-size:18px; margin-bottom:20px; border-bottom:2px solid #F4F7FE; padding-bottom:10px;"><i class="fa-solid fa-pen-nib" style="color:#059669;"></i> ブログ記事の追加</h2>
+                
+                <input type="hidden" id="blogFormClientId">
+                <input type="hidden" id="blogFormIndex">
                 
                 <div style="margin-bottom:15px;">
                     <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">年月</label>
@@ -271,9 +290,14 @@
                     <input type="url" id="newBlogUrl" class="form-control" placeholder="https://" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
                 </div>
                 
-                <div style="display:flex; justify-content:flex-end; gap:10px;">
-                    <button onclick="document.getElementById('addBlogModal').style.display='none'" style="padding:10px 15px; border-radius:8px; border:none; background:#F8FAFC; color:#64748B; font-weight:bold; cursor:pointer;">キャンセル</button>
-                    <button id="saveBlogBtn" style="padding:10px 15px; border-radius:8px; border:none; background:#059669; color:white; font-weight:bold; cursor:pointer;">記事を追加する</button>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <button id="deleteBlogBtn" style="padding:10px 15px; border-radius:8px; border:1px solid #EA4335; background:white; color:#EA4335; font-weight:bold; cursor:pointer; display:none;"><i class="fa-solid fa-trash"></i> 削除</button>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="document.getElementById('blogFormModal').style.display='none'" style="padding:10px 15px; border-radius:8px; border:none; background:#F8FAFC; color:#64748B; font-weight:bold; cursor:pointer;">キャンセル</button>
+                        <button id="saveBlogBtn" style="padding:10px 15px; border-radius:8px; border:none; background:#059669; color:white; font-weight:bold; cursor:pointer;">保存する</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -367,8 +391,9 @@
                 if (client.plan === 'A') {
                     // ブログ情報をJSON文字列にしてonclickで渡す（クォーティングをエスケープ）
                     const blogsStr = encodeURIComponent(JSON.stringify(client.blogs || []));
-                    companyDisplay = `<a href="javascript:void(0)" onclick="openBlogModal('${client.id}', '${blogsStr}')" style="color:var(--primary-blue); font-weight:bold; text-decoration:underline;">
-                        <i class="fa-solid fa-shop"></i> ${client.company_name} <span class="status-badge" style="background:#FEF3C7; color:#D97706; padding:2px 4px; font-size:10px;">ブログ追加</span>
+                    const companyNameEncoded = encodeURIComponent(client.company_name);
+                    companyDisplay = `<a href="javascript:void(0)" onclick="openBlogListModal('${client.id}', '${companyNameEncoded}', '${blogsStr}')" style="color:var(--primary-blue); font-weight:bold; text-decoration:underline;">
+                        <i class="fa-solid fa-shop"></i> ${client.company_name} <span class="status-badge" style="background:#FEF3C7; color:#D97706; padding:2px 4px; font-size:10px;">ブログ一覧/追加</span>
                     </a>`;
                 }
 
@@ -426,19 +451,104 @@
             window.location.href = '/';
         };
 
-        window.openBlogModal = function(clientId, blogsStrEncoded) {
-            document.getElementById('blogTargetClientId').value = clientId;
-            document.getElementById('blogTargetClientBlogs').value = decodeURIComponent(blogsStrEncoded);
-            document.getElementById('newBlogMonth').value = '';
-            document.getElementById('newBlogTitle').value = '';
-            document.getElementById('newBlogUrl').value = '';
-            document.getElementById('addBlogModal').style.display = 'flex';
+        // 現在扱っているクライアントのブログ一覧（編集中のみ保持）
+        let currentClientBlogs = [];
+        let currentClientId = null;
+
+        const parseYearMonth = (str) => {
+            const m = String(str).match(/(\d+)年(\d+)月/);
+            if(m) return parseInt(m[1]) * 100 + parseInt(m[2]);
+            return 0; // fallback
+        };
+
+        window.openBlogListModal = function(clientId, companyNameEncoded, blogsStrEncoded) {
+            currentClientId = clientId;
+            currentClientBlogs = JSON.parse(decodeURIComponent(blogsStrEncoded));
+            
+            // 年月順（新しいのが上）にソート
+            currentClientBlogs.sort((a, b) => parseYearMonth(b.month) - parseYearMonth(a.month));
+
+            document.getElementById('blogListClientName').innerText = decodeURIComponent(companyNameEncoded);
+            
+            renderBlogListInner();
+            document.getElementById('blogListModal').style.display = 'flex';
+        };
+
+        function renderBlogListInner() {
+            const container = document.getElementById('blogListContainerInner');
+            if (currentClientBlogs.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#A0AEC0; padding:20px;">まだブログが登録されていません</p>';
+                return;
+            }
+
+            let html = '';
+            currentClientBlogs.forEach((blog, index) => {
+                html += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; border:1px solid #E2E8F0; border-radius:10px; margin-bottom:10px; transition:0.2s; cursor:pointer;" class="blog-row-hover" onclick="openBlogFormModal(${index})">
+                        <div style="flex:1;">
+                            <div style="font-weight:bold; color:var(--text-main); font-size:15px; margin-bottom:5px;">${blog.title}</div>
+                            <div style="font-size:12px; color:var(--text-muted);"><i class="fa-solid fa-calendar-days"></i> ${blog.month}　<a href="${blog.url}" target="_blank" onclick="event.stopPropagation();" style="color:var(--primary-blue);"><i class="fa-solid fa-link"></i> ${blog.url}</a></div>
+                        </div>
+                        <div style="color:var(--primary-blue);"><i class="fa-solid fa-angle-right"></i></div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        window.openBlogFormModal = function(index) {
+            document.getElementById('blogFormClientId').value = currentClientId;
+            document.getElementById('blogFormIndex').value = index;
+            
+            if (index === -1) {
+                // 新規追加
+                document.getElementById('blogFormTitle').innerHTML = '<i class="fa-solid fa-pen-nib" style="color:#059669;"></i> ブログ記事を追加';
+                document.getElementById('newBlogMonth').value = '';
+                document.getElementById('newBlogTitle').value = '';
+                document.getElementById('newBlogUrl').value = '';
+                document.getElementById('deleteBlogBtn').style.display = 'none';
+            } else {
+                // 編集
+                document.getElementById('blogFormTitle').innerHTML = '<i class="fa-solid fa-pen-to-square" style="color:var(--primary-blue);"></i> ブログ記事の編集';
+                const blog = currentClientBlogs[index];
+                document.getElementById('newBlogMonth').value = blog.month;
+                document.getElementById('newBlogTitle').value = blog.title;
+                document.getElementById('newBlogUrl').value = blog.url;
+                document.getElementById('deleteBlogBtn').style.display = 'block';
+            }
+            
+            document.getElementById('blogFormModal').style.display = 'flex';
+        };
+
+        const executeBlogUpdate = async (btn, newBlogsArr, successMsg) => {
+            const clientId = document.getElementById('blogFormClientId').value;
+            btn.innerText = '保存中...';
+            btn.disabled = true;
+
+            const { error } = await supabase.from('clients').update({ blogs: newBlogsArr }).eq('id', clientId);
+
+            btn.innerText = '保存する';
+            btn.disabled = false;
+
+            if (error) {
+                console.error("更新エラー:", error);
+                alert("エラーが発生しました: " + error.message);
+                return;
+            }
+
+            alert(successMsg);
+            document.getElementById('blogFormModal').style.display = 'none';
+            // リストを再表示用に更新
+            currentClientBlogs = newBlogsArr;
+            currentClientBlogs.sort((a, b) => parseYearMonth(b.month) - parseYearMonth(a.month));
+            renderBlogListInner();
+            // 親の一覧も更新
+            loadClients();
         };
 
         document.getElementById('saveBlogBtn').addEventListener('click', async () => {
             const btn = document.getElementById('saveBlogBtn');
-            const clientId = document.getElementById('blogTargetClientId').value;
-            let blogsArr = JSON.parse(document.getElementById('blogTargetClientBlogs').value || '[]');
+            const index = parseInt(document.getElementById('blogFormIndex').value);
             
             const month = document.getElementById('newBlogMonth').value.trim();
             const title = document.getElementById('newBlogTitle').value.trim();
@@ -449,29 +559,25 @@
                 return;
             }
 
-            // 新規ブログを追加
-            blogsArr.push({ month, title, url });
-
-            btn.innerText = '保存中...';
-            btn.disabled = true;
-
-            const { error } = await supabase.from('clients').update({ blogs: blogsArr }).eq('id', clientId);
-
-            if (error) {
-                console.error("更新エラー:", error);
-                alert("エラーが発生しました: " + error.message);
-                btn.innerText = '記事を追加する';
-                btn.disabled = false;
-                return;
+            let newBlogsArr = [...currentClientBlogs];
+            if (index === -1) {
+                newBlogsArr.push({ month, title, url });
+                executeBlogUpdate(btn, newBlogsArr, "ブログ記事を追加しました！");
+            } else {
+                newBlogsArr[index] = { month, title, url };
+                executeBlogUpdate(btn, newBlogsArr, "ブログ記事を更新しました！");
             }
+        });
 
-            alert("ブログ記事を追加しました！");
-            document.getElementById('addBlogModal').style.display = 'none';
-            btn.innerText = '記事を追加する';
-            btn.disabled = false;
+        document.getElementById('deleteBlogBtn').addEventListener('click', async () => {
+            if(!confirm("本当にこのブログ記事を削除しますか？")) return;
+            const btn = document.getElementById('deleteBlogBtn');
+            const index = parseInt(document.getElementById('blogFormIndex').value);
             
-            // リロード
-            loadClients();
+            let newBlogsArr = [...currentClientBlogs];
+            newBlogsArr.splice(index, 1);
+            
+            executeBlogUpdate(btn, newBlogsArr, "ブログ記事を削除しました。");
         });
 
 

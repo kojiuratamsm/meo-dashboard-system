@@ -2625,7 +2625,12 @@
             const blogs = window.agencyBlogs || [];
             
             // 存在する月を抽出
-            const months = [...new Set(blogs.map(b => b.month))].sort((a,b) => b.localeCompare(a));
+            const parseYM = (str) => {
+                const m = String(str).match(/(\d+)年(\d+)月/);
+                if(m) return parseInt(m[1]) * 100 + parseInt(m[2]);
+                return 0;
+            };
+            const months = [...new Set(blogs.map(b => b.month))].sort((a,b) => parseYM(b) - parseYM(a));
             months.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m;
@@ -2644,8 +2649,16 @@
             if (selectedMonth !== 'all') {
                 filtered = blogs.filter(b => b.month === selectedMonth);
             }
-            // 最新順（追加順の逆）
-            filtered = filtered.reverse();
+            
+            // 年月解析ヘルパー (例: 2026年4月 -> 202604)
+            const parseYearMonth = (str) => {
+                const m = String(str).match(/(\d+)年(\d+)月/);
+                if(m) return parseInt(m[1]) * 100 + parseInt(m[2]);
+                return 0; // fallback
+            };
+
+            // 最新順（追加順の逆ではなく、年月そのもので正確にソート）
+            filtered.sort((a, b) => parseYearMonth(b.month) - parseYearMonth(a.month));
 
             if (filtered.length === 0) {
                 container.innerHTML = '<p style="font-size:13px; color:var(--text-muted); text-align:center; padding:10px;">ブログ記事がまだありません。</p>';
