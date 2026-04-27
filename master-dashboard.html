@@ -73,7 +73,11 @@
             <div style="font-size:11px; color:#A0AEC0; margin-top:5px;">MASTER DASHBOARD</div>
         </div>
         <a href="#" class="nav-item active" onclick="switchMasterView('view-clients', this)"><i class="fa-solid fa-users"></i> 全クライアント一覧</a>
-        <a href="#" class="nav-item" onclick="switchMasterView('view-keyword-analysis', this)"><i class="fa-solid fa-magnifying-glass-chart"></i> キーワード分析</a>
+        
+        <!-- 目立つキーワード分析ボタン -->
+        <a href="#" class="nav-item" onclick="switchMasterView('view-keyword-analysis', this)" style="background: linear-gradient(135deg, #4285F4, #3b82f6); color: white; display:flex; justify-content:center; gap:8px; font-weight: bold; margin-top: 15px; box-shadow: 0 5px 15px rgba(66,133,244,0.4); border:none; transition: all 0.3s;">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 16px;"></i> ラッコGKP 分析
+        </a>
         <div style="margin-top:20px; padding:0 15px;">
             <p style="font-size:11px; color:#A0AEC0; margin-bottom:10px; font-weight:bold;">申し込みフォームURL取得</p>
             <button class="btn-action" style="background:#4A5568; margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('/signup-a')">運用代行プラン</button>
@@ -427,14 +431,17 @@
         // UI操作・キーワード分析関連ロジック
         // ==========================================
 
-        function switchMasterView(viewId, el) {
+        window.switchMasterView = function(viewId, el) {
             document.querySelectorAll('.master-view').forEach(v => v.style.display = 'none');
             document.getElementById(viewId).style.display = 'block';
             if(el) {
-                document.querySelectorAll('.sidebar .nav-item').forEach(n => n.classList.remove('active'));
-                el.classList.add('active');
+                // 通常のサイドバーメニューの色を変えないため、ボタンの色はそのままで処理
+                document.querySelectorAll('.sidebar .nav-item').forEach(n => {
+                    if(!n.style.background.includes('linear-gradient')) n.classList.remove('active');
+                });
+                if(!el.style.background.includes('linear-gradient')) el.classList.add('active');
             }
-        }
+        };
 
         const dropZone = document.getElementById('csvDropZone');
         const fileInput = document.getElementById('csvFileInput');
@@ -463,11 +470,11 @@
         let currentSortCol = 'volume';
         let sortAsc = false;
 
-        function resetKeywordAnalysis() {
+        window.resetKeywordAnalysis = function() {
             document.getElementById('analysisReportCard').style.display = 'none';
             document.getElementById('csvDropZone').style.display = 'block';
             fileInput.value = '';
-        }
+        };
 
         function handleCsvFile(file) {
             // パース時に文字化けを防ぐためFileReaderを使用
@@ -535,7 +542,7 @@
             document.getElementById('csvDropZone').style.display = 'none';
         }
 
-        function sortKeywordData(col) {
+        window.sortKeywordData = function(col) {
             if(currentSortCol === col) {
                 sortAsc = !sortAsc;
             } else {
@@ -554,7 +561,7 @@
                 }
             });
             renderKeywordTable();
-        }
+        };
 
         function renderKeywordTable() {
             const tbody = document.getElementById('keywordTableBody');
