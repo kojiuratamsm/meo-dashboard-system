@@ -231,19 +231,19 @@
             <div class="kpi-grid-4">
                 <div class="card kpi-card">
                     <div class="kpi-icon icon-blue"><i class="fa-regular fa-eye"></i></div>
-                    <div class="kpi-info"><h3>合計表示回数</h3><div class="value">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
+                    <div class="kpi-info"><h3>合計表示回数</h3><div class="value" id="kpiOverviewTotal">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
                 </div>
                 <div class="card kpi-card">
                     <div class="kpi-icon icon-green"><i class="fa-solid fa-route"></i></div>
-                    <div class="kpi-info"><h3>ルート検索数</h3><div class="value">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
+                    <div class="kpi-info"><h3>ルート検索数</h3><div class="value" id="kpiRouteTotal">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
                 </div>
                 <div class="card kpi-card">
                     <div class="kpi-icon icon-yellow"><i class="fa-solid fa-globe"></i></div>
-                    <div class="kpi-info"><h3>サイトアクセス</h3><div class="value">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
+                    <div class="kpi-info"><h3>サイトアクセス</h3><div class="value" id="kpiWebsiteTotal">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
                 </div>
                 <div class="card kpi-card">
                     <div class="kpi-icon" style="background:#FEECEB; color:#EA4335;"><i class="fa-solid fa-phone"></i></div>
-                    <div class="kpi-info"><h3>通話</h3><div class="value">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
+                    <div class="kpi-info"><h3>通話</h3><div class="value" id="kpiCallTotal">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
                 </div>
             </div>
 
@@ -2098,10 +2098,32 @@
             let currentPeriod = '6months';
             let currentMetric = 'overview';
             
-            const dataConfig = {
-                '6months': { labels: ['10月', '11月', '12月', '1月', '2月', '3月'], overview: [0, 0, 0, 0, 0, 0], route: [0, 0, 0, 0, 0, 0], call: [0, 0, 0, 0, 0, 0], website: [0, 0, 0, 0, 0, 0] },
+            let dataConfig = {
+                '6months': { labels: ['11月', '12月', '1月', '2月', '3月', '4月'], overview: [0, 0, 0, 0, 0, 0], route: [0, 0, 0, 0, 0, 0], call: [0, 0, 0, 0, 0, 0], website: [0, 0, 0, 0, 0, 0] },
                 'daily': { labels: Array.from({length: 31}, (_, i) => `${i + 1}日`), overview: Array.from({length: 31}, () => 0), route: Array.from({length: 31}, () => 0), call: Array.from({length: 31}, () => 0), website: Array.from({length: 31}, () => 0) }
             };
+
+            try {
+                let userObj = JSON.parse(localStorage.getItem('currentUser'));
+                if (userObj && userObj.email === 'test@gmail.com') {
+                    // Inject realistic mock values for test user (半年間の推移)
+                    dataConfig['6months'].overview = [15200, 16800, 18450, 17200, 19500, 21320];
+                    dataConfig['6months'].route = [280, 310, 350, 330, 390, 420];
+                    dataConfig['6months'].website = [850, 920, 1050, 980, 1120, 1260];
+                    dataConfig['6months'].call = [120, 135, 145, 140, 160, 185];
+
+                    // Inject values into KPI UI
+                    setTimeout(() => {
+                        document.getElementById('kpiOverviewTotal').innerHTML = `21,320 <span style="font-size:12px; color:var(--primary-green); margin-left:10px;"><i class="fa-solid fa-arrow-trend-up"></i> +9.3%</span>`;
+                        document.getElementById('kpiRouteTotal').innerHTML = `420 <span style="font-size:12px; color:var(--primary-green); margin-left:10px;"><i class="fa-solid fa-arrow-trend-up"></i> +7.6%</span>`;
+                        document.getElementById('kpiWebsiteTotal').innerHTML = `1,260 <span style="font-size:12px; color:var(--primary-green); margin-left:10px;"><i class="fa-solid fa-arrow-trend-up"></i> +12.5%</span>`;
+                        document.getElementById('kpiCallTotal').innerHTML = `185 <span style="font-size:12px; color:var(--primary-green); margin-left:10px;"><i class="fa-solid fa-arrow-trend-up"></i> +15.6%</span>`;
+                        
+                        // 動的タイトルも更新
+                        document.querySelector('.dynamic-store-name').innerText = userObj.company_name || 'テスト店舗';
+                    }, 100);
+                }
+            } catch (e) {}
 
             const metricConfig = {
                 'overview': { color: '#4285F4', bg: 'rgba(66, 133, 244, 0.1)' },
