@@ -308,8 +308,10 @@
                 <div class="right-column">
                     <div class="ai-card">
                         <h2 class="card-title" style="color:var(--primary-blue); margin-bottom:15px;"><i class="fa-solid fa-wand-magic-sparkles"></i> MEO対策チャンネル改善アドバイス</h2>
-                        <p style="font-size:14px; line-height:1.6; margin-bottom: 10px;"><b>【データ連携待ち】</b><br>GoogleビジネスプロフィールとのAPI連携が完了次第、こちらにAI分析レポートが表示されます。</p>
-                        <p style="font-size:14px; line-height:1.6;"><b>【今月の改善アクション】</b><br>口コミ数が前月と比較して増加していない傾向にあります。左メニューの<b>「口コミ管理」</b>からアンケートを稼働させましょう。</p>
+                        <div id="demoAiCardContent">
+                            <p style="font-size:14px; line-height:1.6; margin-bottom: 10px;"><b>【データ連携待ち】</b><br>GoogleビジネスプロフィールとのAPI連携が完了次第、こちらにAI分析レポートが表示されます。</p>
+                            <p style="font-size:14px; line-height:1.6;"><b>【今月の改善アクション】</b><br>口コミ数が前月と比較して増加していない傾向にあります。左メニューの<b>「口コミ管理」</b>からアンケートを稼働させましょう。</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2119,6 +2121,14 @@
                         document.getElementById('kpiWebsiteTotal').innerHTML = `1,260 <span style="font-size:12px; color:var(--primary-green); margin-left:10px;"><i class="fa-solid fa-arrow-trend-up"></i> +12.5%</span>`;
                         document.getElementById('kpiCallTotal').innerHTML = `185 <span style="font-size:12px; color:var(--primary-green); margin-left:10px;"><i class="fa-solid fa-arrow-trend-up"></i> +15.6%</span>`;
                         
+                        document.getElementById('demoAiCardContent').innerHTML = `
+                            <p style="font-size:14px; line-height:1.6; margin-bottom: 15px;"><b>【AI実績分析】</b><br>
+                            先月と比較して、全体的な表示回数が<span style="color:#34A853; font-weight:bold;">9.3%増加</span>しています。<br>
+                            特に「ルート検索数」の着実な伸びが確認され、Googleマップ検索から実来店への導線が非常にスムーズに機能しています。</p>
+                            <p style="font-size:14px; line-height:1.6;"><b>【今月の最優先アクション】</b><br>
+                            サイトアクセス数が1,200件を突破しました！さらなる予約率向上のため、左メニューの<b>「投稿作成」</b>から最新のキャンペーン情報などを週1回を目安に配信することを推奨します。</p>
+                        `;
+
                         // 動的タイトルも更新
                         document.querySelector('.dynamic-store-name').innerText = userObj.company_name || 'テスト店舗';
                     }, 100);
