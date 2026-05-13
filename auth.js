@@ -17,9 +17,19 @@ export function getCurrentUser() {
 /**
  * ログアウト処理
  */
-export function logout() {
+export async function logout() {
   localStorage.removeItem('currentUser')
   localStorage.removeItem('masterAdmin')
+  try {
+    // Supabaseから提供されるsupabaseモジュールをインポート済みか確認できないため、
+    // グローバルまたは他ファイルからの呼び出しを想定してキャッシュのみ削除を優先。
+    // supabase.auth.signOut() が呼べる環境なら呼びたいところですが、
+    // 今回は安全のためローカルの破棄を確実に行います。
+    const { supabase } = await import('../supabase-config.js');
+    await supabase.auth.signOut();
+  } catch (e) {
+    console.error("Supabase logout error:", e);
+  }
   window.location.href = '/login'
 }
 

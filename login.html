@@ -131,35 +131,42 @@
                 return;
             }
 
-            // 1. マスター権限の判定（これだけは絶対パス）
-            if (email === 'urata@msm-jap.com' && pass === 'Koji2819') {
-                localStorage.setItem('masterAdmin', 'true');
-                window.location.href = '/master-dashboard';
-                return;
-            } 
+            // 1. まずSupabaseの「本物の鍵（Auth）」で認証
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: pass
+            });
 
-            // 2. クライアント（顧客）のデータベース照合
-            btn.innerText = '認証中...';
-            btn.disabled = true;
-
-            // Supabaseから一致するデータを検索
-            const { data, error } = await supabase
-                .from('clients')
-                .select('*')
-                .eq('email', email)
-                .eq('temp_password', pass)
-                .single(); // 単一レコードで取得
-
-            if (error || !data) {
-                // 合致するデータがない場合
+            if (authError || !authData.user) {
                 alert("メールアドレスまたはパスワードが間違っています。");
                 btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> ログイン';
                 btn.disabled = false;
                 return;
             }
 
+            // 2. マスター権限の判定
+            if (email === 'urata@msm-jap.com') {
+                localStorage.setItem('masterAdmin', 'true');
+                window.location.href = '/master-dashboard';
+                return;
+            } 
+
+            // 3. 認証成功後、クライアントの店舗情報などをデータベースから取得
+            const { data: clientData, error: dbError } = await supabase
+                .from('clients')
+                .select('*')
+                .eq('auth_id', authData.user.id)
+                .single();
+
+            if (dbError || !clientData) {
+                alert("アカウントは見つかりましたが、店舗情報が未登録です。管理者へお問い合わせください。");
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> ログイン';
+                btn.disabled = false;
+                return;
+            }
+
             // 認証成功！ブラウザにこの顧客の情報を記憶させる
-            localStorage.setItem('currentUser', JSON.stringify(data));
+            localStorage.setItem('currentUser', JSON.stringify(clientData));
             // 本番ダッシュボードへ遷移
             window.location.href = '/';
         };

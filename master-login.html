@@ -52,16 +52,42 @@
         <button class="btn-primary" onclick="masterLogin()">認証してマスターパネルへ行く</button>
     </div>
 
-    <script>
-        function masterLogin() {
+    <script type="module">
+        import { supabase } from './supabase-config.js';
+
+        window.masterLogin = async function() {
             const email = document.getElementById('masterEmail').value;
             const pass = document.getElementById('masterPass').value;
+            const btn = document.querySelector('.btn-primary');
 
-            if (email === 'urata@msm-jap.com' && pass === 'Koji2819') {
+            if (!email || !pass) {
+                alert("メールアドレスとパスワードを入力してください。");
+                return;
+            }
+
+            btn.innerText = "認証中...";
+            btn.disabled = true;
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: pass
+            });
+
+            btn.innerText = "認証してマスターパネルへ行く";
+            btn.disabled = false;
+
+            if (error || !data.user) {
+                alert('権限がありません。メールアドレスまたはパスワードが間違っています。');
+                return;
+            }
+
+            if (data.user.email === 'urata@msm-jap.com') {
                 alert('認証成功！マスターダッシュボードへ移動します。');
+                localStorage.setItem('masterAdmin', 'true');
                 window.location.href = '/master-dashboard';
             } else {
-                alert('権限がありません。メールアドレスまたはパスワードが間違っています。');
+                alert('マスター権限がないアカウントです。');
+                await supabase.auth.signOut();
             }
         }
     </script>
