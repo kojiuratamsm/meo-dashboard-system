@@ -66,19 +66,43 @@
         .thumbnail-preview:hover { border-color: var(--primary-orange); }
         .thumbnail-preview img { width: 100%; height: 100%; object-fit: cover; }
         .thumbnail-placeholder { color: #A0AEC0; font-size: 13px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: white; border-radius: 12px; width: 400px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal h3 { margin-top: 0; margin-bottom: 20px; font-size: 18px; color: #2D3748; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+        .btn-cancel { background: #E2E8F0; color: #4A5568; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        
+        /* Sidebar Article List */
+        .article-list-container { margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px; }
+        .article-list-container h3 { font-size: 14px; color: #4A5568; margin-bottom: 15px; }
+        .search-mini { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 15px; font-size: 12px; }
+        .article-item { background: #F7FAFC; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
+        .article-item:hover { border-color: var(--primary-orange); }
+        .article-item-title { font-size: 12px; font-weight: bold; color: #2D3748; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .article-item-meta { font-size: 10px; color: #718096; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
-    <nav class="sidebar">
+    <aside class="sidebar">
         <div class="logo-area">
             <div class="msm-logo">MapOn Media</div>
             <div style="font-size:11px; color:#A0AEC0; margin-top:5px; font-weight:bold;">WRITER PANEL</div>
         </div>
-        <a href="#" class="nav-item active"><i class="fa-solid fa-pen-to-square"></i> 新規記事作成</a>
-        <a href="/media.html" target="_blank" class="nav-item"><i class="fa-solid fa-eye"></i> 公開メディアを確認</a>
-        <a href="#" onclick="writerLogout()" class="nav-item" style="margin-top:auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
-    </nav>
+        <a href="media-admin.html" class="nav-item active"><i class="fa-solid fa-pen-nib"></i> 記事を書く</a>
+        <a href="master-dashboard.html" class="nav-item"><i class="fa-solid fa-arrow-left"></i> 管理画面に戻る</a>
+        <a href="#" class="nav-item" onclick="writerLogout()" style="margin-top:auto; color:#E53E3E;"><i class="fa-solid fa-right-from-bracket"></i> ログアウト</a>
+
+        <div class="article-list-container">
+            <h3><i class="fa-solid fa-list"></i> 過去の記事一覧</h3>
+            <input type="text" id="articleSearch" class="search-mini" placeholder="タイトル・執筆者で検索..." oninput="filterArticleList()">
+            <div id="sidebarArticleList" style="max-height: 400px; overflow-y: auto;">
+                <!-- JSで動的に追加 -->
+            </div>
+        </div>
+    </aside>
 
     <main class="main-content">
         <header class="header">
@@ -120,11 +144,11 @@
             <div class="grid-2">
                 <div class="form-group">
                     <label>執筆者名 (記事の最後に表示されます)</label>
-                    <input type="text" id="blogAuthor" class="form-control" placeholder="例: MEOアドバイザー 浦田">
+                    <input type="text" id="authorName" class="form-control" placeholder="例: MEOアドバイザー 浦田">
                 </div>
                 <div class="form-group">
                     <label>執筆日</label>
-                    <input type="date" id="blogDate" class="form-control">
+                    <input type="date" id="publishedDate" class="form-control">
                 </div>
             </div>
         </div>
@@ -132,7 +156,10 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h2 style="margin:0;"><i class="fa-solid fa-file-lines"></i> 記事本文</h2>
-                <button class="btn-primary" style="padding: 8px 15px; font-size: 12px; background: #3182CE;" onclick="insertCustomButton()"><i class="fa-solid fa-link"></i> リンクボタンを挿入</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-primary" style="padding: 8px 15px; font-size: 12px; background: #718096;" onclick="openDividerModal()"><i class="fa-solid fa-minus"></i> 分割線を挿入</button>
+                    <button class="btn-primary" style="padding: 8px 15px; font-size: 12px; background: #3182CE;" onclick="openButtonModal()"><i class="fa-solid fa-link"></i> リンクボタンを挿入</button>
+                </div>
             </div>
             <div id="editor-container"></div>
         </div>
@@ -172,20 +199,152 @@
         </div>
     </main>
 
+    <!-- Modal for Button Insertion -->
+    <div class="modal-overlay" id="buttonModal">
+        <div class="modal">
+            <h3>ボタンの挿入</h3>
+            <div class="form-group">
+                <label>名前 (ボタンに表示するテキスト)</label>
+                <input type="text" id="btnText" class="form-control" placeholder="例: ご予約はこちら">
+            </div>
+            <div class="form-group">
+                <label>リンク (URL)</label>
+                <input type="text" id="btnLink" class="form-control" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>ボタンの色</label>
+                <input type="color" id="btnColor" class="form-control" value="#ED8936" style="height: 40px; padding: 5px;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeButtonModal()">キャンセル</button>
+                <button class="btn-primary" onclick="insertButtonImage()">挿入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Divider Insertion -->
+    <div class="modal-overlay" id="dividerModal">
+        <div class="modal">
+            <h3>分割線の挿入</h3>
+            <div class="form-group">
+                <label>線の種類</label>
+                <select id="dividerStyle" class="form-control">
+                    <option value="solid">直線</option>
+                    <option value="dashed">破線（長めの点線）</option>
+                    <option value="dotted">点線</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>線の色</label>
+                <input type="color" id="dividerColor" class="form-control" value="#CBD5E0" style="height: 40px; padding: 5px;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeDividerModal()">キャンセル</button>
+                <button class="btn-primary" onclick="insertDividerImage()">挿入</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { supabase } from './supabase-config.js';
 
         // 認証チェック
+        let editingArticleId = null; // 編集中の記事ID
+        let allArticles = []; // サイドバー用
+        let tagsList = [];
+
         async function checkAuth() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
+            const { data, error } = await supabase.auth.getSession();
+            if (error || !data.session) {
                 window.location.href = '/media-login.html';
                 return;
             }
-            // 今日の日付をセット
-            document.getElementById('blogDate').valueAsDate = new Date();
+            document.getElementById('authorName').value = data.session.user.email;
+            document.getElementById('publishedDate').valueAsDate = new Date();
+            
+            // ログイン成功時に記事一覧を読み込む
+            loadSidebarArticles();
         }
         checkAuth();
+
+        // 記事一覧の読み込み
+        async function loadSidebarArticles() {
+            const { data, error } = await supabase.from('blogs').select('*').order('created_at', { ascending: false });
+            if (!error && data) {
+                allArticles = data;
+                renderSidebarArticles(data);
+            }
+        }
+
+        function renderSidebarArticles(articles) {
+            const container = document.getElementById('sidebarArticleList');
+            container.innerHTML = '';
+            
+            // 月ごとにグループ化
+            const grouped = {};
+            articles.forEach(a => {
+                const date = new Date(a.published_date || a.created_at);
+                const month = `${date.getFullYear()}年${date.getMonth() + 1}月`;
+                if(!grouped[month]) grouped[month] = [];
+                grouped[month].push(a);
+            });
+
+            for (const [month, list] of Object.entries(grouped)) {
+                container.innerHTML += `<div style="font-size:11px; color:#A0AEC0; font-weight:bold; margin:10px 0 5px;">${month}</div>`;
+                list.forEach(article => {
+                    const dateStr = (article.published_date || article.created_at).split('T')[0];
+                    container.innerHTML += `
+                        <div class="article-item" onclick="loadArticleForEdit('${article.id}')">
+                            <div class="article-item-title">${article.title}</div>
+                            <div class="article-item-meta">
+                                <span>${dateStr}</span>
+                                <span>${article.author_name}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        window.filterArticleList = function() {
+            const q = document.getElementById('articleSearch').value.toLowerCase();
+            const filtered = allArticles.filter(a => 
+                (a.title && a.title.toLowerCase().includes(q)) || 
+                (a.author_name && a.author_name.toLowerCase().includes(q))
+            );
+            renderSidebarArticles(filtered);
+        };
+
+        window.loadArticleForEdit = function(id) {
+            const article = allArticles.find(a => a.id === id);
+            if (!article) return;
+            
+            editingArticleId = id;
+            document.getElementById('blogTitle').value = article.title || '';
+            document.getElementById('authorName').value = article.author_name || '';
+            if(article.published_date) document.getElementById('publishedDate').value = article.published_date;
+            if(article.tags && article.tags.length > 0) document.getElementById('blogCategory').value = article.tags[0];
+            
+            if (article.image_url) {
+                document.getElementById('thumbnailImg').src = article.image_url;
+                document.getElementById('thumbnailImg').style.display = 'block';
+                document.getElementById('thumbnailPlaceholder').style.display = 'none';
+                document.getElementById('blogThumbnail').value = article.image_url;
+            }
+            
+            document.getElementById('seoStoreName').value = article.store_name || '';
+            document.getElementById('seoPhone').value = article.phone || '';
+            document.getElementById('seoAddress').value = article.address || '';
+            if (article.map_iframe !== undefined) document.getElementById('seoMapIframe').value = article.map_iframe || '';
+            
+            tagsList = article.seo_keywords || [];
+            renderTags();
+            
+            quill.root.innerHTML = article.content || '';
+            
+            const btn = document.querySelector('.btn-primary');
+            btn.innerHTML = '<i class="fa-solid fa-upload"></i> 更新する';
+        };
 
         // 画像アップロードのプレビュー処理
         document.getElementById('thumbnailFile').addEventListener('change', function(e) {
@@ -228,13 +387,9 @@
         // タグ入力処理
         const tagInput = document.getElementById('tagInput');
         const tagsContainer = document.getElementById('tagsContainer');
-        let tagsList = [];
 
         function renderTags() {
-            // Remove existing tag pills
             document.querySelectorAll('.tag-pill').forEach(el => el.remove());
-            
-            // Insert new tag pills before the input field
             tagsList.forEach((tag, index) => {
                 const pill = document.createElement('div');
                 pill.className = 'tag-pill';
@@ -266,37 +421,78 @@
             placeholder: 'ここから魅力的な記事を書き始めましょう...',
             modules: {
                 imageResize: {
-                    displayStyles: {
-                        backgroundColor: 'black',
-                        border: 'none',
-                        color: 'white'
-                    },
+                    displayStyles: { backgroundColor: 'black', border: 'none', color: 'white' },
                     modules: [ 'Resize', 'DisplaySize', 'Toolbar' ]
                 },
                 toolbar: [
                     [{ 'header': [2, 3, false] }],
                     ['bold', 'italic', 'underline'],
-                    [{ 'color': [] }, { 'background': [] }], // 文字色・背景色追加
-                    [{ 'align': [] }], // 配置（左寄せ、中央、右寄せ、両端揃え）
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'align': [] }],
                     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link', 'image', 'video'], // video追加
+                    ['link', 'image', 'video'],
                     ['clean']
                 ]
             }
         });
 
-        // ボタン挿入機能
-        window.insertCustomButton = function() {
-            const url = prompt('ボタンの飛び先URLを入力してください:');
-            const text = prompt('ボタンのテキストを入力してください:');
-            
-            if (url && text) {
-                const range = quill.getSelection(true);
-                // HTMLを挿入するためのちょっとしたハック
-                const buttonHTML = `<a href="${url}" target="_blank" style="display:inline-block; background-color:#ED8936; color:white; padding:12px 24px; border-radius:30px; text-decoration:none; font-weight:bold; margin:10px 0; box-shadow:0 4px 10px rgba(237,137,54,0.3); transition:0.3s;">${text}</a>`;
-                quill.clipboard.dangerouslyPasteHTML(range.index, buttonHTML);
-                quill.setSelection(range.index + 1);
-            }
+        // モーダル制御
+        window.openButtonModal = function() { document.getElementById('buttonModal').style.display = 'flex'; };
+        window.closeButtonModal = function() { document.getElementById('buttonModal').style.display = 'none'; };
+        window.openDividerModal = function() { document.getElementById('dividerModal').style.display = 'flex'; };
+        window.closeDividerModal = function() { document.getElementById('dividerModal').style.display = 'none'; };
+
+        window.insertButtonImage = function() {
+            const text = document.getElementById('btnText').value.trim();
+            const url = document.getElementById('btnLink').value.trim();
+            const color = document.getElementById('btnColor').value;
+            if (!text || !url) { alert('名前とリンクを入力してください。'); return; }
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.font = 'bold 20px sans-serif';
+            const textWidth = ctx.measureText(text).width;
+            canvas.width = textWidth + 60;
+            canvas.height = 50;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, canvas.width, canvas.height, 25);
+            ctx.fill();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 2);
+            const base64 = canvas.toDataURL('image/png');
+            const range = quill.getSelection(true) || { index: quill.getLength() - 1 };
+            quill.insertEmbed(range.index, 'image', base64);
+            quill.setSelection(range.index, 1);
+            quill.format('link', url);
+            quill.setSelection(range.index + 1);
+            closeButtonModal();
+            document.getElementById('btnText').value = '';
+            document.getElementById('btnLink').value = '';
+        };
+
+        window.insertDividerImage = function() {
+            const style = document.getElementById('dividerStyle').value;
+            const color = document.getElementById('dividerColor').value;
+            const canvas = document.createElement('canvas');
+            canvas.width = 800;
+            canvas.height = 10;
+            const ctx = canvas.getContext('2d');
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            if (style === 'dashed') ctx.setLineDash([15, 10]);
+            else if (style === 'dotted') ctx.setLineDash([4, 4]);
+            else ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(0, 5);
+            ctx.lineTo(800, 5);
+            ctx.stroke();
+            const base64 = canvas.toDataURL('image/png');
+            const range = quill.getSelection(true) || { index: quill.getLength() - 1 };
+            quill.insertEmbed(range.index, 'image', base64);
+            quill.setSelection(range.index + 1);
+            closeDividerModal();
         };
 
         window.writerLogout = async function() {
@@ -308,9 +504,8 @@
             const title = document.getElementById('blogTitle').value.trim();
             const category = document.getElementById('blogCategory').value;
             const thumbnail = document.getElementById('blogThumbnail').value.trim();
-            const author = document.getElementById('blogAuthor').value.trim();
-            const date = document.getElementById('blogDate').value;
-            
+            const author = document.getElementById('authorName').value.trim();
+            const date = document.getElementById('publishedDate').value;
             const storeName = document.getElementById('seoStoreName').value.trim();
             const phone = document.getElementById('seoPhone').value.trim();
             const address = document.getElementById('seoAddress').value.trim();
@@ -318,7 +513,6 @@
             
             let contentHTML = quill.root.innerHTML;
             if (mapIframe) {
-                // Remove existing iframes with the same source to avoid duplicates (optional, but let's just append)
                 contentHTML += `<div class="embedded-map" style="margin-top: 30px;">${mapIframe}</div>`;
             }
 

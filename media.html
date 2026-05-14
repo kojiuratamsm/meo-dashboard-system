@@ -26,8 +26,14 @@
         .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
         .logo img { height: 35px; }
         
-        /* Container */
-        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; min-height: 70vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; min-height: 70vh; display: flex; gap: 40px; }
+        .main-col { flex: 1; }
+        .sidebar-col { width: 300px; padding-top: 40px; }
+        
+        /* Hero Concept */
+        .hero-concept { background: linear-gradient(135deg, #2B6CB0, #2C5282); color: white; border-radius: 24px; padding: 50px 40px; margin-top: 40px; margin-bottom: 40px; text-align: center; box-shadow: 0 10px 30px rgba(43,108,176,0.2); }
+        .hero-concept h1 { font-size: 28px; font-weight: 900; margin-bottom: 15px; letter-spacing: 1px; }
+        .hero-concept p { font-size: 15px; line-height: 1.8; opacity: 0.9; max-width: 600px; margin: 0 auto; }
 
         /* Blog List */
         .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; }
@@ -68,7 +74,20 @@
         /* Loader */
         .loader { text-align: center; padding: 50px; color: var(--primary); font-size: 24px; }
 
-        @media (max-width: 768px) {
+        /* Sidebar Widgets */
+        .widget { background: var(--bg-main); border-radius: 16px; padding: 25px; margin-bottom: 30px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .widget h3 { font-size: 16px; font-weight: 700; color: #2D3748; margin-bottom: 15px; border-bottom: 2px solid #EDF2F7; padding-bottom: 10px; }
+        .search-box { display: flex; gap: 10px; }
+        .search-box input { flex: 1; padding: 10px 15px; border: 1px solid var(--border); border-radius: 8px; outline: none; }
+        .search-box button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; }
+        .category-list { list-style: none; }
+        .category-list li { margin-bottom: 10px; }
+        .category-list a { color: #4A5568; text-decoration: none; font-size: 14px; transition: 0.2s; display: flex; justify-content: space-between; }
+        .category-list a:hover { color: var(--primary); padding-left: 5px; }
+
+        @media (max-width: 900px) {
+            .container { flex-direction: column; }
+            .sidebar-col { width: 100%; padding-top: 0; }
             .article-container { padding: 30px 20px; }
             .article-title { font-size: 24px; }
         }
@@ -84,8 +103,29 @@
         </div>
     </header>
 
-    <div class="container" id="app">
-        <div class="loader"><i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...</div>
+    <div class="container">
+        <main class="main-col" id="app">
+            <div class="loader"><i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...</div>
+        </main>
+        
+        <aside class="sidebar-col" id="sidebar-area" style="display:none;">
+            <div class="widget">
+                <h3><i class="fa-solid fa-magnifying-glass"></i> 記事を検索</h3>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="キーワード...">
+                    <button onclick="searchBlogs()"><i class="fa-solid fa-search"></i></button>
+                </div>
+            </div>
+            <div class="widget">
+                <h3><i class="fa-solid fa-tags"></i> カテゴリー</h3>
+                <ul class="category-list">
+                    <li><a href="?cat=グルメ">グルメ・飲食店 <i class="fa-solid fa-chevron-right" style="font-size:10px; margin-top:4px;"></i></a></li>
+                    <li><a href="?cat=整体・サロン">整体・美容サロン <i class="fa-solid fa-chevron-right" style="font-size:10px; margin-top:4px;"></i></a></li>
+                    <li><a href="?cat=ライフスタイル">ライフスタイル <i class="fa-solid fa-chevron-right" style="font-size:10px; margin-top:4px;"></i></a></li>
+                    <li><a href="?cat=ノウハウ">MEOノウハウ <i class="fa-solid fa-chevron-right" style="font-size:10px; margin-top:4px;"></i></a></li>
+                </ul>
+            </div>
+        </aside>
     </div>
 
     <script type="module">
@@ -94,24 +134,56 @@
         const app = document.getElementById('app');
         const urlParams = new URLSearchParams(window.location.search);
         const articleId = urlParams.get('id');
+        const categoryFilter = urlParams.get('cat');
+        const searchFilter = urlParams.get('q');
 
         async function init() {
             if (articleId) {
+                document.getElementById('sidebar-area').style.display = 'none'; // 記事詳細ではサイドバー非表示（ご要望に応じて）
+                // いや、サイドバーあった方が回遊率上がるので表示します
+                document.getElementById('sidebar-area').style.display = 'block';
                 await loadArticle(articleId);
             } else {
+                document.getElementById('sidebar-area').style.display = 'block';
                 await loadArticleList();
             }
         }
 
+        window.searchBlogs = function() {
+            const q = document.getElementById('searchInput').value.trim();
+            if(q) window.location.href = '?q=' + encodeURIComponent(q);
+        }
+
         async function loadArticleList() {
-            const { data, error } = await supabase.from('blogs').select('*').order('created_at', { ascending: false });
+            let query = supabase.from('blogs').select('*').order('created_at', { ascending: false });
             
-            if (error || !data) {
-                app.innerHTML = '<p>記事が見つかりませんでした。</p>';
+            if (categoryFilter) {
+                query = query.contains('tags', [categoryFilter]);
+            }
+            if (searchFilter) {
+                query = query.or(`title.ilike.%${searchFilter}%,content.ilike.%${searchFilter}%`);
+            }
+
+            const { data, error } = await query;
+            
+            let html = '';
+
+            // TOPページのみコンセプト表示（検索やカテゴリ絞り込み時は非表示）
+            if (!categoryFilter && !searchFilter) {
+                html += `
+                <div class="hero-concept">
+                    <h1>お店の「本当の魅力」を、地図に乗せて届ける。</h1>
+                    <p>MapOn Mediaは、地域の隠れた名店から話題のスポットまで、MEOのプロが厳選したお店のリアルな魅力をお届けするローカル発見メディアです。</p>
+                </div>
+                `;
+            }
+
+            if (error || !data || data.length === 0) {
+                app.innerHTML = html + '<p style="text-align:center; padding: 50px;">記事が見つかりませんでした。</p>';
                 return;
             }
 
-            let html = '<div class="blog-grid">';
+            html += '<div class="blog-grid">';
             data.forEach(blog => {
                 const category = (blog.tags && blog.tags.length > 0) ? blog.tags[0] : 'お知らせ';
                 const date = blog.published_date || blog.created_at.split('T')[0];
@@ -190,12 +262,15 @@
             app.innerHTML = `
                 <article class="article-container">
                     <div class="article-header">
-                        <span class="category-tag">${category}</span>
                         <h1 class="article-title">${blog.title}</h1>
                     </div>
                     ${img}
                     <div class="article-content">
                         ${blog.content}
+                    </div>
+                    
+                    <div style="margin-top: 30px; text-align: right;">
+                        <span class="category-tag">${category}</span>
                     </div>
                     
                     ${storeCardHtml}
