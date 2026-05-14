@@ -91,24 +91,23 @@
             <div class="msm-logo">MapOn Media</div>
             <div style="font-size:11px; color:#A0AEC0; margin-top:5px; font-weight:bold;">WRITER PANEL</div>
         </div>
-        <a href="media-admin.html" class="nav-item active"><i class="fa-solid fa-pen-nib"></i> 記事を書く</a>
-        <a href="master-dashboard.html" class="nav-item"><i class="fa-solid fa-arrow-left"></i> 管理画面に戻る</a>
+        <a href="#" class="nav-item" id="nav-editor" onclick="switchView('editor')"><i class="fa-solid fa-pen-nib"></i> 記事を書く</a>
+        <a href="#" class="nav-item" id="nav-list" onclick="switchView('list')"><i class="fa-solid fa-list"></i> 作成した記事一覧</a>
+        <a href="master-dashboard.html" class="nav-item" style="margin-top: 20px;"><i class="fa-solid fa-arrow-left"></i> 管理画面に戻る</a>
         <a href="#" class="nav-item" onclick="writerLogout()" style="margin-top:auto; color:#E53E3E;"><i class="fa-solid fa-right-from-bracket"></i> ログアウト</a>
-
-        <div class="article-list-container">
-            <h3><i class="fa-solid fa-list"></i> 過去の記事一覧</h3>
-            <input type="text" id="articleSearch" class="search-mini" placeholder="タイトル・執筆者で検索..." oninput="filterArticleList()">
-            <div id="sidebarArticleList" style="max-height: 400px; overflow-y: auto;">
-                <!-- JSで動的に追加 -->
-            </div>
-        </div>
     </aside>
 
     <main class="main-content">
         <header class="header">
-            <h1>新しい記事を書く</h1>
-            <button class="btn-primary" onclick="publishBlog()"><i class="fa-solid fa-paper-plane"></i> 記事を公開する</button>
+            <h1 id="page-title">新しい記事を書く</h1>
+            <div id="list-search-container" style="display:none; margin-right: auto; margin-left: 30px;">
+                <input type="text" id="articleSearch" class="form-control" style="width:250px; padding:8px 15px; border-radius:20px;" placeholder="執筆者で検索..." oninput="filterArticleList()">
+            </div>
+            <button class="btn-primary" id="publishBtn" onclick="saveArticle()"><i class="fa-solid fa-upload"></i> 記事を公開する</button>
         </header>
+
+        <!-- EDITOR VIEW -->
+        <div id="editor-view">
 
         <div class="card">
             <h2><i class="fa-solid fa-heading"></i> 基本情報</h2>
