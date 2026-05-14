@@ -156,10 +156,6 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h2 style="margin:0;"><i class="fa-solid fa-file-lines"></i> 記事本文</h2>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-primary" style="padding: 8px 15px; font-size: 12px; background: #718096;" onclick="openDividerModal()"><i class="fa-solid fa-minus"></i> 分割線を挿入</button>
-                    <button class="btn-primary" style="padding: 8px 15px; font-size: 12px; background: #3182CE;" onclick="openButtonModal()"><i class="fa-solid fa-link"></i> リンクボタンを挿入</button>
-                </div>
             </div>
             <div id="editor-container"></div>
         </div>
@@ -197,61 +193,45 @@
                 </div>
             </div>
         </div>
+        <!-- END EDITOR VIEW -->
+
+        <!-- LIST VIEW -->
+        <div id="list-view" style="display:none;">
+            <div class="card" id="list-container">
+                <!-- JSで動的に一覧を描画 -->
+            </div>
+        </div>
+        <!-- END LIST VIEW -->
+
     </main>
-
-    <!-- Modal for Button Insertion -->
-    <div class="modal-overlay" id="buttonModal">
-        <div class="modal">
-            <h3>ボタンの挿入</h3>
-            <div class="form-group">
-                <label>名前 (ボタンに表示するテキスト)</label>
-                <input type="text" id="btnText" class="form-control" placeholder="例: ご予約はこちら">
-            </div>
-            <div class="form-group">
-                <label>リンク (URL)</label>
-                <input type="text" id="btnLink" class="form-control" placeholder="https://...">
-            </div>
-            <div class="form-group">
-                <label>ボタンの色</label>
-                <input type="color" id="btnColor" class="form-control" value="#ED8936" style="height: 40px; padding: 5px;">
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeButtonModal()">キャンセル</button>
-                <button class="btn-primary" onclick="insertButtonImage()">挿入</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Divider Insertion -->
-    <div class="modal-overlay" id="dividerModal">
-        <div class="modal">
-            <h3>分割線の挿入</h3>
-            <div class="form-group">
-                <label>線の種類</label>
-                <select id="dividerStyle" class="form-control">
-                    <option value="solid">直線</option>
-                    <option value="dashed">破線（長めの点線）</option>
-                    <option value="dotted">点線</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>線の色</label>
-                <input type="color" id="dividerColor" class="form-control" value="#CBD5E0" style="height: 40px; padding: 5px;">
-            </div>
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeDividerModal()">キャンセル</button>
-                <button class="btn-primary" onclick="insertDividerImage()">挿入</button>
-            </div>
-        </div>
-    </div>
 
     <script type="module">
         import { supabase } from './supabase-config.js';
 
         // 認証チェック
         let editingArticleId = null; // 編集中の記事ID
-        let allArticles = []; // サイドバー用
-        let tagsList = [];
+        let allArticles = [];
+
+        window.switchView = function(view) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(view === 'editor') {
+                document.getElementById('nav-editor').classList.add('active');
+                document.getElementById('editor-view').style.display = 'block';
+                document.getElementById('list-view').style.display = 'none';
+                document.getElementById('list-search-container').style.display = 'none';
+                document.getElementById('page-title').innerText = editingArticleId ? '記事の編集' : '新規記事作成';
+            } else {
+                document.getElementById('nav-list').classList.add('active');
+                document.getElementById('editor-view').style.display = 'none';
+                document.getElementById('list-view').style.display = 'block';
+                document.getElementById('list-search-container').style.display = 'block';
+                document.getElementById('page-title').innerText = '作成した記事一覧';
+                loadSidebarArticles();
+            }
+        };
+
+        // 初期表示
+        switchView('editor');
 
         async function checkAuth() {
             const { data, error } = await supabase.auth.getSession();
@@ -261,13 +241,9 @@
             }
             document.getElementById('authorName').value = data.session.user.email;
             document.getElementById('publishedDate').valueAsDate = new Date();
-            
-            // ログイン成功時に記事一覧を読み込む
-            loadSidebarArticles();
         }
         checkAuth();
 
-        // 記事一覧の読み込み
         async function loadSidebarArticles() {
             const { data, error } = await supabase.from('blogs').select('*').order('created_at', { ascending: false });
             if (!error && data) {
@@ -277,10 +253,9 @@
         }
 
         function renderSidebarArticles(articles) {
-            const container = document.getElementById('sidebarArticleList');
+            const container = document.getElementById('list-container');
             container.innerHTML = '';
             
-            // 月ごとにグループ化
             const grouped = {};
             articles.forEach(a => {
                 const date = new Date(a.published_date || a.created_at);
@@ -290,29 +265,46 @@
             });
 
             for (const [month, list] of Object.entries(grouped)) {
-                container.innerHTML += `<div style="font-size:11px; color:#A0AEC0; font-weight:bold; margin:10px 0 5px;">${month}</div>`;
+                container.innerHTML += `<h3 style="font-size:16px; color:#4A5568; margin:20px 0 10px; padding-bottom:5px; border-bottom:2px solid #EDF2F7;">${month}</h3>`;
+                
+                let listHTML = `<div style="display:grid; grid-template-columns:1fr; gap:10px;">`;
                 list.forEach(article => {
                     const dateStr = (article.published_date || article.created_at).split('T')[0];
-                    container.innerHTML += `
-                        <div class="article-item" onclick="loadArticleForEdit('${article.id}')">
-                            <div class="article-item-title">${article.title}</div>
-                            <div class="article-item-meta">
-                                <span>${dateStr}</span>
-                                <span>${article.author_name}</span>
+                    listHTML += `
+                        <div class="article-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; font-size:14px;">
+                            <div style="flex:1;">
+                                <div class="article-item-title" style="font-size:16px; margin-bottom:5px;">${article.title}</div>
+                                <div class="article-item-meta" style="font-size:12px; display:flex; gap:20px;">
+                                    <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
+                                    <span><i class="fa-solid fa-pen-nib"></i> ${article.author_name}</span>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:10px;">
+                                <button onclick="loadArticleForEdit('${article.id}')" style="background:#3182CE; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-pen"></i> 編集</button>
+                                <button onclick="deleteArticle('${article.id}')" style="background:#E53E3E; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-trash"></i> 削除</button>
                             </div>
                         </div>
                     `;
                 });
+                listHTML += `</div>`;
+                container.innerHTML += listHTML;
             }
         }
 
         window.filterArticleList = function() {
             const q = document.getElementById('articleSearch').value.toLowerCase();
             const filtered = allArticles.filter(a => 
-                (a.title && a.title.toLowerCase().includes(q)) || 
                 (a.author_name && a.author_name.toLowerCase().includes(q))
             );
             renderSidebarArticles(filtered);
+        };
+
+        window.deleteArticle = async function(id) {
+            if(confirm('本当にこの記事を削除しますか？')) {
+                await supabase.from('blogs').delete().eq('id', id);
+                alert('削除しました。');
+                loadSidebarArticles();
+            }
         };
 
         window.loadArticleForEdit = function(id) {
@@ -330,6 +322,10 @@
                 document.getElementById('thumbnailImg').style.display = 'block';
                 document.getElementById('thumbnailPlaceholder').style.display = 'none';
                 document.getElementById('blogThumbnail').value = article.image_url;
+            } else {
+                document.getElementById('thumbnailImg').style.display = 'none';
+                document.getElementById('thumbnailPlaceholder').style.display = 'flex';
+                document.getElementById('blogThumbnail').value = '';
             }
             
             document.getElementById('seoStoreName').value = article.store_name || '';
@@ -342,8 +338,11 @@
             
             quill.root.innerHTML = article.content || '';
             
-            const btn = document.querySelector('.btn-primary');
+            const btn = document.querySelector('#publishBtn');
             btn.innerHTML = '<i class="fa-solid fa-upload"></i> 更新する';
+            
+            // 編集画面へ切り替え
+            switchView('editor');
         };
 
         // 画像アップロードのプレビュー処理
@@ -387,6 +386,7 @@
         // タグ入力処理
         const tagInput = document.getElementById('tagInput');
         const tagsContainer = document.getElementById('tagsContainer');
+        let tagsList = [];
 
         function renderTags() {
             document.querySelectorAll('.tag-pill').forEach(el => el.remove());
@@ -436,65 +436,6 @@
             }
         });
 
-        // モーダル制御
-        window.openButtonModal = function() { document.getElementById('buttonModal').style.display = 'flex'; };
-        window.closeButtonModal = function() { document.getElementById('buttonModal').style.display = 'none'; };
-        window.openDividerModal = function() { document.getElementById('dividerModal').style.display = 'flex'; };
-        window.closeDividerModal = function() { document.getElementById('dividerModal').style.display = 'none'; };
-
-        window.insertButtonImage = function() {
-            const text = document.getElementById('btnText').value.trim();
-            const url = document.getElementById('btnLink').value.trim();
-            const color = document.getElementById('btnColor').value;
-            if (!text || !url) { alert('名前とリンクを入力してください。'); return; }
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.font = 'bold 20px sans-serif';
-            const textWidth = ctx.measureText(text).width;
-            canvas.width = textWidth + 60;
-            canvas.height = 50;
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.roundRect(0, 0, canvas.width, canvas.height, 25);
-            ctx.fill();
-            ctx.fillStyle = '#FFFFFF';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 2);
-            const base64 = canvas.toDataURL('image/png');
-            const range = quill.getSelection(true) || { index: quill.getLength() - 1 };
-            quill.insertEmbed(range.index, 'image', base64);
-            quill.setSelection(range.index, 1);
-            quill.format('link', url);
-            quill.setSelection(range.index + 1);
-            closeButtonModal();
-            document.getElementById('btnText').value = '';
-            document.getElementById('btnLink').value = '';
-        };
-
-        window.insertDividerImage = function() {
-            const style = document.getElementById('dividerStyle').value;
-            const color = document.getElementById('dividerColor').value;
-            const canvas = document.createElement('canvas');
-            canvas.width = 800;
-            canvas.height = 10;
-            const ctx = canvas.getContext('2d');
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            if (style === 'dashed') ctx.setLineDash([15, 10]);
-            else if (style === 'dotted') ctx.setLineDash([4, 4]);
-            else ctx.setLineDash([]);
-            ctx.beginPath();
-            ctx.moveTo(0, 5);
-            ctx.lineTo(800, 5);
-            ctx.stroke();
-            const base64 = canvas.toDataURL('image/png');
-            const range = quill.getSelection(true) || { index: quill.getLength() - 1 };
-            quill.insertEmbed(range.index, 'image', base64);
-            quill.setSelection(range.index + 1);
-            closeDividerModal();
-        };
-
         window.writerLogout = async function() {
             await supabase.auth.signOut();
             window.location.href = '/media-login.html';
@@ -521,34 +462,44 @@
                 return;
             }
 
-            const btn = document.querySelector('.btn-primary');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 公開中...';
+            const btn = document.querySelector('#publishBtn');
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中...';
             btn.disabled = true;
 
-            // Supabaseへ保存
-            const { error } = await supabase.from('blogs').insert([
-                {
-                    title: title,
-                    content: contentHTML,
-                    author_name: author || 'MapOn 編集部',
-                    published_date: date,
-                    store_name: storeName,
-                    phone: phone,
-                    address: address,
-                    tags: [category],
-                    seo_keywords: tagsList,
-                    image_url: thumbnail
-                }
-            ]);
+            const payload = {
+                title: title,
+                content: contentHTML,
+                author_name: author || 'MapOn 編集部',
+                published_date: date,
+                store_name: storeName,
+                phone: phone,
+                address: address,
+                tags: [category],
+                seo_keywords: tagsList,
+                image_url: thumbnail,
+            };
 
-            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 記事を公開する';
-            btn.disabled = false;
+            let saveError = null;
 
-            if (error) {
-                console.error(error);
-                alert('記事の公開に失敗しました: ' + error.message);
+            if (editingArticleId) {
+                // 更新
+                const { error } = await supabase.from('blogs').update(payload).eq('id', editingArticleId);
+                saveError = error;
             } else {
-                alert('記事が公開されました！');
+                // 新規作成
+                const { error } = await supabase.from('blogs').insert([payload]);
+                saveError = error;
+            }
+
+            if (saveError) {
+                console.error(saveError);
+                alert('保存に失敗しました。');
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+            } else {
+                alert(editingArticleId ? '記事を更新しました！' : '記事を公開しました！');
+                
                 // フォームリセット
                 document.getElementById('blogTitle').value = '';
                 document.getElementById('seoStoreName').value = '';
@@ -561,6 +512,12 @@
                 tagsList = [];
                 renderTags();
                 quill.root.innerHTML = '';
+                
+                editingArticleId = null;
+                btn.innerHTML = '<i class="fa-solid fa-upload"></i> 公開する';
+                
+                // 一覧画面に戻る
+                switchView('list');
             }
         };
     </script>
