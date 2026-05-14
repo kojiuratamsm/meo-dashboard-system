@@ -23,7 +23,8 @@
         /* Header */
         header { background: var(--bg-main); box-shadow: 0 4px 20px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .header-container { max-width: 1100px; margin: 0 auto; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 24px; font-weight: 900; color: var(--primary); letter-spacing: 1px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo img { height: 35px; }
         
         /* Container */
         .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; min-height: 70vh; }
@@ -77,10 +78,9 @@
 
     <header>
         <div class="header-container">
-            <a href="/media.html" class="logo"><i class="fa-solid fa-map-location-dot"></i> MapOn Media</a>
-            <div>
-                <a href="/master-dashboard.html" style="color:var(--text-muted); text-decoration:none; font-size:13px; font-weight:bold;">管理画面へ</a>
-            </div>
+            <a href="/media.html" class="logo">
+                <img src="/mapon-logo.png" alt="MapOn">
+            </a>
         </div>
     </header>
 

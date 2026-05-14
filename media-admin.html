@@ -24,6 +24,7 @@
         .sidebar { width: 250px; background: #FFFFFF; padding: 30px 20px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; }
         .logo-area { text-align: center; margin-bottom: 40px; }
         .msm-logo { font-weight: 800; font-size: 26px; color: var(--primary-orange); letter-spacing: 1px; }
+        .msm-logo img { width: 150px; }
         
         .nav-item { padding: 15px; margin-bottom: 10px; border-radius: 10px; color: #718096; text-decoration: none; font-weight: 600; display: block; transition: 0.2s; }
         .nav-item.active { background-color: #FFFAF0; color: var(--primary-orange); }
@@ -51,6 +52,19 @@
         .ql-container { border-radius: 0 0 8px 8px !important; border-color: var(--border-color) !important; min-height: 400px; font-size: 16px; font-family: 'Noto Sans JP', sans-serif; }
         
         .seo-badge { display: inline-block; background: #E6FFFA; color: #319795; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 10px; vertical-align: middle; }
+        
+        /* Tag Input Styles */
+        .tags-input-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff; min-height: 46px; }
+        .tag-pill { background: #EBF8FF; color: #3182CE; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+        .tag-remove { cursor: pointer; color: #63B3ED; font-weight: bold; transition: 0.2s; }
+        .tag-remove:hover { color: #2B6CB0; }
+        .tag-input { border: none; outline: none; flex: 1; min-width: 120px; font-size: 14px; padding: 4px; }
+        
+        /* Thumbnail Preview */
+        .thumbnail-preview { width: 100%; height: 150px; border-radius: 8px; border: 2px dashed var(--border-color); display: flex; justify-content: center; align-items: center; overflow: hidden; background: #F7FAFC; cursor: pointer; transition: 0.2s; position: relative; }
+        .thumbnail-preview:hover { border-color: var(--primary-orange); }
+        .thumbnail-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .thumbnail-placeholder { color: #A0AEC0; font-size: 13px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 5px; }
     </style>
 </head>
 <body>
@@ -89,8 +103,16 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>サムネイル画像URL</label>
-                    <input type="text" id="blogThumbnail" class="form-control" placeholder="https://example.com/image.jpg">
+                    <label>サムネイル画像</label>
+                    <div class="thumbnail-preview" onclick="document.getElementById('thumbnailFile').click()">
+                        <div class="thumbnail-placeholder" id="thumbnailPlaceholder">
+                            <i class="fa-solid fa-image" style="font-size:24px;"></i>
+                            画像を選択（クリック）
+                        </div>
+                        <img id="thumbnailImg" style="display:none;">
+                    </div>
+                    <input type="file" id="thumbnailFile" accept="image/*" style="display:none;">
+                    <input type="hidden" id="blogThumbnail">
                 </div>
             </div>
             
@@ -130,9 +152,18 @@
                 <label>店舗の住所</label>
                 <input type="text" id="seoAddress" class="form-control" placeholder="例: 東京都新宿区○○1-2-3">
             </div>
+            
+            <div class="form-group" style="margin-top:20px; border-top:1px dashed #CBD5E0; padding-top:20px;">
+                <label>Google Map埋め込みコード（iframe） <span style="font-size:11px; color:#718096; font-weight:normal;">※任意。記事の最後に実際の地図を表示できます</span></label>
+                <textarea id="seoMapIframe" class="form-control" rows="3" placeholder='<iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>'></textarea>
+                <p style="font-size:11px; color:#A0AEC0; margin-top:5px;">Googleマップの「共有」＞「地図を埋め込む」からHTMLをコピーして貼り付けてください。</p>
+            </div>
+
             <div class="form-group">
-                <label>狙うSEOキーワード（カンマ区切り）</label>
-                <input type="text" id="seoKeywords" class="form-control" placeholder="例: 新宿, 焼肉, おすすめ, 個室">
+                <label>狙うSEOキーワード <span style="font-size:11px; color:#718096; font-weight:normal;">※入力してEnterを押すと追加されます</span></label>
+                <div class="tags-input-container" id="tagsContainer">
+                    <input type="text" id="tagInput" class="tag-input" placeholder="例: 新宿 焼肉">
+                </div>
             </div>
         </div>
     </main>
@@ -152,6 +183,79 @@
         }
         checkAuth();
 
+        // 画像アップロードのプレビュー処理
+        document.getElementById('thumbnailFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxSize = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height && width > maxSize) {
+                        height = Math.round((height * maxSize) / width);
+                        width = maxSize;
+                    } else if (height > maxSize) {
+                        width = Math.round((width * maxSize) / height);
+                        height = maxSize;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                    
+                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    document.getElementById('thumbnailImg').src = base64;
+                    document.getElementById('thumbnailImg').style.display = 'block';
+                    document.getElementById('thumbnailPlaceholder').style.display = 'none';
+                    document.getElementById('blogThumbnail').value = base64;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // タグ入力処理
+        const tagInput = document.getElementById('tagInput');
+        const tagsContainer = document.getElementById('tagsContainer');
+        let tagsList = [];
+
+        function renderTags() {
+            // Remove existing tag pills
+            document.querySelectorAll('.tag-pill').forEach(el => el.remove());
+            
+            // Insert new tag pills before the input field
+            tagsList.forEach((tag, index) => {
+                const pill = document.createElement('div');
+                pill.className = 'tag-pill';
+                pill.innerHTML = `${tag} <span class="tag-remove" onclick="removeTag(${index})">×</span>`;
+                tagsContainer.insertBefore(pill, tagInput);
+            });
+        }
+
+        window.removeTag = function(index) {
+            tagsList.splice(index, 1);
+            renderTags();
+        };
+
+        tagInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                const val = tagInput.value.trim().replace(',', '');
+                if (val && !tagsList.includes(val)) {
+                    tagsList.push(val);
+                    renderTags();
+                }
+                tagInput.value = '';
+            }
+        });
+
         // Quillエディタの初期化
         var quill = new Quill('#editor-container', {
             theme: 'snow',
@@ -160,8 +264,9 @@
                 toolbar: [
                     [{ 'header': [2, 3, false] }],
                     ['bold', 'italic', 'underline'],
+                    [{ 'color': [] }, { 'background': [] }], // 文字色・背景色追加
                     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link', 'image'],
+                    ['link', 'image', 'video'], // video追加
                     ['clean']
                 ]
             }
@@ -182,9 +287,13 @@
             const storeName = document.getElementById('seoStoreName').value.trim();
             const phone = document.getElementById('seoPhone').value.trim();
             const address = document.getElementById('seoAddress').value.trim();
-            const keywordsRaw = document.getElementById('seoKeywords').value.trim();
+            const mapIframe = document.getElementById('seoMapIframe').value.trim();
             
-            const contentHTML = quill.root.innerHTML;
+            let contentHTML = quill.root.innerHTML;
+            if (mapIframe) {
+                // Remove existing iframes with the same source to avoid duplicates (optional, but let's just append)
+                contentHTML += `<div class="embedded-map" style="margin-top: 30px;">${mapIframe}</div>`;
+            }
 
             if(!title || contentHTML === '<p><br></p>') {
                 alert('タイトルと本文は必須です。');
@@ -194,8 +303,6 @@
             const btn = document.querySelector('.btn-primary');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 公開中...';
             btn.disabled = true;
-
-            const keywordsArray = keywordsRaw ? keywordsRaw.split(',').map(k => k.trim()) : [];
 
             // Supabaseへ保存
             const { error } = await supabase.from('blogs').insert([
@@ -208,7 +315,7 @@
                     phone: phone,
                     address: address,
                     tags: [category],
-                    seo_keywords: keywordsArray,
+                    seo_keywords: tagsList,
                     image_url: thumbnail
                 }
             ]);
@@ -226,7 +333,12 @@
                 document.getElementById('seoStoreName').value = '';
                 document.getElementById('seoPhone').value = '';
                 document.getElementById('seoAddress').value = '';
-                document.getElementById('seoKeywords').value = '';
+                document.getElementById('seoMapIframe').value = '';
+                document.getElementById('thumbnailImg').style.display = 'none';
+                document.getElementById('thumbnailPlaceholder').style.display = 'flex';
+                document.getElementById('blogThumbnail').value = '';
+                tagsList = [];
+                renderTags();
                 quill.root.innerHTML = '';
             }
         };
