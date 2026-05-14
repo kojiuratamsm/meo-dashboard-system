@@ -727,7 +727,7 @@
             });
         }
 
-        function processRakkoData(data, storeName) {
+        async function processRakkoData(data, storeName) {
             parsedKeywordData = [];
             data.forEach(row => {
                 let keys = Object.keys(row);
