@@ -15,6 +15,9 @@ export default defineConfig({
         signupC: resolve(__dirname, 'signup-c.html'),
         reserve: resolve(__dirname, 'reserve.html'),
         surveyMockup: resolve(__dirname, 'survey-mockup.html'),
+        media: resolve(__dirname, 'media.html'),
+        mediaLogin: resolve(__dirname, 'media-login.html'),
+        mediaAdmin: resolve(__dirname, 'media-admin.html')
       }
     }
   },
