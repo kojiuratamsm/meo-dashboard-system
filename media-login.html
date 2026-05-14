@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MapOnメディア - ライターログイン</title>
+    <link rel="icon" href="mapon-logo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --primary-orange: #ED8936;
+            --text-main: #2D3748;
+            --text-muted: #A0AEC0;
+            --border-color: #E2E8F0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+        body { background-color: var(--bg-color); height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+        .login-container { width: 100%; max-width: 400px; background: var(--card-bg); border-radius: 24px; box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.05); padding: 50px 40px; border-top: 5px solid var(--primary-orange); }
+        .logo-area { text-align: center; margin-bottom: 40px; }
+        .logo-area h1 { font-size: 28px; color: var(--text-main); font-weight: 800; letter-spacing: 1px; }
+        .logo-area p { font-size: 12px; color: var(--primary-orange); font-weight: 700; letter-spacing: 2px; margin-top: 5px; }
+
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 14px 16px; border-radius: 12px; border: 2px solid var(--border-color); outline: none; transition: 0.3s; font-size: 15px; background: #F8FAFC; }
+        .form-control:focus { background: white; border-color: var(--primary-orange); box-shadow: 0 0 0 4px rgba(237, 137, 54, 0.1); }
+
+        .btn-primary { width: 100%; background: linear-gradient(135deg, #DD6B20, #ED8936); border: none; color: white; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(237, 137, 54, 0.3); }
+        .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="logo-area">
+            <h1>MapOn Media</h1>
+            <p>WRITER LOGIN</p>
+        </div>
+
+        <div class="form-group">
+            <label>ライター専用メールアドレス</label>
+            <input type="email" id="writerEmail" class="form-control" placeholder="writer@example.com">
+        </div>
+        <div class="form-group">
+            <label>パスワード</label>
+            <input type="password" id="writerPass" class="form-control" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" onclick="writerLogin()"><i class="fa-solid fa-pen-nib"></i> 執筆ルームへ入る</button>
+    </div>
+
+    <script type="module">
+        import { supabase } from './src/supabase-config.js';
+
+        // NOTE: src/supabase-config.js is correct since this is in root directory, 
+        // wait, earlier it was just './supabase-config.js' in master-login.html! 
+        // Let me correct the import path in the script.
+    </script>
+    <script type="module">
+        import { supabase } from './supabase-config.js';
+
+        window.writerLogin = async function() {
+            const email = document.getElementById('writerEmail').value.trim();
+            const pass = document.getElementById('writerPass').value.trim();
+            const btn = document.querySelector('.btn-primary');
+
+            if (!email || !pass) {
+                alert("メールアドレスとパスワードを入力してください。");
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 認証中...';
+            btn.disabled = true;
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: pass
+            });
+
+            btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> 執筆ルームへ入る';
+            btn.disabled = false;
+
+            if (error || !data.user) {
+                alert('ログインに失敗しました。メールアドレスまたはパスワードが間違っています。');
+                return;
+            }
+
+            // マスターまたはライターのみ許可
+            if (data.user.email === 'mapon-meo@msm-fund.com' || data.user.email === 'urata@msm-jap.com') {
+                localStorage.setItem('mediaWriter', 'true');
+                window.location.href = '/media-admin.html';
+            } else {
+                alert('執筆権限がありません。');
+                await supabase.auth.signOut();
+            }
+        }
+    </script>
+</body>
+</html>
