@@ -87,10 +87,10 @@
         .mobile-menu-btn { display: none; }
         .mobile-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; }
         @media (max-width: 900px) {
-            .sidebar { transform: translateX(-100%); z-index: 1000; transition: transform 0.3s; }
+            .sidebar { position: fixed; height: 100vh; transform: translateX(-100%); z-index: 1000; transition: transform 0.3s; }
             .sidebar.mobile-open { transform: translateX(0); }
             .mobile-overlay.mobile-open { display: block; }
-            .main-content { margin-left: 0; padding: 20px; width: 100%; }
+            .main-content { padding: 15px; width: 100%; flex: 1; }
             .grid-2 { grid-template-columns: 1fr; }
             .header { flex-direction: column; align-items: flex-start; gap: 15px; }
             .header-top { width: 100%; display: flex; justify-content: space-between; align-items: center; }
@@ -283,6 +283,19 @@
                 window.location.href = '/media-login.html';
                 return;
             }
+
+            // 5時間経過チェック (5 hours = 5 * 60 * 60 * 1000 ms = 18000000 ms)
+            const now = new Date().getTime();
+            const lastActivity = localStorage.getItem('mapon_media_last_activity');
+            if (lastActivity && (now - parseInt(lastActivity)) > 18000000) {
+                await supabase.auth.signOut();
+                localStorage.removeItem('mapon_media_last_activity');
+                window.location.href = '/media-login.html';
+                return;
+            }
+            // アクセス時間を更新
+            localStorage.setItem('mapon_media_last_activity', now);
+
             document.getElementById('authorName').value = data.session.user.email;
             document.getElementById('publishedDate').valueAsDate = new Date();
         }
