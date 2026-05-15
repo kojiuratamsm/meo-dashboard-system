@@ -82,11 +82,38 @@
         .article-item:hover { border-color: var(--primary-orange); }
         .article-item-title { font-size: 12px; font-weight: bold; color: #2D3748; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .article-item-meta { font-size: 10px; color: #718096; display: flex; justify-content: space-between; }
+
+        /* Mobile Adjustments */
+        .mobile-menu-btn { display: none; }
+        .mobile-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+        @media (max-width: 900px) {
+            .sidebar { transform: translateX(-100%); z-index: 1000; transition: transform 0.3s; }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .mobile-overlay.mobile-open { display: block; }
+            .main-content { margin-left: 0; padding: 20px; width: 100%; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .header { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .header-top { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+            .mobile-menu-btn { display: block; background: none; border: none; font-size: 24px; color: var(--primary-orange); cursor: pointer; padding: 5px; }
+            .header h1 { font-size: 20px; margin: 0; }
+            #list-search-container { margin: 10px 0 0 0 !important; width: 100%; }
+            #list-search-container input { width: 100% !important; }
+            #publishBtn { width: 100%; justify-content: center; }
+            
+            /* Modal Fix for Mobile */
+            .modal { width: 90%; padding: 20px; }
+            
+            /* Article List Fix for Mobile */
+            .article-item { flex-direction: column; align-items: flex-start !important; gap: 10px; }
+            .article-item > div:last-child { width: 100%; display: flex; justify-content: flex-end; }
+        }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
+    <div class="mobile-overlay" id="mobileOverlay" onclick="toggleAdminSidebar()"></div>
+
+    <aside class="sidebar" id="adminSidebar">
         <div class="logo-area">
             <div class="msm-logo">MapOn Media</div>
             <div style="font-size:11px; color:#A0AEC0; margin-top:5px; font-weight:bold;">WRITER PANEL</div>
@@ -99,11 +126,16 @@
 
     <main class="main-content">
         <header class="header">
-            <h1 id="page-title">新しい記事を書く</h1>
+            <div class="header-top">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button class="mobile-menu-btn" onclick="toggleAdminSidebar()"><i class="fa-solid fa-bars"></i></button>
+                    <h1 id="page-title">新しい記事を書く</h1>
+                </div>
+                <button class="btn-primary" id="publishBtn" onclick="saveArticle()"><i class="fa-solid fa-upload"></i> <span class="publish-text">記事を公開する</span></button>
+            </div>
             <div id="list-search-container" style="display:none; margin-right: auto; margin-left: 30px;">
                 <input type="text" id="articleSearch" class="form-control" style="width:250px; padding:8px 15px; border-radius:20px;" placeholder="執筆者で検索..." oninput="filterArticleList()">
             </div>
-            <button class="btn-primary" id="publishBtn" onclick="saveArticle()"><i class="fa-solid fa-upload"></i> 記事を公開する</button>
         </header>
 
         <!-- EDITOR VIEW -->
@@ -211,14 +243,27 @@
         let editingArticleId = null; // 編集中の記事ID
         let allArticles = [];
 
+        window.toggleAdminSidebar = function() {
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('mobileOverlay');
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('mobile-open');
+        };
+
         window.switchView = function(view) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            // Close sidebar on mobile when switching views
+            document.getElementById('adminSidebar').classList.remove('mobile-open');
+            document.getElementById('mobileOverlay').classList.remove('mobile-open');
+
             if(view === 'editor') {
                 document.getElementById('nav-editor').classList.add('active');
                 document.getElementById('editor-view').style.display = 'block';
                 document.getElementById('list-view').style.display = 'none';
                 document.getElementById('list-search-container').style.display = 'none';
-                document.getElementById('page-title').innerText = editingArticleId ? '記事の編集' : '新規記事作成';
+                document.getElementById('page-title').innerText = editingArticleId ? '記事の編集' : '新しい記事を書く';
+                document.getElementById('publishBtn').style.display = 'flex';
             } else {
                 document.getElementById('nav-list').classList.add('active');
                 document.getElementById('editor-view').style.display = 'none';
@@ -337,8 +382,8 @@
             
             quill.root.innerHTML = article.content || '';
             
-            const btn = document.querySelector('#publishBtn');
-            btn.innerHTML = '<i class="fa-solid fa-upload"></i> 更新する';
+            const btnText = document.querySelector('.publish-text');
+            if (btnText) btnText.innerText = '更新する';
             
             // 編集画面へ切り替え
             switchView('editor');
@@ -463,7 +508,7 @@
 
             const btn = document.querySelector('#publishBtn');
             const originalBtnText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span class="publish-text">保存中...</span>';
             btn.disabled = true;
 
             const payload = {
@@ -513,7 +558,7 @@
                 quill.root.innerHTML = '';
                 
                 editingArticleId = null;
-                btn.innerHTML = '<i class="fa-solid fa-upload"></i> 公開する';
+                btn.innerHTML = '<i class="fa-solid fa-upload"></i> <span class="publish-text">記事を公開する</span>';
                 
                 // 一覧画面に戻る
                 switchView('list');
