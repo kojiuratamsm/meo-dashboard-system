@@ -52,6 +52,7 @@
         .ql-toolbar.ql-snow { width: 100%; border: none !important; background: transparent; display: flex; flex-direction: row; flex-wrap: wrap; padding: 0 !important; box-shadow: none; margin-bottom: 20px; }
         .ql-toolbar.ql-snow .ql-formats { margin: 0 10px 10px 0 !important; }
         .ql-container.ql-snow { width: 100%; flex-grow: 1; border-radius: 8px !important; border: 1px solid var(--border-color) !important; min-height: 400px; font-size: 16px; font-family: 'Noto Sans JP', sans-serif; }
+        .ql-divider::after { content: "ー"; font-weight: 900; font-size: 16px; }
         .seo-badge { display: inline-block; background: #E6FFFA; color: #319795; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 10px; vertical-align: middle; }
 
         /* Custom Quill Dropdown Labels */
@@ -60,11 +61,6 @@
         .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before, .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before { content: '小見出し'; }
         .ql-snow .ql-picker.ql-header .ql-picker-label::before, .ql-snow .ql-picker.ql-header .ql-picker-item::before { content: '文字サイズ'; }
         
-        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before { content: '10px'; }
-        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before { content: '12px'; }
-        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before { content: '14px'; }
-        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before { content: '16px'; }
-        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before { content: '18px'; }
         .ql-snow .ql-picker.ql-size .ql-picker-label::before, .ql-snow .ql-picker.ql-size .ql-picker-item::before { content: 'サイズ変更'; }
         
         .ql-snow .ql-picker.ql-header, .ql-snow .ql-picker.ql-size { width: 100px !important; }
@@ -138,33 +134,29 @@
         <div class="logo-area" style="margin-bottom: 20px;">
             <div class="msm-logo">MapOn Media</div>
             <div style="font-size:11px; color:#A0AEC0; margin-top:5px; font-weight:bold;">WRITER PANEL</div>
-        </div>
+                        </div>
+        <a href="#" class="nav-item" id="nav-editor" onclick="switchView('editor')"><i class="fa-solid fa-pen-nib"></i> 記事を書く</a>
+        <a href="#" class="nav-item" id="nav-list" onclick="switchView('list')"><i class="fa-solid fa-list"></i> 作成した記事一覧</a>
+        
         <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
             <div style="font-size: 11px; font-weight: bold; color: #718096; margin-bottom: 10px;">TEXT FORMATTING</div>
             <div id="toolbar-container"></div>
-        </div>
-
-        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px; flex: 1; display: flex; flex-direction: column;">
-            <h3 style="font-size: 14px; color: #4A5568; margin-bottom: 10px;"><i class="fa-solid fa-list"></i> 作成した記事一覧</h3>
-            <div id="list-search-container" style="margin-bottom: 10px;">
-                <input type="text" id="articleSearch" class="form-control" style="width:100%; padding:8px 10px; font-size: 12px; border-radius:6px;" placeholder="記事名・執筆者検索..." oninput="filterArticleList()">
-            </div>
-            <div id="list-container" style="flex: 1; padding-right: 5px;">
-                <!-- JSで動的に一覧を描画 -->
-            </div>
-        </div>
+                        </div>
         
         <a href="#" class="nav-item" onclick="writerLogout()" style="margin-top:15px; color:#E53E3E; padding: 10px; text-align:center;"><i class="fa-solid fa-right-from-bracket"></i> ログアウト</a>
     </aside>
 
     <main class="main-content">
         <header class="header">
-            <div class="header-top" style="width: 100%;">
+            <div class="header-top">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <button class="mobile-menu-btn" onclick="toggleAdminSidebar()"><i class="fa-solid fa-bars"></i></button>
                     <h1 id="page-title">新しい記事を書く</h1>
                 </div>
                 <button class="btn-primary" id="publishBtn" onclick="saveArticle()"><i class="fa-solid fa-upload"></i> <span class="publish-text">記事を公開する</span></button>
+            </div>
+            <div id="list-search-container" style="display:none; margin-right: auto; margin-left: 30px;">
+                <input type="text" id="articleSearch" class="form-control" style="width:250px; padding:8px 15px; border-radius:20px;" placeholder="執筆者で検索..." oninput="filterArticleList()">
             </div>
         </header>
 
@@ -200,7 +192,7 @@
                     <input type="file" id="thumbnailFile" accept="image/*" style="display:none;">
                     <input type="hidden" id="blogThumbnail">
                 </div>
-            </div>
+                        </div>
             
             <div class="grid-2">
                 <div class="form-group">
@@ -215,12 +207,12 @@
                             <i class="fa-solid fa-plus"></i>
                         </button>
                     </div>
-                </div>
+                        </div>
                 <div class="form-group">
                     <label>執筆日</label>
                     <input type="date" id="publishedDate" class="form-control">
                 </div>
-            </div>
+                        </div>
         </div>
 
         <div class="card">
@@ -229,7 +221,7 @@
                 <span id="charCount" style="font-size:12px; color:#718096; margin-left:15px; font-weight:normal; background:#EDF2F7; padding:4px 8px; border-radius:4px;">0文字</span>
             </div>
             <div id="editor-container"></div>
-        </div>
+                        </div>
 
         <div class="card" style="border: 1px solid #3182CE; background: #EBF8FF;">
             <h2 style="color: #2B6CB0; border-bottom: 2px solid #BEE3F8;"><i class="fa-solid fa-robot"></i> SEO自動生成用データ <span class="seo-badge">裏側でGoogleにアピールします</span></h2>
@@ -245,7 +237,7 @@
                     <label>電話番号</label>
                     <input type="text" id="seoPhone" class="form-control" placeholder="例: 03-1234-5678">
                 </div>
-            </div>
+                        </div>
             <div class="form-group">
                 <label>店舗の住所</label>
                 <input type="text" id="seoAddress" class="form-control" placeholder="例: 東京都新宿区○○1-2-3">
@@ -260,22 +252,30 @@
                     <label>外部リンク <span style="font-size:11px; color:#718096; font-weight:normal;">※HPや予約サイト等のURL</span></label>
                     <input type="url" id="seoExternalLink" class="form-control" placeholder="例: https://www.hotpepper.jp/...">
                 </div>
-            </div>
+                        </div>
 
             <div class="form-group">
                 <label>狙うSEOキーワード <span style="font-size:11px; color:#718096; font-weight:normal;">※入力してEnterを押すと追加されます</span></label>
                 <div class="tags-input-container" id="tagsContainer">
                     <input type="text" id="tagInput" class="tag-input" placeholder="例: 新宿 焼肉">
                 </div>
-            </div>
+                        </div>
 
             <div class="form-group" style="margin-top:30px;">
                 <label><i class="fa-solid fa-code"></i> 裏側で生成されるSEOコード（リアルタイムプレビュー）</label>
                 <pre id="seoPreviewCode" style="background:#1A202C; color:#A0AEC0; padding:15px; border-radius:8px; font-size:12px; white-space:pre-wrap; overflow-x:auto;">※店舗名を入力すると、ここにGoogleに送信されるコードが表示されます。</pre>
                 <p style="font-size:11px; color:#718096; margin-top:5px;">※この記事を公開すると、上記のコードが自動でページに埋め込まれ、Googleへお店の情報が正しく伝達されます。</p>
             </div>
-        </div>
+                        </div>
         <!-- END EDITOR VIEW -->
+        
+        <!-- LIST VIEW -->
+        <div id="list-view" style="display:none;">
+            <div class="card" id="list-container">
+                <!-- JSで動的に一覧を描画 -->
+            </div>
+                        </div>
+        <!-- END LIST VIEW -->
 
     </main>
 
@@ -291,6 +291,34 @@
             const overlay = document.getElementById('mobileOverlay');
             sidebar.classList.toggle('mobile-open');
             overlay.classList.toggle('mobile-open');
+        };
+
+        window.switchView = function(view) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            // Close sidebar on mobile when switching views
+            document.getElementById('adminSidebar').classList.remove('mobile-open');
+            document.getElementById('mobileOverlay').classList.remove('mobile-open');
+
+            if(view === 'editor') {
+                if(document.getElementById('nav-editor')) document.getElementById('nav-editor').classList.add('active');
+                document.getElementById('editor-view').style.display = 'block';
+                document.getElementById('list-view').style.display = 'none';
+                document.getElementById('list-search-container').style.display = 'none';
+                document.getElementById('page-title').innerText = editingArticleId ? '記事の編集' : '新しい記事を書く';
+                document.getElementById('publishBtn').style.display = 'flex';
+                document.getElementById('toolbar-container').style.display = 'block';
+            } else {
+                if(document.getElementById('nav-list')) document.getElementById('nav-list').classList.add('active');
+                document.getElementById('editor-view').style.display = 'none';
+                document.getElementById('list-view').style.display = 'block';
+                document.getElementById('list-search-container').style.display = 'block';
+                document.getElementById('page-title').innerText = '作成した記事一覧';
+                document.getElementById('publishBtn').style.display = 'none';
+                document.getElementById('toolbar-container').style.display = 'none';
+                
+                loadSidebarArticles();
+            }
         };
 
         window.resetEditor = function() {
@@ -391,21 +419,23 @@
             });
 
             for (const [month, list] of Object.entries(grouped)) {
-                container.innerHTML += `<div style="font-size:12px; font-weight:bold; color:#718096; margin:15px 0 5px; padding-bottom:5px; border-bottom:1px solid #EDF2F7;">${month}</div>`;
+                container.innerHTML += `<h3 style="font-size:16px; color:#4A5568; margin:20px 0 10px; padding-bottom:5px; border-bottom:2px solid #EDF2F7;">${month}</h3>`;
                 
                 let listHTML = `<div style="display:flex; flex-direction:column; gap:8px;">`;
                 list.forEach(article => {
                     const dateStr = (article.published_date || article.created_at).split('T')[0].substring(5); // Show MM-DD
                     listHTML += `
-                        <div class="article-item" style="background:#F7FAFC; border:1px solid #E2E8F0; padding:10px; border-radius:6px; font-size:12px; position:relative;">
-                            <div class="article-item-title" style="font-size:13px; font-weight:bold; color:#2D3748; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${article.title}</div>
-                            <div style="font-size:10px; color:#A0AEC0; margin-bottom:8px;">
+                        <div class="article-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; font-size:14px; background:#fff; border-bottom:1px solid #E2E8F0; transition:0.2s;">
+                            <div>
+                                <div class="article-item-title" style="font-size:16px; font-weight:bold; color:#2D3748; margin-bottom:5px;">${article.title}</div>
+                            <div style="font-size:12px; color:#A0AEC0; margin-bottom:8px; display:flex; gap:15px;">
                                 <span><i class="fa-regular fa-clock"></i> ${dateStr}</span> &nbsp;
                                 <span><i class="fa-solid fa-pen-nib"></i> ${article.author_name}</span>
                             </div>
-                            <div style="display:flex; gap:5px;">
-                                <button onclick="loadArticleForEdit('${article.id}')" style="flex:1; background:#3182CE; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:11px;"><i class="fa-solid fa-pen"></i> 編集</button>
-                                <button onclick="deleteArticle('${article.id}')" style="background:#E53E3E; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:11px;"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                            <div style="display:flex; gap:10px;">
+                                <button onclick="loadArticleForEdit('${article.id}')" style="background:#3182CE; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-size:13px;"><i class="fa-solid fa-pen"></i> 編集</button>
+                                <button onclick="deleteArticle('${article.id}')" style="background:#E53E3E; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-size:13px;"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                     `;
@@ -475,10 +505,7 @@
             const btnText = document.querySelector('.publish-text');
             if (btnText) btnText.innerText = '更新する';
             
-            document.getElementById('page-title').innerText = '記事の編集';
-            if (window.innerWidth <= 900) toggleAdminSidebar();
-            
-            // スクロールをトップに戻す
+            switchView('editor');
             document.querySelector('.main-content').scrollTop = 0;
         };
 
@@ -573,8 +600,18 @@
         Quill.register(DividerBlot);
         
         // Custom Size Format
+        const sizesList = ['6px', '8px', '10.5px', '11px', '12px', '14px', '16px', '18px', '20px', '22px', '24px', '26px', '28px', '30px', '32px', '34px', '36px', '38px', '40px', '42px', '44px', '46px', '48px', '50px'];
+        const styleTag = document.createElement('style');
+        let cssText = '';
+        sizesList.forEach(size => {
+            const num = size.replace('px', '');
+            cssText += `.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="${size}"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="${size}"]::before { content: '${num}'; }\n`;
+        });
+        styleTag.innerHTML = cssText;
+        document.head.appendChild(styleTag);
+        
         const SizeStyle = Quill.import('attributors/style/size');
-        SizeStyle.whitelist = ['10px', '12px', '14px', '16px', '18px'];
+        SizeStyle.whitelist = sizesList;
         Quill.register(SizeStyle, true);
 
         // Quillエディタの初期化
@@ -590,7 +627,7 @@
                 toolbar: {
                     container: [
                         [{ 'header': [1, 2, 3, false] }],
-                        [{ 'size': ['10px', '12px', '14px', '16px', '18px', false] }],
+                        [{ 'size': [...sizesList, false] }],
                         ['bold', 'italic', 'underline'],
                         [{ 'color': [] }, { 'background': [] }],
                         [{ 'align': [] }],
@@ -726,9 +763,9 @@
                 btn.disabled = false;
             } else {
                 // 完了後は新規作成モードに戻して一覧更新
-                loadSidebarArticles();
-                resetEditor();
                 alert(editingArticleId ? '記事を更新しました！' : '記事を公開しました！');
+                resetEditor();
+                switchView('list');
             }
         };
     </script>
