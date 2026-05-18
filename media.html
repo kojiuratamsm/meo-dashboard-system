@@ -339,6 +339,14 @@
                     "telephone": blog.phone || "",
                     "url": window.location.href
                 };
+                
+                let sameAs = [];
+                if(blog.gbp_url) sameAs.push(blog.gbp_url);
+                if(blog.external_link) sameAs.push(blog.external_link);
+                if(sameAs.length > 0) {
+                    schemaData.sameAs = sameAs.length === 1 ? sameAs[0] : sameAs;
+                }
+                
                 const script = document.createElement('script');
                 script.type = 'application/ld+json';
                 script.text = JSON.stringify(schemaData);

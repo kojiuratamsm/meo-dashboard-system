@@ -228,6 +228,12 @@
                     <input type="text" id="tagInput" class="tag-input" placeholder="例: 新宿 焼肉">
                 </div>
             </div>
+
+            <div class="form-group" style="margin-top:30px;">
+                <label><i class="fa-solid fa-code"></i> 裏側で生成されるSEOコード（リアルタイムプレビュー）</label>
+                <pre id="seoPreviewCode" style="background:#1A202C; color:#A0AEC0; padding:15px; border-radius:8px; font-size:12px; white-space:pre-wrap; overflow-x:auto;">※店舗名を入力すると、ここにGoogleに送信されるコードが表示されます。</pre>
+                <p style="font-size:11px; color:#718096; margin-top:5px;">※この記事を公開すると、上記のコードが自動でページに埋め込まれ、Googleへお店の情報が正しく伝達されます。</p>
+            </div>
         </div>
         <!-- END EDITOR VIEW -->
 
@@ -396,6 +402,8 @@
             if (article.gbp_url !== undefined) document.getElementById('seoGbpUrl').value = article.gbp_url || '';
             if (article.external_link !== undefined) document.getElementById('seoExternalLink').value = article.external_link || '';
             
+            updateSeoPreview();
+            
             tagsList = article.seo_keywords || [];
             renderTags();
             
@@ -499,6 +507,42 @@
             }
         });
 
+        // SEO Preview Update Logic
+        function updateSeoPreview() {
+            const storeName = document.getElementById('seoStoreName').value.trim();
+            if(!storeName) {
+                document.getElementById('seoPreviewCode').innerText = '※店舗名を入力すると、ここにGoogleに送信されるコードが表示されます。';
+                return;
+            }
+            const phone = document.getElementById('seoPhone').value.trim();
+            const address = document.getElementById('seoAddress').value.trim();
+            const gbpUrl = document.getElementById('seoGbpUrl').value.trim();
+            const externalLink = document.getElementById('seoExternalLink').value.trim();
+            
+            let sameAs = [];
+            if(gbpUrl) sameAs.push(gbpUrl);
+            if(externalLink) sameAs.push(externalLink);
+
+            const schema = {
+                "@context": "https://schema.org",
+                "@type": "LocalBusiness",
+                "name": storeName,
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": address
+                },
+                "telephone": phone
+            };
+            if(sameAs.length > 0) {
+                schema.sameAs = sameAs.length === 1 ? sameAs[0] : sameAs;
+            }
+            document.getElementById('seoPreviewCode').innerText = '<script type="application/ld+json">\n' + JSON.stringify(schema, null, 2) + '\n<\/script>';
+        }
+
+        ['seoStoreName', 'seoPhone', 'seoAddress', 'seoGbpUrl', 'seoExternalLink'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateSeoPreview);
+        });
+
         window.writerLogout = async function() {
             await supabase.auth.signOut();
             window.location.href = '/media-login.html';
@@ -577,6 +621,7 @@
                 tagsList = [];
                 renderTags();
                 quill.root.innerHTML = '';
+                updateSeoPreview();
                 
                 editingArticleId = null;
                 btn.innerHTML = '<i class="fa-solid fa-upload"></i> <span class="publish-text">記事を公開する</span>';
