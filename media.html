@@ -34,8 +34,8 @@
         .header-search button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; }
 
         .container { max-width: 100%; margin: 0; padding: 0; min-height: calc(100vh - 75px); display: flex; flex-direction: row; }
-        .main-col { flex: 1; padding: 40px; background: #F7FAFC; }
-        .sidebar-col { width: 300px; padding: 40px 20px; background: var(--bg-main); border-right: 1px solid var(--border); }
+        .main-col { flex: 1; padding: 40px; background: #F7FAFC; min-width: 0; }
+        .sidebar-col { width: 320px; padding: 40px 20px; background: var(--bg-main); border-right: 1px solid var(--border); flex-shrink: 0; }
         
         /* Hero Concept */
         .hero-concept { background: linear-gradient(135deg, #1A365D, #2B6CB0); color: white; border-radius: 24px; padding: 80px 40px; margin-bottom: 40px; text-align: center; box-shadow: 0 15px 40px rgba(26,54,93,0.3); position: relative; overflow: hidden; animation: fadeIn 1s ease-out; }
@@ -100,7 +100,7 @@
         .widget h3 { font-size: 16px; font-weight: 700; color: #2D3748; margin-bottom: 15px; border-bottom: 2px solid #EDF2F7; padding-bottom: 10px; }
         .category-list { list-style: none; }
         .category-list li { margin-bottom: 15px; }
-        .category-list a { color: #4A5568; text-decoration: none; font-size: 15px; font-weight: 500; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 8px; background: #F7FAFC; }
+        .category-list a { color: #4A5568; text-decoration: none; font-size: 14px; font-weight: 500; transition: 0.2s; display: flex; justify-content: space-between; align-items: center; padding: 10px; border-radius: 8px; background: #F7FAFC; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .category-list a:hover { color: var(--primary); background: #EBF8FF; transform: translateX(5px); }
 
         /* Footer */
@@ -309,7 +309,14 @@
                             <div class="swiper mySwiper">
                                 <div class="swiper-wrapper">
                     `;
-                    data.forEach(blog => {
+                    
+                    // Loop slides if few
+                    let displayData = [...data];
+                    if (displayData.length > 0 && displayData.length < 6) {
+                        displayData = [...displayData, ...displayData, ...displayData, ...displayData].slice(0, 8);
+                    }
+                    
+                    displayData.forEach(blog => {
                         const img = blog.image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800';
                         html += `
                                     <div class="swiper-slide">

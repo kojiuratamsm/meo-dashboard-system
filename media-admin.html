@@ -427,7 +427,8 @@
                 
                 let listHTML = `<div style="display:grid; grid-template-columns:1fr; gap:15px;">`;
                 list.forEach(article => {
-                    const dateStr = (article.published_date || article.created_at).split('T')[0];
+                    const dateRaw = article.published_date || article.created_at || new Date().toISOString();
+                    const dateStr = dateRaw.split('T')[0];
                     const imgUrl = article.image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=200';
                     listHTML += `
                         <div class="article-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#fff; border:1px solid #E2E8F0; border-radius:12px; transition:0.2s; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
