@@ -49,9 +49,10 @@
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(237, 137, 54, 0.2); }
         
         /* Quill Editor customization */
-        .ql-toolbar { position: sticky !important; top: 0 !important; z-index: 100 !important; border-radius: 8px 8px 0 0 !important; border-color: var(--border-color) !important; background: #F8FAFC; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .ql-container { border-radius: 0 0 8px 8px !important; border-color: var(--border-color) !important; min-height: 400px; font-size: 16px; font-family: 'Noto Sans JP', sans-serif; }
-        .ql-divider::after { content: "\\f068"; font-family: "Font Awesome 6 Free"; font-weight: 900; }
+        .ql-toolbar.ql-snow { width: 60px; float: left; position: sticky !important; top: 20px !important; border-radius: 8px 0 0 8px !important; border-right: none !important; border-color: var(--border-color) !important; background: #F8FAFC; box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; padding: 10px 5px !important; }
+        .ql-toolbar.ql-snow .ql-formats { margin: 0 0 10px 0 !important; display: flex; flex-direction: column; align-items: center; }
+        .ql-container.ql-snow { margin-left: 60px; border-radius: 0 8px 8px 0 !important; border-left: 1px solid var(--border-color) !important; border-color: var(--border-color) !important; min-height: 400px; font-size: 16px; font-family: 'Noto Sans JP', sans-serif; }
+        .ql-divider::after { content: "ー"; font-weight: 900; font-size: 16px; }
         
         .seo-badge { display: inline-block; background: #E6FFFA; color: #319795; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 10px; vertical-align: middle; }
         
@@ -107,6 +108,11 @@
             /* Article List Fix for Mobile */
             .article-item { flex-direction: column; align-items: flex-start !important; gap: 10px; }
             .article-item > div:last-child { width: 100%; display: flex; justify-content: flex-end; }
+            
+            /* Quill Mobile Fix */
+            .ql-toolbar.ql-snow { width: 100%; float: none; position: sticky !important; top: 0 !important; z-index: 100; border-radius: 8px 8px 0 0 !important; border-right: 1px solid var(--border-color) !important; flex-direction: row; flex-wrap: wrap; padding: 8px !important; }
+            .ql-toolbar.ql-snow .ql-formats { flex-direction: row; margin-right: 15px !important; margin-bottom: 5px !important; }
+            .ql-container.ql-snow { margin-left: 0; border-radius: 0 0 8px 8px !important; }
         }
     </style>
 </head>
@@ -176,7 +182,16 @@
             <div class="grid-2">
                 <div class="form-group">
                     <label>執筆者名 (記事の最後に表示されます)</label>
-                    <input type="text" id="authorName" class="form-control" placeholder="例: MEOアドバイザー 浦田">
+                    <div style="display:flex; gap:10px;">
+                        <select id="authorName" class="form-control">
+                            <option value="浦田紘次">浦田紘次</option>
+                            <option value="小島夢來">小島夢來</option>
+                            <option value="佐々木琢磨">佐々木琢磨</option>
+                        </select>
+                        <button type="button" style="width:46px; border:2px solid var(--primary-orange); color:var(--primary-orange); background:transparent; border-radius:8px; cursor:pointer;" onclick="addAuthor()">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>執筆日</label>
@@ -309,10 +324,38 @@
             // アクセス時間を更新
             localStorage.setItem('mapon_media_last_activity', now);
 
-            document.getElementById('authorName').value = data.session.user.email;
             document.getElementById('publishedDate').valueAsDate = new Date();
+            
+            // 執筆者の初期設定
+            const savedAuthors = JSON.parse(localStorage.getItem('mapon_custom_authors') || '[]');
+            const authorSelect = document.getElementById('authorName');
+            savedAuthors.forEach(name => {
+                if (![...authorSelect.options].some(opt => opt.value === name)) {
+                    authorSelect.add(new Option(name, name));
+                }
+            });
+            // 自分がリストにいなければ追加
+            const defaultName = data.session.user.email;
+            if (![...authorSelect.options].some(opt => opt.value === defaultName)) {
+                // To avoid email as default, let's just leave the first option
+            }
         }
         checkAuth();
+        
+        window.addAuthor = function() {
+            const newName = prompt("新しい執筆者の名前を入力してください:");
+            if(newName && newName.trim()) {
+                const name = newName.trim();
+                const select = document.getElementById('authorName');
+                if (![...select.options].some(opt => opt.value === name)) {
+                    select.add(new Option(name, name));
+                    const customAuthors = JSON.parse(localStorage.getItem('mapon_custom_authors') || '[]');
+                    customAuthors.push(name);
+                    localStorage.setItem('mapon_custom_authors', JSON.stringify(customAuthors));
+                }
+                select.value = name;
+            }
+        };
 
         async function loadSidebarArticles() {
             const { data, error } = await supabase.from('blogs').select('*').order('created_at', { ascending: false });
@@ -383,7 +426,14 @@
             
             editingArticleId = id;
             document.getElementById('blogTitle').value = article.title || '';
-            document.getElementById('authorName').value = article.author_name || '';
+            
+            let authorVal = article.author_name || '';
+            const authorSelect = document.getElementById('authorName');
+            if (authorVal && ![...authorSelect.options].some(opt => opt.value === authorVal)) {
+                authorSelect.add(new Option(authorVal, authorVal));
+            }
+            authorSelect.value = authorVal;
+            
             if(article.published_date) document.getElementById('publishedDate').value = article.published_date;
             if(article.tags && article.tags.length > 0) document.getElementById('blogCategory').value = article.tags[0];
             
