@@ -445,7 +445,7 @@
 
             const category = (blog.tags && blog.tags.length > 0) ? blog.tags[0] : 'お知らせ';
             const date = blog.published_date || blog.created_at.split('T')[0];
-            const img = blog.image_url ? `<img src="${blog.image_url}" class="article-cover" alt="">` : '';
+            const img = blog.image_url ? `<img src="${blog.image_url}" class="article-image" style="max-height: 450px; object-fit: contain; background: #F7FAFC;" alt="">` : '';
 
             // 店舗カードHTML生成
             let storeCardHtml = '';
