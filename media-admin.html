@@ -62,7 +62,7 @@
         .tag-input { border: none; outline: none; flex: 1; min-width: 120px; font-size: 14px; padding: 4px; }
         
         /* Thumbnail Preview */
-        .thumbnail-preview { width: 100%; height: 150px; border-radius: 8px; border: 2px dashed var(--border-color); display: flex; justify-content: center; align-items: center; overflow: hidden; background: #F7FAFC; cursor: pointer; transition: 0.2s; position: relative; }
+        .thumbnail-preview { width: 100%; aspect-ratio: 16/9; height: auto; min-height: 150px; border-radius: 8px; border: 2px dashed var(--border-color); display: flex; justify-content: center; align-items: center; overflow: hidden; background: #F7FAFC; cursor: pointer; transition: 0.2s; position: relative; }
         .thumbnail-preview:hover { border-color: var(--primary-orange); }
         .thumbnail-preview img { width: 100%; height: 100%; object-fit: cover; }
         .thumbnail-placeholder { color: #A0AEC0; font-size: 13px; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 5px; }
@@ -152,10 +152,10 @@
                 <div class="form-group">
                     <label>カテゴリー（タグ）</label>
                     <select id="blogCategory" class="form-control">
-                        <option value="グルメ">グルメ・飲食店</option>
-                        <option value="整体・サロン">整体・美容サロン</option>
+                        <option value="グルメ・飲食店">グルメ・飲食店</option>
+                        <option value="整体・美容サロン">整体・美容サロン</option>
                         <option value="ライフスタイル">ライフスタイル</option>
-                        <option value="ノウハウ">MEOノウハウ</option>
+                        <option value="エンターテイメント">エンターテイメント</option>
                     </select>
                 </div>
                 <div class="form-group">
