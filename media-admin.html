@@ -211,10 +211,15 @@
                 <input type="text" id="seoAddress" class="form-control" placeholder="例: 東京都新宿区○○1-2-3">
             </div>
             
-            <div class="form-group" style="margin-top:20px; border-top:1px dashed #CBD5E0; padding-top:20px;">
-                <label>Google Map埋め込みコード（iframe） <span style="font-size:11px; color:#718096; font-weight:normal;">※任意。記事の最後に実際の地図を表示できます</span></label>
-                <textarea id="seoMapIframe" class="form-control" rows="3" placeholder='<iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>'></textarea>
-                <p style="font-size:11px; color:#A0AEC0; margin-top:5px;">Googleマップの「共有」＞「地図を埋め込む」からHTMLをコピーして貼り付けてください。</p>
+            <div class="grid-2" style="margin-top:20px; border-top:1px dashed #CBD5E0; padding-top:20px;">
+                <div class="form-group">
+                    <label>GBP URL <span style="font-size:11px; color:#718096; font-weight:normal;">※GoogleマイビジネスのURL</span></label>
+                    <input type="url" id="seoGbpUrl" class="form-control" placeholder="例: https://g.page/...">
+                </div>
+                <div class="form-group">
+                    <label>外部リンク <span style="font-size:11px; color:#718096; font-weight:normal;">※HPや予約サイト等のURL</span></label>
+                    <input type="url" id="seoExternalLink" class="form-control" placeholder="例: https://www.hotpepper.jp/...">
+                </div>
             </div>
 
             <div class="form-group">
@@ -388,7 +393,8 @@
             document.getElementById('seoStoreName').value = article.store_name || '';
             document.getElementById('seoPhone').value = article.phone || '';
             document.getElementById('seoAddress').value = article.address || '';
-            if (article.map_iframe !== undefined) document.getElementById('seoMapIframe').value = article.map_iframe || '';
+            if (article.gbp_url !== undefined) document.getElementById('seoGbpUrl').value = article.gbp_url || '';
+            if (article.external_link !== undefined) document.getElementById('seoExternalLink').value = article.external_link || '';
             
             tagsList = article.seo_keywords || [];
             renderTags();
@@ -498,7 +504,7 @@
             window.location.href = '/media-login.html';
         };
 
-        window.publishBlog = async function() {
+        window.saveArticle = async function() {
             const title = document.getElementById('blogTitle').value.trim();
             const category = document.getElementById('blogCategory').value;
             const thumbnail = document.getElementById('blogThumbnail').value.trim();
@@ -507,12 +513,10 @@
             const storeName = document.getElementById('seoStoreName').value.trim();
             const phone = document.getElementById('seoPhone').value.trim();
             const address = document.getElementById('seoAddress').value.trim();
-            const mapIframe = document.getElementById('seoMapIframe').value.trim();
+            const gbpUrl = document.getElementById('seoGbpUrl').value.trim();
+            const externalLink = document.getElementById('seoExternalLink').value.trim();
             
             let contentHTML = quill.root.innerHTML;
-            if (mapIframe) {
-                contentHTML += `<div class="embedded-map" style="margin-top: 30px;">${mapIframe}</div>`;
-            }
 
             if(!title || contentHTML === '<p><br></p>') {
                 alert('タイトルと本文は必須です。');
@@ -532,6 +536,8 @@
                 store_name: storeName,
                 phone: phone,
                 address: address,
+                gbp_url: gbpUrl,
+                external_link: externalLink,
                 tags: [category],
                 seo_keywords: tagsList,
                 image_url: thumbnail,
@@ -559,10 +565,12 @@
                 
                 // フォームリセット
                 document.getElementById('blogTitle').value = '';
+                document.getElementById('seoGbpUrl').value = '';
+                document.getElementById('seoExternalLink').value = '';
+                document.getElementById('tagInput').value = '';
                 document.getElementById('seoStoreName').value = '';
                 document.getElementById('seoPhone').value = '';
                 document.getElementById('seoAddress').value = '';
-                document.getElementById('seoMapIframe').value = '';
                 document.getElementById('thumbnailImg').style.display = 'none';
                 document.getElementById('thumbnailPlaceholder').style.display = 'flex';
                 document.getElementById('blogThumbnail').value = '';
