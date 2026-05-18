@@ -52,9 +52,22 @@
         .ql-toolbar.ql-snow { width: 100%; border: none !important; background: transparent; display: flex; flex-direction: row; flex-wrap: wrap; padding: 0 !important; box-shadow: none; margin-bottom: 20px; }
         .ql-toolbar.ql-snow .ql-formats { margin: 0 10px 10px 0 !important; }
         .ql-container.ql-snow { width: 100%; flex-grow: 1; border-radius: 8px !important; border: 1px solid var(--border-color) !important; min-height: 400px; font-size: 16px; font-family: 'Noto Sans JP', sans-serif; }
-        .ql-divider::after { content: "ー"; font-weight: 900; font-size: 16px; }
-        
         .seo-badge { display: inline-block; background: #E6FFFA; color: #319795; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 10px; vertical-align: middle; }
+
+        /* Custom Quill Dropdown Labels */
+        .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="1"]::before, .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="1"]::before { content: 'タイトル'; }
+        .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="2"]::before, .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before { content: '見出し'; }
+        .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before, .ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before { content: '小見出し'; }
+        .ql-snow .ql-picker.ql-header .ql-picker-label::before, .ql-snow .ql-picker.ql-header .ql-picker-item::before { content: '文字サイズ'; }
+        
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before { content: '10px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before { content: '12px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before { content: '14px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before { content: '16px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before { content: '18px'; }
+        .ql-snow .ql-picker.ql-size .ql-picker-label::before, .ql-snow .ql-picker.ql-size .ql-picker-item::before { content: 'サイズ変更'; }
+        
+        .ql-snow .ql-picker.ql-header, .ql-snow .ql-picker.ql-size { width: 100px !important; }
         
         /* Tag Input Styles */
         .tags-input-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff; min-height: 46px; }
@@ -126,28 +139,32 @@
             <div class="msm-logo">MapOn Media</div>
             <div style="font-size:11px; color:#A0AEC0; margin-top:5px; font-weight:bold;">WRITER PANEL</div>
         </div>
-        <a href="#" class="nav-item" id="nav-editor" onclick="switchView('editor')"><i class="fa-solid fa-pen-nib"></i> 記事を書く</a>
-        <a href="#" class="nav-item" id="nav-list" onclick="switchView('list')"><i class="fa-solid fa-list"></i> 作成した記事一覧</a>
-        
-        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px; flex: 1; display: flex; flex-direction: column;">
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
             <div style="font-size: 11px; font-weight: bold; color: #718096; margin-bottom: 10px;">TEXT FORMATTING</div>
             <div id="toolbar-container"></div>
         </div>
+
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px; flex: 1; display: flex; flex-direction: column;">
+            <h3 style="font-size: 14px; color: #4A5568; margin-bottom: 10px;"><i class="fa-solid fa-list"></i> 作成した記事一覧</h3>
+            <div id="list-search-container" style="margin-bottom: 10px;">
+                <input type="text" id="articleSearch" class="form-control" style="width:100%; padding:8px 10px; font-size: 12px; border-radius:6px;" placeholder="記事名・執筆者検索..." oninput="filterArticleList()">
+            </div>
+            <div id="list-container" style="flex: 1; padding-right: 5px;">
+                <!-- JSで動的に一覧を描画 -->
+            </div>
+        </div>
         
-        <a href="#" class="nav-item" onclick="writerLogout()" style="margin-top:15px; color:#E53E3E; text-align:center;"><i class="fa-solid fa-right-from-bracket"></i> ログアウト</a>
+        <a href="#" class="nav-item" onclick="writerLogout()" style="margin-top:15px; color:#E53E3E; padding: 10px; text-align:center;"><i class="fa-solid fa-right-from-bracket"></i> ログアウト</a>
     </aside>
 
     <main class="main-content">
         <header class="header">
-            <div class="header-top">
+            <div class="header-top" style="width: 100%;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <button class="mobile-menu-btn" onclick="toggleAdminSidebar()"><i class="fa-solid fa-bars"></i></button>
                     <h1 id="page-title">新しい記事を書く</h1>
                 </div>
                 <button class="btn-primary" id="publishBtn" onclick="saveArticle()"><i class="fa-solid fa-upload"></i> <span class="publish-text">記事を公開する</span></button>
-            </div>
-            <div id="list-search-container" style="display:none; margin-right: auto; margin-left: 30px;">
-                <input type="text" id="articleSearch" class="form-control" style="width:250px; padding:8px 15px; border-radius:20px;" placeholder="執筆者で検索..." oninput="filterArticleList()">
             </div>
         </header>
 
@@ -259,14 +276,6 @@
             </div>
         </div>
         <!-- END EDITOR VIEW -->
-        
-        <!-- LIST VIEW -->
-        <div id="list-view" style="display:none;">
-            <div class="card" id="list-container">
-                <!-- JSで動的に一覧を描画 -->
-            </div>
-        </div>
-        <!-- END LIST VIEW -->
 
     </main>
 
@@ -284,57 +293,29 @@
             overlay.classList.toggle('mobile-open');
         };
 
-        window.switchView = function(view) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        window.resetEditor = function() {
+            if (window.innerWidth <= 900) toggleAdminSidebar();
             
-            // Close sidebar on mobile when switching views
-            document.getElementById('adminSidebar').classList.remove('mobile-open');
-            document.getElementById('mobileOverlay').classList.remove('mobile-open');
-
-            if(view === 'editor') {
-                document.getElementById('nav-editor').classList.add('active');
-                document.getElementById('editor-view').style.display = 'block';
-                document.getElementById('list-view').style.display = 'none';
-                document.getElementById('list-search-container').style.display = 'none';
-                document.getElementById('page-title').innerText = editingArticleId ? '記事の編集' : '新しい記事を書く';
-                document.getElementById('publishBtn').style.display = 'flex';
-                // Show Toolbar
-                document.getElementById('toolbar-container').style.display = 'block';
-            } else {
-                document.getElementById('nav-list').classList.add('active');
-                document.getElementById('editor-view').style.display = 'none';
-                document.getElementById('list-view').style.display = 'block';
-                document.getElementById('list-search-container').style.display = 'block';
-                document.getElementById('page-title').innerText = '作成した記事一覧';
-                document.getElementById('publishBtn').style.display = 'none';
-                // Hide Toolbar
-                document.getElementById('toolbar-container').style.display = 'none';
-                
-                // Clear Editor State completely
-                editingArticleId = null;
-                document.getElementById('blogTitle').value = '';
-                document.getElementById('seoGbpUrl').value = '';
-                document.getElementById('seoExternalLink').value = '';
-                document.getElementById('tagInput').value = '';
-                document.getElementById('seoStoreName').value = '';
-                document.getElementById('seoPhone').value = '';
-                document.getElementById('seoAddress').value = '';
-                document.getElementById('thumbnailImg').style.display = 'none';
-                document.getElementById('thumbnailPlaceholder').style.display = 'flex';
-                document.getElementById('blogThumbnail').value = '';
-                tagsList = [];
-                renderTags();
-                quill.root.innerHTML = '';
-                updateSeoPreview();
-                const btn = document.querySelector('#publishBtn');
-                btn.innerHTML = '<i class="fa-solid fa-upload"></i> <span class="publish-text">記事を公開する</span>';
-                
-                loadSidebarArticles();
-            }
+            editingArticleId = null;
+            document.getElementById('page-title').innerText = '新しい記事を書く';
+            document.getElementById('blogTitle').value = '';
+            document.getElementById('seoGbpUrl').value = '';
+            document.getElementById('seoExternalLink').value = '';
+            document.getElementById('tagInput').value = '';
+            document.getElementById('seoStoreName').value = '';
+            document.getElementById('seoPhone').value = '';
+            document.getElementById('seoAddress').value = '';
+            document.getElementById('thumbnailImg').style.display = 'none';
+            document.getElementById('thumbnailPlaceholder').style.display = 'flex';
+            document.getElementById('blogThumbnail').value = '';
+            tagsList = [];
+            renderTags();
+            quill.root.innerHTML = '';
+            updateSeoPreview();
+            
+            const btn = document.querySelector('#publishBtn');
+            btn.innerHTML = '<i class="fa-solid fa-upload"></i> <span class="publish-text">記事を公開する</span>';
         };
-
-        // 初期表示
-        switchView('editor');
 
         async function checkAuth() {
             const { data, error } = await supabase.auth.getSession();
@@ -372,6 +353,7 @@
             }
         }
         checkAuth();
+        loadSidebarArticles();
         
         window.addAuthor = function() {
             const newName = prompt("新しい執筆者の名前を入力してください:");
@@ -409,23 +391,21 @@
             });
 
             for (const [month, list] of Object.entries(grouped)) {
-                container.innerHTML += `<h3 style="font-size:16px; color:#4A5568; margin:20px 0 10px; padding-bottom:5px; border-bottom:2px solid #EDF2F7;">${month}</h3>`;
+                container.innerHTML += `<div style="font-size:12px; font-weight:bold; color:#718096; margin:15px 0 5px; padding-bottom:5px; border-bottom:1px solid #EDF2F7;">${month}</div>`;
                 
-                let listHTML = `<div style="display:grid; grid-template-columns:1fr; gap:10px;">`;
+                let listHTML = `<div style="display:flex; flex-direction:column; gap:8px;">`;
                 list.forEach(article => {
-                    const dateStr = (article.published_date || article.created_at).split('T')[0];
+                    const dateStr = (article.published_date || article.created_at).split('T')[0].substring(5); // Show MM-DD
                     listHTML += `
-                        <div class="article-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; font-size:14px;">
-                            <div style="flex:1;">
-                                <div class="article-item-title" style="font-size:16px; margin-bottom:5px;">${article.title}</div>
-                                <div class="article-item-meta" style="font-size:12px; display:flex; gap:20px;">
-                                    <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
-                                    <span><i class="fa-solid fa-pen-nib"></i> ${article.author_name}</span>
-                                </div>
+                        <div class="article-item" style="background:#F7FAFC; border:1px solid #E2E8F0; padding:10px; border-radius:6px; font-size:12px; position:relative;">
+                            <div class="article-item-title" style="font-size:13px; font-weight:bold; color:#2D3748; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${article.title}</div>
+                            <div style="font-size:10px; color:#A0AEC0; margin-bottom:8px;">
+                                <span><i class="fa-regular fa-clock"></i> ${dateStr}</span> &nbsp;
+                                <span><i class="fa-solid fa-pen-nib"></i> ${article.author_name}</span>
                             </div>
-                            <div style="display:flex; gap:10px;">
-                                <button onclick="loadArticleForEdit('${article.id}')" style="background:#3182CE; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-pen"></i> 編集</button>
-                                <button onclick="deleteArticle('${article.id}')" style="background:#E53E3E; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-trash"></i> 削除</button>
+                            <div style="display:flex; gap:5px;">
+                                <button onclick="loadArticleForEdit('${article.id}')" style="flex:1; background:#3182CE; color:white; border:none; padding:5px; border-radius:4px; cursor:pointer; font-size:11px;"><i class="fa-solid fa-pen"></i> 編集</button>
+                                <button onclick="deleteArticle('${article.id}')" style="background:#E53E3E; color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer; font-size:11px;"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
                     `;
@@ -495,8 +475,11 @@
             const btnText = document.querySelector('.publish-text');
             if (btnText) btnText.innerText = '更新する';
             
-            // 編集画面へ切り替え
-            switchView('editor');
+            document.getElementById('page-title').innerText = '記事の編集';
+            if (window.innerWidth <= 900) toggleAdminSidebar();
+            
+            // スクロールをトップに戻す
+            document.querySelector('.main-content').scrollTop = 0;
         };
 
         // 画像アップロードのプレビュー処理
@@ -566,6 +549,7 @@
         window.removeTag = function(index) {
             tagsList.splice(index, 1);
             renderTags();
+            updateSeoPreview();
         };
 
         tagInput.addEventListener('keydown', function(e) {
@@ -575,6 +559,7 @@
                 if (val && !tagsList.includes(val)) {
                     tagsList.push(val);
                     renderTags();
+                    updateSeoPreview();
                 }
                 tagInput.value = '';
             }
@@ -586,10 +571,16 @@
         DividerBlot.blotName = 'divider';
         DividerBlot.tagName = 'hr';
         Quill.register(DividerBlot);
+        
+        // Custom Size Format
+        const SizeStyle = Quill.import('attributors/style/size');
+        SizeStyle.whitelist = ['10px', '12px', '14px', '16px', '18px'];
+        Quill.register(SizeStyle, true);
 
         // Quillエディタの初期化
         var quill = new Quill('#editor-container', {
             theme: 'snow',
+            scrollingContainer: '.main-content', // Paste jump fix
             placeholder: 'ここから魅力的な記事を書き始めましょう...',
             modules: {
                 imageResize: {
@@ -598,7 +589,8 @@
                 },
                 toolbar: {
                     container: [
-                        [{ 'header': [2, 3, false] }],
+                        [{ 'header': [1, 2, 3, false] }],
+                        [{ 'size': ['10px', '12px', '14px', '16px', '18px', false] }],
                         ['bold', 'italic', 'underline'],
                         [{ 'color': [] }, { 'background': [] }],
                         [{ 'align': [] }],
@@ -660,6 +652,9 @@
             };
             if(sameAs.length > 0) {
                 schema.sameAs = sameAs.length === 1 ? sameAs[0] : sameAs;
+            }
+            if(tagsList && tagsList.length > 0) {
+                schema.keywords = tagsList.join(', ');
             }
             document.getElementById('seoPreviewCode').innerText = '<script type="application/ld+json">\n' + JSON.stringify(schema, null, 2) + '\n<\/script>';
         }
@@ -730,10 +725,10 @@
                 btn.innerHTML = originalBtnText;
                 btn.disabled = false;
             } else {
+                // 完了後は新規作成モードに戻して一覧更新
+                loadSidebarArticles();
+                resetEditor();
                 alert(editingArticleId ? '記事を更新しました！' : '記事を公開しました！');
-                
-                // 一覧画面に戻る
-                switchView('list');
             }
         };
     </script>

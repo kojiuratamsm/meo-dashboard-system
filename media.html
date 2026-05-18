@@ -7,6 +7,9 @@
     <link rel="icon" href="mapon-logo.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <style>
         :root {
             --primary: #2B6CB0;
@@ -136,9 +139,19 @@
             .footer-center h2 { font-size: 36px; }
             .footer-copy { position: static; }
         }
+
+        /* Thumb Slider */
+        .swiper { width: 100%; padding-bottom: 30px; }
+        .swiper-slide { width: auto; }
+        .thumb-slide { width: 300px; height: 200px; border-radius: 16px; overflow: hidden; display: block; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 2px solid transparent; transition: 0.3s; }
+        .thumb-slide:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 25px rgba(43, 108, 176, 0.3); }
+        .thumb-slide img { width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 <body style="display: flex; flex-direction: column; min-height: 100vh;">
+
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <header>
         <div class="header-container">
@@ -280,12 +293,57 @@
                         </div>
                     </div>
                 </div>
-                <div style="text-align:center; padding:50px; color:#718096; background:#F7FAFC; border-radius:16px;">
-                    <i class="fa-solid fa-arrow-left" style="font-size:24px; margin-bottom:15px; color:#A0AEC0;"></i><br>
-                    左のカテゴリーから記事をお探しください。
-                </div>
                 `;
+                
+                if (data && data.length > 0) {
+                    html += `
+                        <div style="margin-top: 40px; padding: 20px; background: var(--bg-main); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                            <h2 style="font-size:20px; font-weight:800; color:#2D3748; margin-bottom:20px; text-align:center;"><i class="fa-solid fa-fire" style="color:#E53E3E;"></i> 新着記事ピックアップ</h2>
+                            <div class="swiper mySwiper">
+                                <div class="swiper-wrapper">
+                    `;
+                    data.forEach(blog => {
+                        const img = blog.image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800';
+                        html += `
+                                    <div class="swiper-slide">
+                                        <a href="?id=${blog.id}" class="thumb-slide">
+                                            <img src="${img}" alt="${blog.title}">
+                                        </a>
+                                    </div>
+                        `;
+                    });
+                    html += `
+                                </div>
+                                <div class="swiper-pagination"></div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="text-align:center; padding:50px; color:#718096; background:#F7FAFC; border-radius:16px;">
+                            <i class="fa-solid fa-arrow-left" style="font-size:24px; margin-bottom:15px; color:#A0AEC0;"></i><br>
+                            左のカテゴリーから記事をお探しください。
+                        </div>
+                    `;
+                }
+                
                 app.innerHTML = html;
+                
+                if (data && data.length > 0) {
+                    new Swiper(".mySwiper", {
+                        slidesPerView: "auto",
+                        spaceBetween: 20,
+                        loop: true,
+                        autoplay: {
+                            delay: 2000,
+                            disableOnInteraction: false,
+                        },
+                        pagination: {
+                            el: ".swiper-pagination",
+                            clickable: true,
+                        },
+                    });
+                }
                 return;
             }
 
@@ -346,6 +404,10 @@
                 if(blog.external_link) sameAs.push(blog.external_link);
                 if(sameAs.length > 0) {
                     schemaData.sameAs = sameAs.length === 1 ? sameAs[0] : sameAs;
+                }
+                
+                if(blog.seo_keywords && blog.seo_keywords.length > 0) {
+                    schemaData.keywords = blog.seo_keywords.join(', ');
                 }
                 
                 const script = document.createElement('script');
