@@ -49,9 +49,9 @@
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(237, 137, 54, 0.2); }
         
         /* Quill Editor customization */
-        .ql-toolbar.ql-snow { width: 60px; float: left; position: sticky !important; top: 20px !important; border-radius: 8px 0 0 8px !important; border-right: none !important; border-color: var(--border-color) !important; background: #F8FAFC; box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; padding: 10px 5px !important; }
+        .ql-toolbar.ql-snow { width: 85px; flex-shrink: 0; position: sticky !important; top: 0 !important; align-self: flex-start; border-radius: 8px 0 0 8px !important; border-right: none !important; border-color: var(--border-color) !important; background: #F8FAFC; box-shadow: -4px 0 6px -1px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; padding: 10px 5px !important; z-index: 10; }
         .ql-toolbar.ql-snow .ql-formats { margin: 0 0 10px 0 !important; display: flex; flex-direction: column; align-items: center; }
-        .ql-container.ql-snow { margin-left: 60px; border-radius: 0 8px 8px 0 !important; border-left: 1px solid var(--border-color) !important; border-color: var(--border-color) !important; min-height: 400px; font-size: 16px; font-family: 'Noto Sans JP', sans-serif; }
+        .ql-container.ql-snow { flex-grow: 1; border-radius: 0 8px 8px 0 !important; border-left: 1px solid var(--border-color) !important; border-color: var(--border-color) !important; min-height: 400px; font-size: 16px; font-family: 'Noto Sans JP', sans-serif; }
         .ql-divider::after { content: "ー"; font-weight: 900; font-size: 16px; }
         
         .seo-badge { display: inline-block; background: #E6FFFA; color: #319795; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin-left: 10px; vertical-align: middle; }
@@ -110,9 +110,10 @@
             .article-item > div:last-child { width: 100%; display: flex; justify-content: flex-end; }
             
             /* Quill Mobile Fix */
-            .ql-toolbar.ql-snow { width: 100%; float: none; position: sticky !important; top: 0 !important; z-index: 100; border-radius: 8px 8px 0 0 !important; border-right: 1px solid var(--border-color) !important; flex-direction: row; flex-wrap: wrap; padding: 8px !important; }
+            #quill-wrapper { flex-direction: column !important; }
+            .ql-toolbar.ql-snow { width: 100%; position: sticky !important; top: 0 !important; z-index: 100; border-radius: 8px 8px 0 0 !important; border-right: 1px solid var(--border-color) !important; flex-direction: row; flex-wrap: wrap; padding: 8px !important; }
             .ql-toolbar.ql-snow .ql-formats { flex-direction: row; margin-right: 15px !important; margin-bottom: 5px !important; }
-            .ql-container.ql-snow { margin-left: 0; border-radius: 0 0 8px 8px !important; }
+            .ql-container.ql-snow { width: 100%; border-radius: 0 0 8px 8px !important; }
         }
     </style>
 </head>
@@ -205,7 +206,9 @@
                 <h2 style="margin:0;"><i class="fa-solid fa-file-lines"></i> 記事本文</h2>
                 <span id="charCount" style="font-size:12px; color:#718096; margin-left:15px; font-weight:normal; background:#EDF2F7; padding:4px 8px; border-radius:4px;">0文字</span>
             </div>
-            <div id="editor-container"></div>
+            <div id="quill-wrapper" style="display: flex; align-items: flex-start; position: relative;">
+                <div id="editor-container"></div>
+            </div>
         </div>
 
         <div class="card" style="border: 1px solid #3182CE; background: #EBF8FF;">
