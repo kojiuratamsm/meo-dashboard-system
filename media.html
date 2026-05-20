@@ -264,14 +264,20 @@
         async function loadArticleList() {
             let query = supabase.from('blogs').select('*').order('created_at', { ascending: false });
             
+            const { data: allData, error } = await query;
+            let data = allData || [];
+
             if (categoryFilter) {
-                query = query.contains('tags', [categoryFilter]);
+                data = data.filter(blog => blog.tags && blog.tags.includes(categoryFilter));
             }
             if (searchFilter) {
-                query = query.or(`title.ilike.%${searchFilter}%,content.ilike.%${searchFilter}%`);
+                const s = searchFilter.toLowerCase();
+                data = data.filter(blog => 
+                    (blog.title && blog.title.toLowerCase().includes(s)) || 
+                    (blog.content && blog.content.toLowerCase().includes(s)) ||
+                    (blog.tags && blog.tags.some(tag => tag.toLowerCase().includes(s)))
+                );
             }
-
-            const { data, error } = await query;
             
             let html = '';
 

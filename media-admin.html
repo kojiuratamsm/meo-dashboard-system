@@ -453,19 +453,19 @@
                     const articleUrl = window.location.origin + '/media.html?id=' + article.id;
                     listHTML += `
                         <div class="article-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#fff; border:1px solid #E2E8F0; border-radius:12px; transition:0.2s; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
-                            <div style="display:flex; align-items:center; gap:20px; flex:1; cursor:pointer;" onclick="loadArticleForEdit('${article.id}')">
+                            <div style="display:flex; align-items:center; gap:20px; flex:1; min-width:0; cursor:pointer;" onclick="loadArticleForEdit('${article.id}')">
                                 <div style="width:100px; height:70px; border-radius:8px; overflow:hidden; flex-shrink:0;">
                                     <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover;">
                                 </div>
-                                <div style="flex:1;">
+                                <div style="flex:1; min-width:0;">
                                     <div class="article-item-title article-item-title-clickable" style="font-size:16px; font-weight:bold; color:#2D3748; margin-bottom:8px; transition: 0.2s;">${article.title || '(タイトルなし)'}</div>
                                     <div style="font-size:12px; color:#718096; display:flex; gap:15px; margin-bottom:8px;">
                                         <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
                                         <span><i class="fa-solid fa-pen-nib"></i> ${article.author_name || '不明'}</span>
                                     </div>
-                                    <div style="display:flex; align-items:center; gap:8px; font-size:11px; color:#4A5568; background:#F8FAFC; padding:4px 8px; border-radius:6px; width:fit-content; max-width:100%; border:1px solid #E2E8F0;" onclick="event.stopPropagation();">
-                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:350px; font-family:monospace; color:#718096;">${articleUrl}</span>
-                                        <button onclick="copyToClipboard('${articleUrl}', this)" style="background:#ED8936; color:white; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold; display:flex; align-items:center; gap:4px; transition:all 0.2s; white-space:nowrap;">
+                                    <div style="display:flex; align-items:center; gap:8px; font-size:11px; color:#4A5568; background:#F8FAFC; padding:4px 8px; border-radius:6px; width:fit-content; max-width:100%; border:1px solid #E2E8F0; box-sizing:border-box;" onclick="event.stopPropagation();">
+                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; flex:1; min-width:0; font-family:monospace; color:#718096;">${articleUrl}</span>
+                                        <button onclick="copyToClipboard('${articleUrl}', this)" style="background:#ED8936; color:white; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold; display:flex; align-items:center; gap:4px; transition:all 0.2s; white-space:nowrap; flex-shrink:0;">
                                             <i class="fa-regular fa-copy"></i> コピー
                                         </button>
                                     </div>
