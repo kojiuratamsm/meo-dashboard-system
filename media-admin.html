@@ -419,7 +419,7 @@
         };
 
         async function loadArticleList() {
-            const { data, error } = await supabase.from('blogs').select('*').order('created_at', { ascending: false });
+            const { data, error } = await supabase.from('blogs').select('id, title, author_name, published_date, created_at, tags, image_url, seo_keywords, store_name, phone, address, gbp_url, external_link').order('created_at', { ascending: false });
             if (!error && data) {
                 allArticles = data;
                 renderArticleList(data);
@@ -500,7 +500,7 @@
             }
         };
 
-        window.loadArticleForEdit = function(id) {
+        window.loadArticleForEdit = async function(id) {
             const article = allArticles.find(a => a.id === id);
             if (!article) return;
             
@@ -539,13 +539,25 @@
             tagsList = article.seo_keywords || [];
             renderTags();
             
-            quill.root.innerHTML = article.content || '';
+            quill.root.innerHTML = '<p style="color:#718096;">本文を読み込み中...</p>';
             
             const btnText = document.querySelector('.publish-text');
             if (btnText) btnText.innerText = '更新する';
             
             switchView('editor');
             document.querySelector('.main-content').scrollTop = 0;
+
+            // 本文は一覧から除外しているため、個別記事として動的に取得する
+            const { data: fullArticle } = await supabase.from('blogs').select('content').eq('id', id).single();
+            if (fullArticle) {
+                quill.root.innerHTML = fullArticle.content || '';
+                // 文字数を更新
+                var text = quill.getText().replace(/\n/g, '').trim();
+                const charCountEl = document.getElementById('charCount');
+                if(charCountEl) charCountEl.innerText = text.length + '文字';
+            } else {
+                quill.root.innerHTML = '';
+            }
         };
 
         // 画像アップロードのプレビュー処理
