@@ -92,6 +92,10 @@
         .article-item { background: #F7FAFC; border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
         .article-item:hover { border-color: var(--primary-orange); }
         .article-item-title { font-size: 12px; font-weight: bold; color: #2D3748; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .article-item-title-clickable:hover {
+            color: var(--primary-orange) !important;
+            text-decoration: underline;
+        }
         .article-item-meta { font-size: 10px; color: #718096; display: flex; justify-content: space-between; }
 
         /* Mobile Adjustments */
@@ -294,6 +298,21 @@
             overlay.classList.toggle('mobile-open');
         };
 
+        window.copyToClipboard = function(text, btn) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalHTML = btn.innerHTML;
+                const originalBg = btn.style.background;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> コピーしました！';
+                btn.style.background = '#48BB78'; // Green feedback
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = originalBg;
+                }, 2000);
+            }).catch(err => {
+                alert('コピーに失敗しました。');
+            });
+        };
+
         window.switchView = function(view) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             
@@ -407,7 +426,7 @@
             }
         }
 
-        function renderArticleList(articles) {
+                function renderArticleList(articles) {
             const container = document.getElementById('list-container');
             container.innerHTML = '';
             
@@ -431,21 +450,28 @@
                     const dateRaw = article.published_date || article.created_at || new Date().toISOString();
                     const dateStr = dateRaw.split('T')[0];
                     const imgUrl = article.image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=200';
+                    const articleUrl = window.location.origin + '/media.html?id=' + article.id;
                     listHTML += `
                         <div class="article-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#fff; border:1px solid #E2E8F0; border-radius:12px; transition:0.2s; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
-                            <div style="display:flex; align-items:center; gap:20px; flex:1;">
+                            <div style="display:flex; align-items:center; gap:20px; flex:1; cursor:pointer;" onclick="loadArticleForEdit('${article.id}')">
                                 <div style="width:100px; height:70px; border-radius:8px; overflow:hidden; flex-shrink:0;">
                                     <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover;">
                                 </div>
-                                <div>
-                                    <div class="article-item-title" style="font-size:16px; font-weight:bold; color:#2D3748; margin-bottom:8px;">${article.title || '(タイトルなし)'}</div>
-                                    <div style="font-size:12px; color:#718096; display:flex; gap:15px;">
+                                <div style="flex:1;">
+                                    <div class="article-item-title article-item-title-clickable" style="font-size:16px; font-weight:bold; color:#2D3748; margin-bottom:8px; transition: 0.2s;">${article.title || '(タイトルなし)'}</div>
+                                    <div style="font-size:12px; color:#718096; display:flex; gap:15px; margin-bottom:8px;">
                                         <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
                                         <span><i class="fa-solid fa-pen-nib"></i> ${article.author_name || '不明'}</span>
                                     </div>
+                                    <div style="display:flex; align-items:center; gap:8px; font-size:11px; color:#4A5568; background:#F8FAFC; padding:4px 8px; border-radius:6px; width:fit-content; max-width:100%; border:1px solid #E2E8F0;" onclick="event.stopPropagation();">
+                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:350px; font-family:monospace; color:#718096;">${articleUrl}</span>
+                                        <button onclick="copyToClipboard('${articleUrl}', this)" style="background:#ED8936; color:white; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold; display:flex; align-items:center; gap:4px; transition:all 0.2s; white-space:nowrap;">
+                                            <i class="fa-regular fa-copy"></i> コピー
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div style="display:flex; gap:10px; flex-shrink:0;">
+                            <div style="display:flex; gap:10px; flex-shrink:0; margin-left:20px;">
                                 <button onclick="loadArticleForEdit('${article.id}')" style="background:#3182CE; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:bold; transition:0.2s;"><i class="fa-solid fa-pen"></i> 編集</button>
                                 <button onclick="deleteArticle('${article.id}')" style="background:#E53E3E; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:bold; transition:0.2s;"><i class="fa-solid fa-trash"></i></button>
                             </div>
