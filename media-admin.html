@@ -418,15 +418,51 @@
             }
         };
 
-        async function loadArticleList() {
-            const { data, error } = await supabase.from('blogs').select('id, title, author_name, published_date, created_at, tags, image_url, seo_keywords, store_name, phone, address, gbp_url, external_link').order('created_at', { ascending: false });
+        let currentAdminPage = 0;
+        const ADMIN_ITEMS_PER_PAGE = 20;
+
+        window.loadMoreAdminArticles = async function() {
+            currentAdminPage++;
+            await loadArticleList(true);
+        };
+
+        async function loadArticleList(append = false) {
+            if (!append) {
+                currentAdminPage = 0;
+                allArticles = [];
+                document.getElementById('list-container').innerHTML = '<div style="padding:20px; text-align:center; color:#718096;"><i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...</div>';
+            } else {
+                const btn = document.getElementById('adminLoadMoreBtn');
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...';
+            }
+
+            let query = supabase.from('blogs')
+                .select('id, title, author_name, published_date, created_at, tags, image_url, seo_keywords, store_name, phone, address, gbp_url, external_link')
+                .order('created_at', { ascending: false });
+
+            const q = document.getElementById('articleSearch').value.trim();
+            if (q) {
+                query = query.or(`title.ilike.%${q}%,author_name.ilike.%${q}%`);
+            }
+
+            const start = currentAdminPage * ADMIN_ITEMS_PER_PAGE;
+            const end = start + ADMIN_ITEMS_PER_PAGE - 1;
+            query = query.range(start, end);
+
+            const { data, error } = await query;
+            const hasMore = (data && data.length === ADMIN_ITEMS_PER_PAGE);
+
             if (!error && data) {
-                allArticles = data;
-                renderArticleList(data);
+                if (append) {
+                    allArticles = allArticles.concat(data);
+                } else {
+                    allArticles = data;
+                }
+                renderArticleList(allArticles, hasMore);
             }
         }
 
-                function renderArticleList(articles) {
+                function renderArticleList(articles, hasMore = false) {
             const container = document.getElementById('list-container');
             container.innerHTML = '';
             
@@ -481,15 +517,14 @@
                 listHTML += `</div>`;
                 container.innerHTML += listHTML;
             }
+
+            if (hasMore) {
+                container.innerHTML += `<div style="text-align:center; margin-top:30px; margin-bottom:20px;"><button id="adminLoadMoreBtn" onclick="loadMoreAdminArticles()" style="background:#ED8936; color:white; border:none; padding:10px 30px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:14px; transition:0.3s; box-shadow:0 4px 10px rgba(237,137,54,0.3);"><i class="fa-solid fa-angle-down"></i> もっと見る</button></div>`;
+            }
         }
 
         window.filterArticleList = function() {
-            const q = document.getElementById('articleSearch').value.toLowerCase();
-            const filtered = allArticles.filter(a => 
-                (a.author_name && a.author_name.toLowerCase().includes(q)) || 
-                (a.title && a.title.toLowerCase().includes(q))
-            );
-            renderArticleList(filtered);
+            loadArticleList(false);
         };
 
         window.deleteArticle = async function(id) {

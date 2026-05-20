@@ -261,134 +261,156 @@
             if(q) window.location.href = '?q=' + encodeURIComponent(q);
         }
 
-        async function loadArticleList() {
-            let query = supabase.from('blogs').select('*').order('created_at', { ascending: false });
-            
-            const { data: allData, error } = await query;
-            let data = allData || [];
+        let currentPage = 0;
+        const ITEMS_PER_PAGE = 12;
 
+        window.loadMoreArticles = async function() {
+            currentPage++;
+            await loadArticleList(true);
+        };
+
+        async function loadArticleList(append = false) {
+            if (!append) {
+                currentPage = 0;
+                app.innerHTML = '<div class="loader"><i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...</div>';
+            } else {
+                const btn = document.getElementById('loadMoreBtn');
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...';
+            }
+
+            let query = supabase.from('blogs')
+                .select('id, title, author_name, published_date, created_at, tags, image_url')
+                .order('created_at', { ascending: false });
+            
             if (categoryFilter) {
-                data = data.filter(blog => blog.tags && blog.tags.includes(categoryFilter));
+                query = query.contains('tags', `["${categoryFilter}"]`);
             }
             if (searchFilter) {
-                const s = searchFilter.toLowerCase();
-                data = data.filter(blog => 
-                    (blog.title && blog.title.toLowerCase().includes(s)) || 
-                    (blog.content && blog.content.toLowerCase().includes(s)) ||
-                    (blog.tags && blog.tags.some(tag => tag.toLowerCase().includes(s)))
-                );
+                query = query.or(`title.ilike.%${searchFilter}%,content.ilike.%${searchFilter}%`);
             }
-            
-            let html = '';
 
-            // TOPページ（フィルタなし）はブログ一覧を出さず、スタイリッシュなLPデザインにする
-            if (!categoryFilter && !searchFilter) {
-                html += `
-                <div class="hero-concept">
-                    <h1>お店の「本当の魅力」を、地図に乗せて届ける。</h1>
-                    <p>MapOn Mediaは、地域の隠れた名店から話題のスポットまで、MEOのプロが厳選したお店のリアルな魅力をお届けするローカル発見メディアです。</p>
-                    
-                    <div class="feature-grid">
-                        <div class="feature-card">
-                            <i class="fa-solid fa-store"></i>
-                            <h3>リアルな魅力</h3>
-                            <p>足を運んだからこそ分かる、お店の空気感やこだわりを丁寧にレポート。</p>
-                        </div>
-                        <div class="feature-card">
-                            <i class="fa-solid fa-map-location-dot"></i>
-                            <h3>地図から発見</h3>
-                            <p>MEOのノウハウを活かし、あなたの現在地から最高のお店を見つけ出します。</p>
-                        </div>
-                        <div class="feature-card">
-                            <i class="fa-solid fa-star"></i>
-                            <h3>プロの厳選</h3>
-                            <p>数ある店舗の中から、本当に価値のある体験を提供してくれるお店だけをピックアップ。</p>
-                        </div>
-                    </div>
-                </div>
-                `;
-                
-                if (data && data.length > 0) {
+            const start = currentPage * ITEMS_PER_PAGE;
+            const end = start + ITEMS_PER_PAGE - 1;
+            query = query.range(start, end);
+
+            const { data, error } = await query;
+            const hasMore = (data && data.length === ITEMS_PER_PAGE);
+
+            if (!append) {
+                let html = '';
+
+                // TOPページ（フィルタなし）はブログ一覧を出さず、スタイリッシュなLPデザインにする
+                if (!categoryFilter && !searchFilter) {
                     html += `
-                        <div style="margin-top: 40px; padding: 20px; background: var(--bg-main); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
-                            <h2 style="font-size:20px; font-weight:800; color:#2D3748; margin-bottom:20px; text-align:center;"><i class="fa-solid fa-fire" style="color:#E53E3E;"></i> 新着記事ピックアップ</h2>
-                            <div class="swiper mySwiper">
-                                <div class="swiper-wrapper">
-                    `;
-                    
-                    // Loop slides if few
-                    let displayData = [...data];
-                    if (displayData.length > 0 && displayData.length < 6) {
-                        displayData = [...displayData, ...displayData, ...displayData, ...displayData].slice(0, 8);
-                    }
-                    
-                    displayData.forEach(blog => {
-                        const img = blog.image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800';
-                        html += `
-                                    <div class="swiper-slide">
-                                        <a href="?id=${blog.id}" class="thumb-slide">
-                                            <img src="${img}" alt="${blog.title}">
-                                            <div class="thumb-title">${blog.title}</div>
-                                        </a>
-                                    </div>
-                        `;
-                    });
-                    html += `
-                                </div>
-                                <div class="swiper-pagination"></div>
+                    <div class="hero-concept">
+                        <h1>お店の「本当の魅力」を、地図に乗せて届ける。</h1>
+                        <p>MapOn Mediaは、地域の隠れた名店から話題のスポットまで、MEOのプロが厳選したお店のリアルな魅力をお届けするローカル発見メディアです。</p>
+                        
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <i class="fa-solid fa-store"></i>
+                                <h3>リアルな魅力</h3>
+                                <p>足を運んだからこそ分かる、お店の空気感やこだわりを丁寧にレポート。</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fa-solid fa-map-location-dot"></i>
+                                <h3>地図から発見</h3>
+                                <p>MEOのノウハウを活かし、あなたの現在地から最高のお店を見つけ出します。</p>
+                            </div>
+                            <div class="feature-card">
+                                <i class="fa-solid fa-star"></i>
+                                <h3>プロの厳選</h3>
+                                <p>数ある店舗の中から、本当に価値のある体験を提供してくれるお店だけをピックアップ。</p>
                             </div>
                         </div>
+                    </div>
                     `;
-                } else {
-                    html += `
-                        <div style="text-align:center; padding:50px; color:#718096; background:#F7FAFC; border-radius:16px;">
-                            <i class="fa-solid fa-arrow-left" style="font-size:24px; margin-bottom:15px; color:#A0AEC0;"></i><br>
-                            左のカテゴリーから記事をお探しください。
-                        </div>
-                    `;
+                    
+                    if (data && data.length > 0) {
+                        html += `
+                            <div style="margin-top: 40px; padding: 20px; background: var(--bg-main); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                                <h2 style="font-size:20px; font-weight:800; color:#2D3748; margin-bottom:20px; text-align:center;"><i class="fa-solid fa-fire" style="color:#E53E3E;"></i> 新着記事ピックアップ</h2>
+                                <div class="swiper mySwiper">
+                                    <div class="swiper-wrapper">
+                        `;
+                        
+                        let displayData = [...data];
+                        if (displayData.length > 0 && displayData.length < 6) {
+                            displayData = [...displayData, ...displayData, ...displayData, ...displayData].slice(0, 8);
+                        }
+                        
+                        displayData.forEach(blog => {
+                            const img = blog.image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800';
+                            html += `
+                                        <div class="swiper-slide">
+                                            <a href="?id=${blog.id}" class="thumb-slide">
+                                                <img src="${img}" alt="${blog.title}">
+                                                <div class="thumb-title">${blog.title}</div>
+                                            </a>
+                                        </div>
+                            `;
+                        });
+                        html += `
+                                    </div>
+                                    <div class="swiper-pagination"></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    app.innerHTML = html;
+                    
+                    if (data && data.length > 0) {
+                        new Swiper(".mySwiper", {
+                            effect: "coverflow",
+                            grabCursor: true,
+                            centeredSlides: true,
+                            slidesPerView: "auto",
+                            loop: true,
+                            autoplay: { delay: 2000, disableOnInteraction: false },
+                            coverflowEffect: { rotate: 0, stretch: -50, depth: 300, modifier: 1, slideShadows: true },
+                            pagination: { el: ".swiper-pagination", clickable: true }
+                        });
+                    }
+                    return;
                 }
-                
+
+                if (error || !data || data.length === 0) {
+                    app.innerHTML = '<div style="padding:50px; text-align:center; background:white; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.05);"><h2 style="margin-bottom:10px;">記事が見つかりませんでした</h2><p style="color:#718096;">別のキーワードやカテゴリーでお試しください。</p></div>';
+                    return;
+                }
+
+                html += '<div class="blog-grid" id="blogGridContainer">';
+                html += generateGridHTML(data);
+                html += '</div>';
+
+                if (hasMore) {
+                    html += `<div style="text-align:center; margin-top:40px;"><button id="loadMoreBtn" onclick="loadMoreArticles()" style="background:var(--primary); color:white; border:none; padding:12px 30px; border-radius:30px; font-weight:bold; cursor:pointer; font-size:15px; box-shadow:0 5px 15px rgba(43,108,176,0.3); transition:0.3s;"><i class="fa-solid fa-angle-down"></i> もっと見る</button></div>`;
+                }
+
                 app.innerHTML = html;
-                
+            } else {
                 if (data && data.length > 0) {
-                    new Swiper(".mySwiper", {
-                        effect: "coverflow",
-                        grabCursor: true,
-                        centeredSlides: true,
-                        slidesPerView: "auto",
-                        loop: true,
-                        autoplay: {
-                            delay: 2000,
-                            disableOnInteraction: false,
-                        },
-                        coverflowEffect: {
-                            rotate: 0,
-                            stretch: -50,
-                            depth: 300,
-                            modifier: 1,
-                            slideShadows: true,
-                        },
-                        pagination: {
-                            el: ".swiper-pagination",
-                            clickable: true,
-                        },
-                    });
+                    const grid = document.getElementById('blogGridContainer');
+                    if (grid) grid.innerHTML += generateGridHTML(data);
                 }
-                return;
+                const btn = document.getElementById('loadMoreBtn');
+                if (hasMore) {
+                    if (btn) btn.innerHTML = '<i class="fa-solid fa-angle-down"></i> もっと見る';
+                } else {
+                    if (btn) btn.style.display = 'none';
+                }
             }
+        }
 
-            if (error || !data || data.length === 0) {
-                app.innerHTML = '<div style="padding:50px; text-align:center; background:white; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,0.05);"><h2 style="margin-bottom:10px;">記事が見つかりませんでした</h2><p style="color:#718096;">別のキーワードやカテゴリーでお試しください。</p></div>';
-                return;
-            }
-
-            html += '<div class="blog-grid">';
-            data.forEach(blog => {
+        function generateGridHTML(articles) {
+            let h = '';
+            articles.forEach(blog => {
                 const category = (blog.tags && blog.tags.length > 0) ? blog.tags[0] : 'お知らせ';
                 const date = blog.published_date || blog.created_at.split('T')[0];
                 const img = blog.image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800';
                 
-                html += `
+                h += `
                     <a href="?id=${blog.id}" class="blog-card">
                         <img src="${img}" alt="" class="card-img">
                         <div class="card-content">
@@ -402,8 +424,8 @@
                     </a>
                 `;
             });
-            html += '</div>';
-            app.innerHTML = html;
+            return h;
+        }
         }
 
         async function loadArticle(id) {
