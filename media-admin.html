@@ -400,7 +400,9 @@
                 // To avoid email as default, let's just leave the first option
             }
         }
-        checkAuth();
+        checkAuth().then(() => {
+            checkAndPromptDraft();
+        });
         loadArticleList();
         
         window.addAuthor = function() {
@@ -663,6 +665,7 @@
             tagsList.splice(index, 1);
             renderTags();
             updateSeoPreview();
+            if (typeof saveDraft === 'function') saveDraft();
         };
 
         tagInput.addEventListener('keydown', function(e) {
@@ -673,6 +676,7 @@
                     tagsList.push(val);
                     renderTags();
                     updateSeoPreview();
+                    if (typeof saveDraft === 'function') saveDraft();
                 }
                 tagInput.value = '';
             }
@@ -745,6 +749,16 @@
         quill.on('text-change', function() {
             var text = quill.getText().replace(/\\n/g, '').trim();
             document.getElementById('charCount').innerText = text.length + '文字';
+            if (typeof saveDraft === 'function') saveDraft();
+        });
+
+        // 下書き自動保存用イベントリスナーの登録
+        ['blogTitle', 'blogCategory', 'authorName', 'publishedDate', 'seoStoreName', 'seoPhone', 'seoAddress', 'seoGbpUrl', 'seoExternalLink'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', () => { if (typeof saveDraft === 'function') saveDraft(); });
+                el.addEventListener('input', () => { if (typeof saveDraft === 'function') saveDraft(); });
+            }
         });
 
         // SEO Preview Update Logic
@@ -819,7 +833,7 @@
                 title: title,
                 content: contentHTML,
                 author_name: author || 'MapOn 編集部',
-                published_date: date,
+                published_date: date || null,
                 store_name: storeName,
                 phone: phone,
                 address: address,
@@ -832,27 +846,151 @@
 
             let saveError = null;
 
-            if (editingArticleId) {
-                // 更新
-                const { error } = await supabase.from('blogs').update(payload).eq('id', editingArticleId);
-                saveError = error;
-            } else {
-                // 新規作成
-                const { error } = await supabase.from('blogs').insert([payload]);
-                saveError = error;
+            try {
+                if (editingArticleId) {
+                    // 更新
+                    const { error } = await supabase.from('blogs').update(payload).eq('id', editingArticleId);
+                    saveError = error;
+                } else {
+                    // 新規作成
+                    const { error } = await supabase.from('blogs').insert([payload]);
+                    saveError = error;
+                }
+            } catch (err) {
+                console.error("Uncaught exception in saveArticle:", err);
+                alert('通信エラーまたはサーバーエラーが発生しました。時間を置いて再度お試しください。\nエラー詳細: ' + (err.message || err));
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+                return;
             }
 
             if (saveError) {
                 console.error(saveError);
-                alert('保存に失敗しました。');
+                alert('保存に失敗しました。詳細: ' + (saveError.message || JSON.stringify(saveError)));
                 btn.innerHTML = originalBtnText;
                 btn.disabled = false;
             } else {
                 // 完了後は新規作成モードに戻して一覧更新
                 alert(editingArticleId ? '記事を更新しました！' : '記事を公開しました！');
+                clearDraft();
                 resetEditor();
                 switchView('list');
             }
+        };
+
+        // 下書き自動保存の処理
+        function saveDraft() {
+            if (editingArticleId) return;
+            
+            const title = document.getElementById('blogTitle').value.trim();
+            const category = document.getElementById('blogCategory').value;
+            const thumbnail = document.getElementById('blogThumbnail').value.trim();
+            const author = document.getElementById('authorName').value.trim();
+            const date = document.getElementById('publishedDate').value;
+            const storeName = document.getElementById('seoStoreName').value.trim();
+            const phone = document.getElementById('seoPhone').value.trim();
+            const address = document.getElementById('seoAddress').value.trim();
+            const gbpUrl = document.getElementById('seoGbpUrl').value.trim();
+            const externalLink = document.getElementById('seoExternalLink').value.trim();
+            const content = quill.root.innerHTML;
+            
+            if (!title && !storeName && (content === '<p><br></p>' || content === '')) {
+                localStorage.removeItem('mapon_media_draft');
+                return;
+            }
+
+            const draft = {
+                title, category, thumbnail, author, date,
+                storeName, phone, address, gbpUrl, externalLink,
+                content, tagsList,
+                timestamp: new Date().getTime()
+            };
+            localStorage.setItem('mapon_media_draft', JSON.stringify(draft));
+        }
+
+        window.clearDraft = function() {
+            localStorage.removeItem('mapon_media_draft');
+            const banner = document.getElementById('draft-restore-banner');
+            if (banner) banner.style.display = 'none';
+        };
+
+        window.checkAndPromptDraft = function() {
+            if (editingArticleId) return;
+            
+            const draftStr = localStorage.getItem('mapon_media_draft');
+            if (draftStr) {
+                const draft = JSON.parse(draftStr);
+                const timeStr = new Date(draft.timestamp).toLocaleString();
+                
+                const editorView = document.getElementById('editor-view');
+                let banner = document.getElementById('draft-restore-banner');
+                if (!banner) {
+                    banner = document.createElement('div');
+                    banner.id = 'draft-restore-banner';
+                    banner.style.cssText = `
+                        background: #FEF3C7;
+                        border: 1px solid #F59E0B;
+                        color: #92400E;
+                        padding: 15px 20px;
+                        border-radius: 12px;
+                        margin-bottom: 20px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        font-size: 14px;
+                        font-weight: 500;
+                        box-shadow: 0 4px 12px rgba(245,158,11,0.1);
+                    `;
+                    editorView.insertBefore(banner, editorView.firstChild);
+                }
+                
+                banner.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-file-pen" style="font-size:18px; color:#D97706;"></i>
+                        <span>前回の執筆途中の下書き（保存日時: ${timeStr}）が残っています。復元しますか？</span>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="restoreDraft()" style="background:#D97706; color:white; border:none; padding:6px 15px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; transition:0.2s;">復元する</button>
+                        <button onclick="clearDraft()" style="background:transparent; color:#78350F; border:1px solid #B45309; padding:6px 15px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px; transition:0.2s;">破棄する</button>
+                    </div>
+                `;
+                banner.style.display = 'flex';
+            }
+        };
+
+        window.restoreDraft = function() {
+            const draftStr = localStorage.getItem('mapon_media_draft');
+            if (!draftStr) return;
+            const draft = JSON.parse(draftStr);
+            
+            document.getElementById('blogTitle').value = draft.title || '';
+            document.getElementById('blogCategory').value = draft.category || 'グルメ・飲食店';
+            document.getElementById('authorName').value = draft.author || '';
+            if (draft.date) document.getElementById('publishedDate').value = draft.date;
+            
+            if (draft.thumbnail) {
+                document.getElementById('thumbnailImg').src = draft.thumbnail;
+                document.getElementById('thumbnailImg').style.display = 'block';
+                document.getElementById('thumbnailPlaceholder').style.display = 'none';
+                document.getElementById('blogThumbnail').value = draft.thumbnail;
+            }
+            
+            document.getElementById('seoStoreName').value = draft.storeName || '';
+            document.getElementById('seoPhone').value = draft.phone || '';
+            document.getElementById('seoAddress').value = draft.address || '';
+            document.getElementById('seoGbpUrl').value = draft.gbpUrl || '';
+            document.getElementById('seoExternalLink').value = draft.externalLink || '';
+            
+            tagsList = draft.tagsList || [];
+            renderTags();
+            
+            quill.root.innerHTML = draft.content || '';
+            updateSeoPreview();
+            
+            const banner = document.getElementById('draft-restore-banner');
+            if (banner) banner.style.display = 'none';
+            
+            alert('下書きを復元しました！');
         };
     </script>
 </body>

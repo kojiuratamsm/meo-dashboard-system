@@ -326,7 +326,8 @@
                     </div>
                     `;
                     
-                    if (data && data.length > 0) {
+                    const sliderData = data ? data.slice(0, 4) : [];
+                    if (sliderData.length > 0) {
                         html += `
                             <div style="margin-top: 40px; padding: 20px; background: var(--bg-main); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
                                 <h2 style="font-size:20px; font-weight:800; color:#2D3748; margin-bottom:20px; text-align:center;"><i class="fa-solid fa-fire" style="color:#E53E3E;"></i> 新着記事ピックアップ</h2>
@@ -334,12 +335,7 @@
                                     <div class="swiper-wrapper">
                         `;
                         
-                        let displayData = [...data];
-                        if (displayData.length > 0 && displayData.length < 6) {
-                            displayData = [...displayData, ...displayData, ...displayData, ...displayData].slice(0, 8);
-                        }
-                        
-                        displayData.forEach(blog => {
+                        sliderData.forEach(blog => {
                             const img = blog.image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800';
                             html += `
                                         <div class="swiper-slide">
@@ -360,7 +356,7 @@
                     
                     app.innerHTML = html;
                     
-                    if (data && data.length > 0) {
+                    if (sliderData.length > 0) {
                         new Swiper(".mySwiper", {
                             effect: "coverflow",
                             grabCursor: true,
@@ -425,7 +421,6 @@
                 `;
             });
             return h;
-        }
         }
 
         async function loadArticle(id) {
