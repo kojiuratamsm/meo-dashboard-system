@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MapOn Media - お店の魅力を届ける</title>
+    <meta name="description" id="metaDescription" content="MapOn Mediaは、地域の優良店や人気スポットをMEOプロフェッショナルが厳選してお届けするローカル発見メディアです。店舗のリアルな魅力やSEO・MEO対策情報を掲載。">
+    <meta name="keywords" id="metaKeywords" content="MapOn, マップオン, MEO, ローカルメディア, 店舗集客, 口コミ, 地図検索">
     <link rel="icon" href="mapon-logo.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -56,11 +58,11 @@
         .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; }
         .blog-card { background: var(--bg-main); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s; text-decoration: none; color: #2D3748; display: flex; flex-direction: column; border: 1px solid var(--border); }
         .blog-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-color: var(--primary); }
-        .blog-img { width: 100%; height: 200px; object-fit: cover; }
-        .blog-content { padding: 25px; flex: 1; display: flex; flex-direction: column; }
-        .blog-title { font-size: 18px; font-weight: 700; margin-bottom: 15px; line-height: 1.5; }
-        .blog-meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted); margin-top: auto; }
-        .blog-category-badge { display: inline-block; padding: 4px 10px; background: #EBF8FF; color: var(--primary); border-radius: 20px; font-size: 11px; font-weight: bold; margin-top: 15px; align-self: flex-start; }
+        .card-img { width: 100%; height: 200px; object-fit: cover; }
+        .card-content { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .card-title { font-size: 15px; font-weight: 700; margin-bottom: 15px; line-height: 1.6; color: var(--text-main); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; height: 72px; }
+        .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted); margin-top: auto; border-top: 1px dashed var(--border); padding-top: 12px; }
+        .category-tag { display: inline-block; padding: 4px 10px; background: #EBF8FF; color: var(--primary); border-radius: 20px; font-size: 11px; font-weight: bold; margin-bottom: 10px; align-self: flex-start; }
 
         /* Article Detail */
         .article-container { background: var(--bg-main); border-radius: 24px; padding: 60px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
@@ -463,8 +465,17 @@
                 document.head.appendChild(script);
             }
 
-            // タイトルの変更
+            // タイトルとメタ情報の変更
             document.title = blog.title + " | MapOn Media";
+            
+            const plainText = blog.content ? blog.content.replace(/<[^>]*>/g, '').replace(/\n/g, ' ').trim().substring(0, 120) : '';
+            const descEl = document.getElementById('metaDescription');
+            if (descEl) descEl.setAttribute('content', plainText + '...');
+            
+            const keysEl = document.getElementById('metaKeywords');
+            if (keysEl && blog.seo_keywords && blog.seo_keywords.length > 0) {
+                keysEl.setAttribute('content', blog.seo_keywords.join(', '));
+            }
 
             const category = (blog.tags && blog.tags.length > 0) ? blog.tags[0] : 'お知らせ';
             const date = blog.published_date || blog.created_at.split('T')[0];
