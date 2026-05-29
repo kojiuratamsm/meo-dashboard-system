@@ -597,53 +597,71 @@
             }
         };
 
-        // 画像アップロードのプレビュー処理
-        document.getElementById('thumbnailFile').addEventListener('change', function(e) {
+        // 画像アップロードのプレビュー処理 (Storage優先・Base64フォールバック)
+        document.getElementById('thumbnailFile').addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const targetWidth = 1920;
-                    const targetHeight = 1080;
-                    
-                    canvas.width = targetWidth;
-                    canvas.height = targetHeight;
-                    const ctx = canvas.getContext('2d');
-                    
-                    const imgRatio = img.width / img.height;
-                    const targetRatio = targetWidth / targetHeight;
-                    
-                    let srcWidth = img.width;
-                    let srcHeight = img.height;
-                    let offsetX = 0;
-                    let offsetY = 0;
-                    
-                    if (imgRatio > targetRatio) {
-                        // Image is wider than 16:9
-                        srcWidth = img.height * targetRatio;
-                        offsetX = (img.width - srcWidth) / 2;
-                    } else {
-                        // Image is taller than 16:9
-                        srcHeight = img.width / targetRatio;
-                        offsetY = (img.height - srcHeight) / 2;
-                    }
-                    
-                    ctx.drawImage(img, offsetX, offsetY, srcWidth, srcHeight, 0, 0, targetWidth, targetHeight);
-                    
-                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
-                    
-                    document.getElementById('thumbnailImg').src = base64;
-                    document.getElementById('thumbnailImg').style.display = 'block';
-                    document.getElementById('thumbnailPlaceholder').style.display = 'none';
-                    document.getElementById('blogThumbnail').value = base64;
+            const btn = document.getElementById('thumbnailPlaceholder');
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="font-size:24px;"></i> アップロード中...';
+
+            try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `thumb-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                
+                const { data, error } = await supabase.storage.from('media-images').upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+                if (error) throw error;
+
+                const { data: publicUrlData } = supabase.storage.from('media-images').getPublicUrl(fileName);
+                const imageUrl = publicUrlData.publicUrl;
+
+                document.getElementById('thumbnailImg').src = imageUrl;
+                document.getElementById('thumbnailImg').style.display = 'block';
+                btn.style.display = 'none';
+                document.getElementById('blogThumbnail').value = imageUrl;
+                btn.innerHTML = origHtml;
+            } catch (err) {
+                console.warn('Storage upload failed, falling back to Base64:', err);
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const targetWidth = 1920;
+                        const targetHeight = 1080;
+                        canvas.width = targetWidth;
+                        canvas.height = targetHeight;
+                        const ctx = canvas.getContext('2d');
+                        const imgRatio = img.width / img.height;
+                        const targetRatio = targetWidth / targetHeight;
+                        let srcWidth = img.width, srcHeight = img.height, offsetX = 0, offsetY = 0;
+                        
+                        if (imgRatio > targetRatio) {
+                            srcWidth = img.height * targetRatio;
+                            offsetX = (img.width - srcWidth) / 2;
+                        } else {
+                            srcHeight = img.width / targetRatio;
+                            offsetY = (img.height - srcHeight) / 2;
+                        }
+                        
+                        ctx.drawImage(img, offsetX, offsetY, srcWidth, srcHeight, 0, 0, targetWidth, targetHeight);
+                        const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                        
+                        document.getElementById('thumbnailImg').src = base64;
+                        document.getElementById('thumbnailImg').style.display = 'block';
+                        btn.style.display = 'none';
+                        document.getElementById('blogThumbnail').value = base64;
+                        btn.innerHTML = origHtml;
+                    };
+                    img.src = event.target.result;
                 };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
+                reader.readAsDataURL(file);
+            }
         });
 
         // タグ入力処理
@@ -732,6 +750,49 @@
                             quill.insertText(range.index, '\n', Quill.sources.USER);
                             quill.insertEmbed(range.index + 1, 'divider', true, Quill.sources.USER);
                             quill.setSelection(range.index + 2, Quill.sources.SILENT);
+                        },
+                        'image': function() {
+                            const input = document.createElement('input');
+                            input.setAttribute('type', 'file');
+                            input.setAttribute('accept', 'image/*');
+                            input.click();
+
+                            input.onchange = async () => {
+                                const file = input.files[0];
+                                if (!file) return;
+
+                                const range = quill.getSelection(true);
+                                quill.insertText(range.index, '画像をアップロード中...', 'color', '#a0aec0');
+                                
+                                try {
+                                    const fileExt = file.name.split('.').pop();
+                                    const fileName = `article-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                                    
+                                    const { data, error } = await supabase.storage.from('media-images').upload(fileName, file, {
+                                        cacheControl: '3600',
+                                        upsert: false
+                                    });
+
+                                    if (error) throw error;
+
+                                    const { data: publicUrlData } = supabase.storage.from('media-images').getPublicUrl(fileName);
+                                    const imageUrl = publicUrlData.publicUrl;
+
+                                    quill.deleteText(range.index, 13);
+                                    quill.insertEmbed(range.index, 'image', imageUrl);
+                                    quill.setSelection(range.index + 1);
+                                    
+                                } catch (err) {
+                                    console.warn('Storage upload failed, falling back to Base64:', err);
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => {
+                                        quill.deleteText(range.index, 13);
+                                        quill.insertEmbed(range.index, 'image', e.target.result);
+                                        quill.setSelection(range.index + 1);
+                                    };
+                                    reader.readAsDataURL(file);
+                                }
+                            };
                         }
                     }
                 }
