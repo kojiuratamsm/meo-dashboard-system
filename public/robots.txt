@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /landing
+Allow: /media
+Allow: /assets/
+Disallow: /login
+Disallow: /master-dashboard
+Disallow: /master-login
+Disallow: /media-admin
+Disallow: /media-login
+Disallow: /signup-a
+Disallow: /signup-b
+Disallow: /signup-c
+Disallow: /reserve
+Disallow: /survey-mockup
+
+Sitemap: https://mapon-meo.com/sitemap.xml
