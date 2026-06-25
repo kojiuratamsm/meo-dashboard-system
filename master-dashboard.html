@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- CSV Parse Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --bg-color: #F4F7FE;
@@ -81,6 +85,39 @@
             border-left: 4px solid #34A853;
         }
         #update-toast.show { transform: translateY(0); }
+        
+        /* Custom scrollbar for table container */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+        
+        .keyword-row {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .keyword-row:hover {
+            background-color: #F8FAFC !important;
+        }
+        .keyword-row-active {
+            background-color: #EFF6FF !important;
+            border-left: 4px solid #4285F4 !important;
+        }
+        .keyword-row-active td {
+            color: #1E40AF !important;
+            font-weight: 700 !important;
+        }
     </style>
 </head>
 <body>
@@ -202,32 +239,82 @@
             </div>
 
             <div class="card" id="analysisReportCard" style="display: none; position: relative;">
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 20px; gap: 10px;">
+                    <button class="btn-action" style="background:#34A853;" onclick="downloadPDF()"><i class="fa-solid fa-file-pdf"></i> PDFで保存</button>
                     <button class="btn-action" style="background:#A0AEC0;" onclick="resetKeywordAnalysis()">別のファイルを解析</button>
                 </div>
                 
                 <!-- 分析結果エリア -->
-                <div id="pdfContentArea" style="padding: 40px; background: white; border-radius:12px; border:1px solid #E2E8F0;">
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom: 40px;">
-                        <img src="mapon-logo.png" style="height:40px; mix-blend-mode:multiply;">
-                        <div style="font-weight: 800; font-size: 20px; color:#A0AEC0; margin-left: 10px;">MSM Google Analytics Data</div>
+                <div id="pdfContentArea" style="padding: 30px; background: white; border-radius:16px; border:1px solid #E2E8F0; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                    <!-- Report Header -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px; border-bottom: 2px solid #EDF2F7; padding-bottom: 15px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <img src="mapon-logo.png" style="height:35px; mix-blend-mode:multiply;">
+                            <div style="font-weight: 900; font-size: 20px; color:#2B3674; letter-spacing: 1px;">MapOn <span style="font-size: 12px; color: #718096; font-weight: bold; margin-left: 5px;">MEO ANALYSIS</span></div>
+                        </div>
+                        <div style="font-size: 12px; color: #718096; font-weight: bold;" id="reportDate">レポート作成日: 2026/06/26</div>
                     </div>
 
-                    <h2 id="reportStoreTitle" style="text-align:center; font-size: 24px; margin-bottom: 10px; color:var(--text-main);">独自のキーワード分析結果レポート</h2>
-                    <div style="text-align:center; margin-bottom: 40px;">
-                        <span style="border-bottom: 4px solid var(--primary-blue); display:inline-block; width:100px;"></span>
-                    </div>
+                    <h2 id="reportStoreTitle" style="text-align:center; font-size: 22px; margin-bottom: 20px; color:#1A202C; font-weight: 800;">独自のキーワード分析結果レポート</h2>
                     
-                    <p style="margin-bottom:20px; color:var(--text-muted); font-size:14px;">※独自のAI評価ロジックに基づき、検索ボリュームと競合性を掛け合わせて狙い目のキーワードを算出しています。</p>
+                    <p style="margin-bottom:25px; color:#718096; font-size:12px; line-height:1.5;">※本レポートは独自のAI評価ロジックに基づき、検索ボリューム、CPC、競合性を掛け合わせて狙い目のMEOキーワードを算出したものです。</p>
 
-                    <div style="overflow-x: auto;">
-                        <table class="client-table" id="keywordTable" style="margin-bottom: 20px;">
-                            <thead>
-                                <!-- Thead is dynamically generated to hold ALL columns from CSV -->
-                            </thead>
-                            <tbody id="keywordTableBody">
-                            </tbody>
-                        </table>
+                    <!-- Side-by-Side Grid Layout -->
+                    <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 25px; align-items: start;">
+                        <!-- Left Side: Keyword List -->
+                        <div style="min-width: 0;">
+                            <h3 style="font-size: 15px; font-weight: 700; color: #2B3674; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
+                                <i class="fa-solid fa-list-ol" style="color: #4285F4;"></i> 【検索ワード一覧】 <span style="font-size: 11px; font-weight: normal; color:#A0AEC0;">(行クリックで右のグラフが連動)</span>
+                            </h3>
+                            
+                            <!-- Table Container with Horizontal Scroll -->
+                            <div style="overflow-x: auto; border: 1px solid #E2E8F0; border-radius: 12px; max-height: 520px; overflow-y: auto; background: #FFF; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);" class="custom-scrollbar">
+                                <table class="client-table" id="keywordTable" style="margin: 0; width: 100%; border-collapse: separate; border-spacing: 0;">
+                                    <thead>
+                                        <!-- Dynamically filled -->
+                                    </thead>
+                                    <tbody id="keywordTableBody">
+                                        <!-- Dynamically filled -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style="font-size: 11px; color:#A0AEC0; margin-top: 6px; text-align: right;"><i class="fa-solid fa-arrows-left-right"></i> リストを横にスライドすると、詳細な月次データを確認できます。</div>
+                        </div>
+
+                        <!-- Right Side: Details & Chart -->
+                        <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">
+                            <!-- Keyword Stat Cards (3 Columns) -->
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                                <!-- Card 1: Volume -->
+                                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                    <div style="font-size: 10px; font-weight: bold; color: #718096; margin-bottom: 4px; white-space: nowrap;">月間検索数</div>
+                                    <div id="statVolume" style="font-size: 18px; font-weight: 800; color: #4285F4; white-space: nowrap;">-</div>
+                                </div>
+                                <!-- Card 2: CPC -->
+                                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                    <div style="font-size: 10px; font-weight: bold; color: #718096; margin-bottom: 4px; white-space: nowrap;">想定CPC</div>
+                                    <div id="statCPC" style="font-size: 18px; font-weight: 800; color: #E53E3E; white-space: nowrap;">-</div>
+                                </div>
+                                <!-- Card 3: Match / Competition -->
+                                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                                    <div style="font-size: 10px; font-weight: bold; color: #718096; margin-bottom: 4px; white-space: nowrap;">整合性 / 競合性</div>
+                                    <div id="statCompetition" style="font-size: 18px; font-weight: 800; color: #319795; white-space: nowrap;">-</div>
+                                </div>
+                            </div>
+
+                            <!-- Chart Container -->
+                            <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 16px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; gap: 10px;">
+                                    <h4 style="font-size: 13px; font-weight: 700; color: #2D3748; display:flex; align-items:center; gap:6px; margin: 0;">
+                                        <i class="fa-solid fa-chart-bar" style="color: #4285F4;"></i> 月間検索ボリュームの推移
+                                    </h4>
+                                    <span id="selectedKeywordLabel" style="font-size: 11px; font-weight: bold; background: #EBF8FF; color: #2B6CB0; padding: 4px 8px; border-radius: 6px; max-width: 150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align: right;">未選択</span>
+                                </div>
+                                <div style="position: relative; height: 320px; width: 100%;">
+                                    <canvas id="keywordChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -727,6 +814,9 @@
             });
         }
 
+        let keywordChartInstance = null;
+        let selectedRowIndex = 0;
+
         async function processRakkoData(data, storeName) {
             parsedKeywordData = [];
             data.forEach(row => {
@@ -735,7 +825,7 @@
                 
                 // 独自のAIロジック対象のボリュームと競合性の列を推定
                 let volumeKey = keys.find(k => k.includes('月間検索数') || k.includes('ボリューム') || String(k).toUpperCase().includes('VOLUME')) || keys[1] || keys[2];
-                let compKey = keys.find(k => k.includes('競合性') || String(k).toUpperCase().includes('COMPETITION')) || keys[2] || keys[3];
+                let compKey = keys.find(k => k.includes('整合性') || k.includes('競合性') || String(k).toUpperCase().includes('COMPETITION') || k.includes('競合')) || keys[2] || keys[3];
 
                 let volumeStr = row[volumeKey] ? String(row[volumeKey]) : "0";
                 let compStr = row[compKey] ? String(row[compKey]) : "-";
@@ -745,13 +835,13 @@
                 // 独自評価ロジック
                 let evaluationHtml = "";
                 let score = 0;
-                if(volume >= 1000 && (compStr.includes("低") || compStr.includes("Low"))) {
+                if(volume >= 1000 && (compStr.includes("低") || compStr.includes("Low") || compStr.includes("0") || parseFloat(compStr) < 0.35)) {
                     evaluationHtml = '<span class="status-badge" style="background:#E6F4EA;color:#34A853; white-space:nowrap;">SS (超穴場)</span>';
                     score = 5;
-                } else if(volume >= 100 && (compStr.includes("低") || compStr.includes("Low"))) {
+                } else if(volume >= 100 && (compStr.includes("低") || compStr.includes("Low") || compStr.includes("0") || parseFloat(compStr) < 0.35)) {
                     evaluationHtml = '<span class="status-badge" style="background:#E6F4EA;color:#34A853; white-space:nowrap;">S (狙い目)</span>';
                     score = 4;
-                } else if(volume >= 500 && (compStr.includes("中") || compStr.includes("Medium"))) {
+                } else if(volume >= 500 && (compStr.includes("中") || compStr.includes("Medium") || parseFloat(compStr) < 0.65)) {
                     evaluationHtml = '<span class="status-badge" style="background:#FEF3C7;color:#D97706; white-space:nowrap;">A (要対策)</span>';
                     score = 3;
                 } else if(volume >= 100) {
@@ -791,9 +881,23 @@
         function showReport(storeName, data) {
             parsedKeywordData = data;
             document.getElementById('reportStoreTitle').innerText = `【${storeName}】キーワード分析診断レポート`;
+            
+            // Set date
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+            document.getElementById('reportDate').innerText = `レポート作成日: ${dateStr}`;
+            
+            selectedRowIndex = 0;
             // 後方互換と新規向けの初期ソート
             sortKeywordData(parsedKeywordData[0] && parsedKeywordData[0]['__sort_volume'] !== undefined ? '__sort_volume' : 'volume');
             document.getElementById('analysisReportCard').style.display = 'block';
+
+            // Select the first row by default
+            if(parsedKeywordData.length > 0) {
+                setTimeout(() => {
+                    selectKeywordRow(0);
+                }, 150);
+            }
         }
 
         window.sortKeywordData = function(col) {
@@ -821,6 +925,10 @@
                 }
             });
             renderKeywordTable();
+            // Reselect the highlighted index or first row after sort
+            if(parsedKeywordData.length > 0) {
+                selectKeywordRow(0);
+            }
         };
 
         function renderKeywordTable() {
@@ -847,7 +955,10 @@
                 th.style.cursor = 'pointer';
                 th.style.whiteSpace = 'nowrap';
                 th.style.padding = '12px 15px';
-                th.onclick = () => sortKeywordData(col);
+                th.onclick = (e) => {
+                    e.stopPropagation();
+                    sortKeywordData(col);
+                };
                 
                 // Make search volume column distinct
                 if(col.includes('月間検索数') || col.includes('ボリューム') || col === 'volume') {
@@ -865,8 +976,10 @@
             evalTh.style.whiteSpace = 'nowrap';
             evalTh.style.padding = '12px 15px';
             evalTh.innerHTML = `弊社独自のAI評価 <i class="fa-solid fa-sort" style="color:#CBD5E1;"></i>`;
-            // Compatibility mapping
-            evalTh.onclick = () => sortKeywordData(isLegacy ? 'score' : '__score');
+            evalTh.onclick = (e) => {
+                e.stopPropagation();
+                sortKeywordData(isLegacy ? 'score' : '__score');
+            };
             trHead.appendChild(evalTh);
             
             thead.appendChild(trHead);
@@ -874,8 +987,13 @@
             // ---------------------------
             // 動的テーブルボディの生成
             // ---------------------------
-            parsedKeywordData.forEach(item => {
+            parsedKeywordData.forEach((item, index) => {
                 const tr = document.createElement('tr');
+                tr.className = 'keyword-row';
+                if (selectedRowIndex === index) {
+                    tr.classList.add('keyword-row-active');
+                }
+                tr.onclick = () => selectKeywordRow(index);
                 
                 columns.forEach(col => {
                     let td = document.createElement('td');
@@ -888,13 +1006,12 @@
                     if(col.includes('キーワード') || col.includes('keyword') || col.toLowerCase() === 'keyword') {
                         td.style.fontWeight = '700';
                         td.style.color = 'var(--text-main)';
-                        td.style.fontSize = '15px';
+                        td.style.fontSize = '14px';
                     } else if (col.includes('月間検索数') || col.includes('ボリューム') || col.toLowerCase() === 'volume') {
                         td.style.fontWeight = '800';
                         td.style.color = 'var(--primary-blue)';
-                        td.style.fontSize = '15px';
+                        td.style.fontSize = '14px';
                         let num = parseInt(String(val).replace(/[^0-9]/g, ''));
-                        // 数値と判定できた場合のみカンマを入れる（もともとカンマありなら問題ない）
                         if(!isNaN(num) && String(val).replace(/[^0-9]/g, '').length > 0) val = num.toLocaleString();
                     }
                     
@@ -911,7 +1028,156 @@
 
                 tbody.appendChild(tr);
             });
+        }
+
+        window.selectKeywordRow = function(index) {
+            selectedRowIndex = index;
+            const rows = document.querySelectorAll('#keywordTableBody tr');
+            rows.forEach((r, idx) => {
+                if(idx === index) {
+                    r.classList.add('keyword-row-active');
+                } else {
+                    r.classList.remove('keyword-row-active');
+                }
+            });
+
+            const item = parsedKeywordData[index];
+            if (!item) return;
+
+            const keys = Object.keys(item);
+            
+            // Find Keyword
+            let keywordKey = keys.find(k => k.includes('キーワード') || k.toLowerCase().includes('keyword')) || keys[0];
+            let keywordName = item[keywordKey] || '(タイトルなし)';
+            
+            // Find Volume
+            let volumeKey = keys.find(k => k.includes('月間検索数') || k.includes('ボリューム') || k.toLowerCase().includes('volume')) || keys[1];
+            let volumeVal = item[volumeKey] || '0';
+            let volumeNum = parseInt(String(volumeVal).replace(/[^0-9]/g, ''));
+            document.getElementById('statVolume').innerText = isNaN(volumeNum) ? volumeVal : volumeNum.toLocaleString();
+
+            // Find CPC
+            let cpcKey = keys.find(k => k.includes('CPC') || k.toLowerCase().includes('cpc') || k.includes('単価') || k.includes('入札'));
+            let cpcVal = cpcKey ? (item[cpcKey] || '-') : '-';
+            document.getElementById('statCPC').innerText = cpcVal;
+
+            // Find Competition (整合性 / 競合性)
+            let compKey = keys.find(k => k.includes('整合性') || k.includes('競合性') || k.toLowerCase().includes('competition') || k.includes('競合'));
+            let compVal = compKey ? (item[compKey] || '-') : '-';
+            document.getElementById('statCompetition').innerText = compVal;
+
+            // Find Month keys (chronological order in CSV)
+            let monthKeys = keys.filter(k => {
+                let kClean = k.trim();
+                return /^(19|20)\d\d[-/年.月]?\d{1,2}/.test(kClean) || 
+                       /^[A-Za-z]{3,9}\s*(19|20)\d\d/.test(kClean) || 
+                       /^(19|20)\d\d\s*[A-Za-z]{3,9}/.test(kClean) ||
+                       /^(1月|2月|3月|4月|5月|6月|7月|8月|9月|10月|11月|12月)/.test(kClean);
+            });
+
+            let labels = monthKeys.map(k => k.replace(/(\d{4})[-/]/, '$1年').trim());
+            let chartDataValues = monthKeys.map(k => {
+                let val = item[k] || '0';
+                return parseInt(String(val).replace(/[^0-9]/g, '')) || 0;
+            });
+
+            document.getElementById('selectedKeywordLabel').innerText = keywordName;
+            document.getElementById('selectedKeywordLabel').title = keywordName;
+
+            const ctx = document.getElementById('keywordChart').getContext('2d');
+
+            if (keywordChartInstance) {
+                keywordChartInstance.data.labels = labels;
+                keywordChartInstance.data.datasets[0].data = chartDataValues;
+                keywordChartInstance.data.datasets[0].label = `${keywordName} の月間検索数`;
+                keywordChartInstance.update();
+            } else {
+                keywordChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: `${keywordName} の月間検索数`,
+                            data: chartDataValues,
+                            backgroundColor: 'rgba(66, 133, 244, 0.75)',
+                            borderColor: 'rgba(66, 133, 244, 1)',
+                            borderWidth: 1.5,
+                            borderRadius: 6,
+                            barPercentage: 0.6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `検索数: ${context.parsed.y.toLocaleString()}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: '#EDF2F7'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString();
+                                    },
+                                    font: {
+                                        size: 10
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: {
+                                        size: 10
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         };
+
+        window.downloadPDF = function() {
+            const element = document.getElementById('pdfContentArea');
+            
+            // Create target filename
+            let storeName = document.getElementById('analysisStoreName').value.trim();
+            if(!storeName) {
+                const select = document.getElementById('savedAnalysisSelect');
+                if (select && select.value) {
+                    storeName = select.value;
+                } else {
+                    storeName = 'MEO分析診断レポート';
+                }
+            }
+            
+            // Options for html2pdf
+            const opt = {
+                margin:       10,
+                filename:     `【${storeName}】MEOキーワード分析レポート.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            // Execute PDF download
+            html2pdf().set(opt).from(element).save();
+        };;
 
         window.onload = () => {
             loadClients();
