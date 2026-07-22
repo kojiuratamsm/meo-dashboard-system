@@ -131,12 +131,21 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
         }
-        .analysis-left-side { min-width: 0; }
+        .analysis-left-side {
+            min-width: 0;
+            width: 100%;
+            overflow: hidden;
+        }
+        .analysis-left-side > div {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
         .analysis-right-side {
             display: flex;
             flex-direction: column;
             gap: 20px;
             min-width: 0;
+            width: 100%;
         }
         .chart-wrapper {
             position: relative;
@@ -949,7 +958,10 @@
 
         function showReport(storeName, data) {
             parsedKeywordData = data;
-            document.getElementById('reportStoreTitle').innerText = `【${storeName}】キーワード分析診断レポート`;
+            document.getElementById('reportStoreTitle').innerHTML = `
+                <div style="margin-bottom: 8px;">【${storeName}】</div>
+                <div style="font-size: 16px; color: #4A5568; font-weight: 600; letter-spacing: 0.5px;">キーワード分析診断レポート</div>
+            `;
             
             // Set date
             const today = new Date();
