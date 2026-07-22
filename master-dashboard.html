@@ -118,6 +118,44 @@
             color: #1E40AF !important;
             font-weight: 700 !important;
         }
+
+        /* Responsive layout for Keyword Analysis report */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 25px;
+            align-items: start;
+        }
+        .stat-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .analysis-grid {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+            }
+            #pdfContentArea {
+                padding: 15px !important;
+            }
+            .stat-cards-grid {
+                gap: 6px !important;
+            }
+            .stat-cards-grid > div {
+                padding: 8px 4px !important;
+            }
+            .stat-cards-grid div[id^="stat"] {
+                font-size: 14px !important;
+            }
+            .stat-cards-grid div:first-child {
+                font-size: 9px !important;
+            }
+            #pdfContentArea h2 {
+                font-size: 18px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -260,7 +298,7 @@
                     <p style="margin-bottom:25px; color:#718096; font-size:12px; line-height:1.5;">※本レポートは独自のAI評価ロジックに基づき、検索ボリューム、CPC、競合性を掛け合わせて狙い目のMEOキーワードを算出したものです。</p>
 
                     <!-- Side-by-Side Grid Layout -->
-                    <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 25px; align-items: start;">
+                    <div class="analysis-grid">
                         <!-- Left Side: Keyword List -->
                         <div style="min-width: 0;">
                             <h3 style="font-size: 15px; font-weight: 700; color: #2B3674; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
@@ -284,7 +322,7 @@
                         <!-- Right Side: Details & Chart -->
                         <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">
                             <!-- Keyword Stat Cards (3 Columns) -->
-                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                            <div class="stat-cards-grid">
                                 <!-- Card 1: Volume -->
                                 <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 12px 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                                     <div style="font-size: 10px; font-weight: bold; color: #718096; margin-bottom: 4px; white-space: nowrap;">月間検索数</div>
