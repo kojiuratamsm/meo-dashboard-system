@@ -131,14 +131,39 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
         }
+        .analysis-left-side { min-width: 0; }
+        .analysis-right-side {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 320px;
+            width: 100%;
+        }
 
         @media (max-width: 900px) {
             .analysis-grid {
-                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
                 gap: 20px !important;
+            }
+            .analysis-right-side {
+                order: -1;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                background: white;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #E2E8F0;
+                margin-top: -15px; /* Offset padding */
+                padding-top: 15px;
             }
             #pdfContentArea {
                 padding: 15px !important;
+                overflow: visible !important; /* Allow sticky to work */
             }
             .stat-cards-grid {
                 gap: 6px !important;
@@ -154,6 +179,12 @@
             }
             #pdfContentArea h2 {
                 font-size: 18px !important;
+            }
+            .chart-wrapper {
+                height: 180px !important;
+            }
+            .analysis-right-side > div:last-child {
+                padding: 10px !important; /* smaller padding for chart box */
             }
         }
     </style>
@@ -300,7 +331,7 @@
                     <!-- Side-by-Side Grid Layout -->
                     <div class="analysis-grid">
                         <!-- Left Side: Keyword List -->
-                        <div style="min-width: 0;">
+                        <div class="analysis-left-side">
                             <h3 style="font-size: 15px; font-weight: 700; color: #2B3674; margin-bottom: 12px; display:flex; align-items:center; gap:6px;">
                                 <i class="fa-solid fa-list-ol" style="color: #4285F4;"></i> 【検索ワード一覧】 <span style="font-size: 11px; font-weight: normal; color:#A0AEC0;">(行クリックで右のグラフが連動)</span>
                             </h3>
@@ -320,7 +351,7 @@
                         </div>
 
                         <!-- Right Side: Details & Chart -->
-                        <div style="display: flex; flex-direction: column; gap: 20px; min-width: 0;">
+                        <div class="analysis-right-side">
                             <!-- Keyword Stat Cards (3 Columns) -->
                             <div class="stat-cards-grid">
                                 <!-- Card 1: Volume -->
@@ -348,7 +379,7 @@
                                     </h4>
                                     <span id="selectedKeywordLabel" style="font-size: 11px; font-weight: bold; background: #EBF8FF; color: #2B6CB0; padding: 4px 8px; border-radius: 6px; max-width: 150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align: right;">未選択</span>
                                 </div>
-                                <div style="position: relative; height: 320px; width: 100%;">
+                                <div class="chart-wrapper">
                                     <canvas id="keywordChart"></canvas>
                                 </div>
                             </div>
