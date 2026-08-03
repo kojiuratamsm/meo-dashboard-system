@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- html2pdf.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --bg-color: #F4F7FE;
@@ -152,6 +153,9 @@
             height: 320px;
             width: 100%;
         }
+        .cb-kw-badge {
+            background: white; border: 2px solid #E2E8F0; padding: 10px 20px; border-radius: 50px; font-size: 15px; font-weight: 700; color: #2B3674; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
 
         @media (max-width: 900px) {
             .analysis-grid {
@@ -211,6 +215,11 @@
         <!-- 目立つキーワード分析ボタン -->
         <a href="#" class="nav-item" onclick="switchMasterView('view-keyword-analysis', this)" style="background: linear-gradient(135deg, #4285F4, #3b82f6); color: white; display:flex; justify-content:center; gap:8px; font-weight: bold; margin-top: 15px; box-shadow: 0 5px 15px rgba(66,133,244,0.4); border:none; transition: all 0.3s;">
             <i class="fa-solid fa-cloud-arrow-up" style="font-size: 16px;"></i> MEO分析診断
+        </a>
+
+        <!-- 費用対効果作成シートボタン -->
+        <a href="#" class="nav-item" onclick="switchMasterView('view-cost-benefit', this)" style="background: linear-gradient(135deg, #DD6B20, #ED8936); color: white; display:flex; justify-content:center; gap:8px; font-weight: bold; margin-top: 10px; box-shadow: 0 5px 15px rgba(221,107,32,0.3); border:none; transition: all 0.3s;">
+            <i class="fa-solid fa-file-invoice-dollar" style="font-size: 16px;"></i> 費用対効果作成シート
         </a>
 
         <!-- メディア管理リンク追加 -->
@@ -394,6 +403,115 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === 費用対効果作成シートビュー === -->
+        <div id="view-cost-benefit" class="master-view" style="display: none;">
+            
+            <div class="card" style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-clock-rotate-left"></i> 過去のシートを読み込む</h3>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <select id="savedCostBenefitSelect" style="padding:10px; border-radius:8px; border:1px solid var(--border-color); width:250px; outline:none; font-size:14px;"></select>
+                    <button class="btn-action" style="background:#4A5568;" onclick="loadSavedCostBenefit()">データ表示</button>
+                    <button class="btn-action" style="background:#EA4335;" onclick="deleteSavedCostBenefit()"><i class="fa-solid fa-trash"></i> 削除</button>
+                    <button class="btn-action" style="background:#319795; margin-left:auto;" onclick="resetCostBenefitForm()"><i class="fa-solid fa-file-circle-plus"></i> 別のシートを新規作成</button>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px;"><i class="fa-solid fa-pen-to-square"></i> シート入力フォーム</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">店舗名</label>
+                        <input type="text" id="cbStoreName" placeholder="例: MapOn新宿店" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; margin-bottom:15px;">
+                        
+                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">推定客単価 (円)</label>
+                        <input type="text" id="cbUnitPrice" placeholder="例: 5000" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; margin-bottom:15px;">
+
+                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">月間検索数</label>
+                        <input type="text" id="cbSearchVolume" placeholder="例: 10000" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; margin-bottom: 15px;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">狙うキーワード (4つ)</label>
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 15px;">
+                            <input type="text" id="cbKw1" placeholder="キーワード1" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px;">
+                            <input type="text" id="cbKw2" placeholder="キーワード2" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px;">
+                            <input type="text" id="cbKw3" placeholder="キーワード3" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px;">
+                            <input type="text" id="cbKw4" placeholder="キーワード4" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px;">
+                        </div>
+
+                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">推定集客数の割合</label>
+                        <div style="display:flex; gap:15px; margin-bottom: 15px;">
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="cbConvRate" value="0.1" checked> 10% (堅実)</label>
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="cbConvRate" value="0.3"> 30% (強気)</label>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="generateCostBenefitPreview()" style="width:100%; background:linear-gradient(135deg, #38B2AC, #319795); color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; font-size:15px; cursor:pointer; box-shadow: 0 4px 10px rgba(49,151,149,0.3); transition:all 0.3s;"><i class="fa-solid fa-wand-magic-sparkles"></i> シミュレーション結果を作成・保存</button>
+            </div>
+
+            <!-- Preview Card -->
+            <div class="card" id="cbPreviewContainer" style="display:none; position: relative;">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 20px; gap: 10px;">
+                    <button class="btn-action" style="background:#E53E3E;" onclick="exportCBPDF()"><i class="fa-solid fa-file-pdf"></i> PDFで保存</button>
+                    <button class="btn-action" style="background:#3182CE;" onclick="exportCBPNG()"><i class="fa-solid fa-image"></i> PNGで保存</button>
+                </div>
+
+                <div id="cbSheetCaptureArea" style="padding: 40px; background: white; border-radius:16px; border:1px solid #E2E8F0; box-shadow: 0 4px 25px rgba(0,0,0,0.04);">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 30px; border-bottom: 3px solid #F4F7FE; padding-bottom: 15px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <img src="mapon-logo.png" style="height:45px; mix-blend-mode:multiply;">
+                            <div>
+                                <div style="font-weight: 900; font-size: 26px; color:#2B3674; letter-spacing: 1px; line-height:1;">MapOn</div>
+                                <div style="font-size: 11px; color: #718096; font-weight: bold; margin-top:2px;">MEO COST-BENEFIT SIMULATION</div>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div id="cbDateDisplay" style="font-size: 13px; color: #A0AEC0; font-weight: bold; margin-bottom:4px;"></div>
+                            <div style="font-size: 24px; font-weight: 800; color: #1A202C;" id="cbStoreNameDisplay"></div>
+                        </div>
+                    </div>
+
+                    <h2 style="text-align:center; font-size: 26px; margin-bottom: 35px; color:#1A202C; font-weight: 900; letter-spacing:1px;">MEO対策 費用対効果シミュレーション</h2>
+
+                    <div style="background:#F8FAFC; border-radius:16px; padding:25px; margin-bottom:30px; border:1px solid #EDF2F7;">
+                        <h3 style="font-size:16px; color:#4A5568; margin-bottom:15px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-magnifying-glass-location" style="color:#4285F4;"></i> ターゲットキーワード</h3>
+                        <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                            <div class="cb-kw-badge" id="cbKw1Display"></div>
+                            <div class="cb-kw-badge" id="cbKw2Display"></div>
+                            <div class="cb-kw-badge" id="cbKw3Display"></div>
+                            <div class="cb-kw-badge" id="cbKw4Display"></div>
+                        </div>
+                    </div>
+
+                    <!-- 3 KPIs Grid -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:40px;">
+                        <!-- Reach -->
+                        <div style="background:white; border-radius:16px; padding:25px; text-align:center; box-shadow:0 10px 25px rgba(66,133,244,0.08); border-top: 5px solid #4285F4;">
+                            <div style="font-size:14px; font-weight:bold; color:#718096; margin-bottom:10px;">推定リーチ数 <span style="font-size:11px; font-weight:normal;">(月間検索数の70%)</span></div>
+                            <div style="font-size:36px; font-weight:900; color:#4285F4; margin-bottom:5px; line-height:1;"><span id="cbReachDisplay">0</span><span style="font-size:18px; margin-left:4px;">回</span></div>
+                            <div style="font-size:12px; color:#A0AEC0;">Googleマップでの表示目安</div>
+                        </div>
+                        <!-- Attract -->
+                        <div style="background:white; border-radius:16px; padding:25px; text-align:center; box-shadow:0 10px 25px rgba(52,168,83,0.08); border-top: 5px solid #34A853;">
+                            <div style="font-size:14px; font-weight:bold; color:#718096; margin-bottom:10px;">推定集客数 <span id="cbConvRateLabel" style="font-size:11px; font-weight:normal;"></span></div>
+                            <div style="font-size:36px; font-weight:900; color:#34A853; margin-bottom:5px; line-height:1;"><span id="cbAttractDisplay">0</span><span style="font-size:18px; margin-left:4px;">人/月</span></div>
+                            <div style="font-size:12px; color:#A0AEC0;">マップ経由での来店目安</div>
+                        </div>
+                        <!-- Revenue -->
+                        <div style="background:linear-gradient(135deg, #FFFFAF, #F6E05E); border-radius:16px; padding:25px; text-align:center; box-shadow:0 10px 25px rgba(214,158,46,0.15); border:1px solid #D69E2E;">
+                            <div style="font-size:14px; font-weight:bold; color:#744210; margin-bottom:10px;">推定月間売上 <span style="font-size:11px; font-weight:normal;">(客単価×集客数)</span></div>
+                            <div style="font-size:36px; font-weight:900; color:#B7791F; margin-bottom:5px; line-height:1;"><span id="cbRevenueDisplay">0</span><span style="font-size:18px; margin-left:4px;">円</span></div>
+                            <div style="font-size:12px; color:#975A16; font-weight:bold;">客単価: <span id="cbUnitPriceDisplay"></span>円 で計算</div>
+                        </div>
+                    </div>
+
+                    <p style="font-size:12px; color:#A0AEC0; text-align:center; line-height:1.6;">
+                        ※本シミュレーション結果は、過去のデータと弊社独自のアルゴリズムに基づき算出された目安であり、将来の成果を保証するものではありません。<br>
+                        ※MEO対策の効果は、業種・地域・競合状況によって変動する場合がございます。
+                    </p>
                 </div>
             </div>
         </div>
@@ -1260,9 +1378,205 @@
             html2pdf().set(opt).from(element).save();
         };;
 
+        // ==========================
+        // 費用対効果作成シート関連ロジック
+        // ==========================
+        let cbHistory = [];
+
+        window.initSavedCostBenefitDropdown = async function() {
+            let select = document.getElementById('savedCostBenefitSelect');
+            select.innerHTML = '<option value="">読み込み中...</option>';
+            
+            const { data, error } = await supabase.from('cost_benefit_analyses').select('*').order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error("Error loading saved cost benefits:", error);
+                select.innerHTML = '<option value="">エラーが発生しました</option>';
+                return;
+            }
+            
+            cbHistory = data || [];
+            select.innerHTML = '<option value="">過去のシートを選択してください</option>';
+            cbHistory.forEach(item => {
+                let opt = document.createElement('option');
+                opt.value = item.id;
+                
+                const d = new Date(item.created_at);
+                const dateStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+                opt.innerText = `【${item.store_name}】 ${dateStr}`;
+                select.appendChild(opt);
+            });
+        }
+
+        window.resetCostBenefitForm = function() {
+            document.getElementById('cbStoreName').value = '';
+            document.getElementById('cbUnitPrice').value = '';
+            document.getElementById('cbSearchVolume').value = '';
+            document.getElementById('cbKw1').value = '';
+            document.getElementById('cbKw2').value = '';
+            document.getElementById('cbKw3').value = '';
+            document.getElementById('cbKw4').value = '';
+            document.getElementById('cbPreviewContainer').style.display = 'none';
+        }
+
+        window.generateCostBenefitPreview = async function(isNew = true) {
+            const storeName = document.getElementById('cbStoreName').value.trim();
+            const unitPriceStr = document.getElementById('cbUnitPrice').value.replace(/[^0-9]/g, '');
+            const searchVolStr = document.getElementById('cbSearchVolume').value.replace(/[^0-9]/g, '');
+            
+            if (!storeName || !unitPriceStr || !searchVolStr) {
+                alert("店舗名、客単価、月間検索数は必須項目です。");
+                return;
+            }
+
+            const unitPrice = parseInt(unitPriceStr);
+            const searchVol = parseInt(searchVolStr);
+            const convRate = parseFloat(document.querySelector('input[name="cbConvRate"]:checked').value);
+            
+            const keywords = [
+                document.getElementById('cbKw1').value.trim() || '-',
+                document.getElementById('cbKw2').value.trim() || '-',
+                document.getElementById('cbKw3').value.trim() || '-',
+                document.getElementById('cbKw4').value.trim() || '-'
+            ];
+
+            // UI Update
+            document.getElementById('cbStoreNameDisplay').innerText = `【${storeName}】`;
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
+            document.getElementById('cbDateDisplay').innerText = `作成日: ${dateStr}`;
+
+            document.getElementById('cbKw1Display').innerText = keywords[0];
+            document.getElementById('cbKw2Display').innerText = keywords[1];
+            document.getElementById('cbKw3Display').innerText = keywords[2];
+            document.getElementById('cbKw4Display').innerText = keywords[3];
+
+            const reach = Math.floor(searchVol * 0.7);
+            const attract = Math.floor(searchVol * convRate);
+            const revenue = unitPrice * attract;
+
+            document.getElementById('cbReachDisplay').innerText = reach.toLocaleString();
+            document.getElementById('cbAttractDisplay').innerText = attract.toLocaleString();
+            document.getElementById('cbRevenueDisplay').innerText = revenue.toLocaleString();
+            document.getElementById('cbUnitPriceDisplay').innerText = unitPrice.toLocaleString();
+            document.getElementById('cbConvRateLabel').innerText = `(検索数の${Math.round(convRate*100)}%)`;
+
+            document.getElementById('cbPreviewContainer').style.display = 'block';
+
+            // DB Save if it's a new generation (not just loading a past one)
+            if (isNew) {
+                try {
+                    const { error } = await supabase.from('cost_benefit_analyses').insert([{
+                        store_name: storeName,
+                        customer_unit_price: unitPrice,
+                        search_volume: searchVol,
+                        keywords: keywords,
+                        conversion_rate: convRate
+                    }]);
+                    if (error) console.error("Error saving cost benefit:", error);
+                    else initSavedCostBenefitDropdown();
+                } catch (err) {
+                    console.error("Exception saving cost benefit:", err);
+                }
+            }
+        }
+
+        window.loadSavedCostBenefit = function() {
+            const id = document.getElementById('savedCostBenefitSelect').value;
+            if (!id) {
+                alert("シートを選択してください。");
+                return;
+            }
+            const data = cbHistory.find(item => item.id === id);
+            if (!data) return;
+
+            document.getElementById('cbStoreName').value = data.store_name;
+            document.getElementById('cbUnitPrice').value = data.customer_unit_price;
+            document.getElementById('cbSearchVolume').value = data.search_volume;
+            
+            document.getElementById('cbKw1').value = data.keywords[0] || '';
+            document.getElementById('cbKw2').value = data.keywords[1] || '';
+            document.getElementById('cbKw3').value = data.keywords[2] || '';
+            document.getElementById('cbKw4').value = data.keywords[3] || '';
+
+            const radios = document.querySelectorAll('input[name="cbConvRate"]');
+            radios.forEach(r => {
+                if (parseFloat(r.value) === data.conversion_rate) r.checked = true;
+            });
+
+            generateCostBenefitPreview(false); // Render without saving a duplicate
+            
+            // Override the date to match the saved record
+            const d = new Date(data.created_at);
+            document.getElementById('cbDateDisplay').innerText = `作成日: ${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+        }
+
+        window.deleteSavedCostBenefit = async function() {
+            const select = document.getElementById('savedCostBenefitSelect');
+            const id = select.value;
+            if (!id) {
+                alert("削除するシートを選択してください。");
+                return;
+            }
+            const data = cbHistory.find(item => item.id === id);
+            if (!confirm(`「${data.store_name}」の費用対効果シートを削除しますか？`)) return;
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 削除中...';
+            btn.disabled = true;
+
+            const { error } = await supabase.from('cost_benefit_analyses').delete().eq('id', id);
+
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+
+            if (error) {
+                alert("削除に失敗しました: " + error.message);
+                return;
+            }
+
+            initSavedCostBenefitDropdown();
+            alert("削除しました。");
+            resetCostBenefitForm();
+        }
+
+        window.exportCBPDF = function() {
+            const element = document.getElementById('cbSheetCaptureArea');
+            const storeName = document.getElementById('cbStoreNameDisplay').innerText.replace(/【|】/g, '');
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+            
+            const opt = {
+                margin:       10,
+                filename:     `【${storeName}】費用対効果シミュレーション_${dateStr}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+        }
+
+        window.exportCBPNG = function() {
+            const element = document.getElementById('cbSheetCaptureArea');
+            const storeName = document.getElementById('cbStoreNameDisplay').innerText.replace(/【|】/g, '');
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+            const filename = `【${storeName}】費用対効果シミュレーション_${dateStr}.png`;
+
+            html2canvas(element, { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
         window.onload = () => {
             loadClients();
             initSavedAnalysisDropdown();
+            initSavedCostBenefitDropdown();
 
             // 更新通知の表示
             setTimeout(() => {
