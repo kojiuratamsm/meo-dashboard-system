@@ -430,22 +430,31 @@
                         <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">推定客単価 (円)</label>
                         <input type="text" id="cbUnitPrice" placeholder="例: 5000" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; margin-bottom:15px;">
 
-                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">月間検索数</label>
-                        <input type="text" id="cbSearchVolume" placeholder="例: 10000" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; margin-bottom: 15px;">
-                    </div>
-                    <div>
-                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">狙うキーワード (4つ)</label>
-                        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom: 15px;">
-                            <input type="text" id="cbKw1" placeholder="キーワード1" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px;">
-                            <input type="text" id="cbKw2" placeholder="キーワード2" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px;">
-                            <input type="text" id="cbKw3" placeholder="キーワード3" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px;">
-                            <input type="text" id="cbKw4" placeholder="キーワード4" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px;">
-                        </div>
-
                         <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">推定集客数の割合</label>
                         <div style="display:flex; gap:15px; margin-bottom: 15px;">
                             <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="cbConvRate" value="0.1" checked> 10% (堅実)</label>
                             <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="cbConvRate" value="0.3"> 30% (強気)</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">狙うキーワード & 月間検索数 (4つ)</label>
+                        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 15px;">
+                            <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:10px;">
+                                <input type="text" id="cbKw1" placeholder="キーワード1" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                                <input type="text" id="cbVol1" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:10px;">
+                                <input type="text" id="cbKw2" placeholder="キーワード2" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                                <input type="text" id="cbVol2" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:10px;">
+                                <input type="text" id="cbKw3" placeholder="キーワード3" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                                <input type="text" id="cbVol3" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:10px;">
+                                <input type="text" id="cbKw4" placeholder="キーワード4" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                                <input type="text" id="cbVol4" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1411,34 +1420,37 @@
         window.resetCostBenefitForm = function() {
             document.getElementById('cbStoreName').value = '';
             document.getElementById('cbUnitPrice').value = '';
-            document.getElementById('cbSearchVolume').value = '';
-            document.getElementById('cbKw1').value = '';
-            document.getElementById('cbKw2').value = '';
-            document.getElementById('cbKw3').value = '';
-            document.getElementById('cbKw4').value = '';
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`cbKw${i}`).value = '';
+                document.getElementById(`cbVol${i}`).value = '';
+            }
             document.getElementById('cbPreviewContainer').style.display = 'none';
         }
 
         window.generateCostBenefitPreview = async function(isNew = true) {
             const storeName = document.getElementById('cbStoreName').value.trim();
             const unitPriceStr = document.getElementById('cbUnitPrice').value.replace(/[^0-9]/g, '');
-            const searchVolStr = document.getElementById('cbSearchVolume').value.replace(/[^0-9]/g, '');
             
-            if (!storeName || !unitPriceStr || !searchVolStr) {
-                alert("店舗名、客単価、月間検索数は必須項目です。");
+            if (!storeName || !unitPriceStr) {
+                alert("店舗名と推定客単価は必須項目です。");
                 return;
             }
 
             const unitPrice = parseInt(unitPriceStr);
-            const searchVol = parseInt(searchVolStr);
             const convRate = parseFloat(document.querySelector('input[name="cbConvRate"]:checked').value);
             
             const keywords = [
-                document.getElementById('cbKw1').value.trim() || '-',
-                document.getElementById('cbKw2').value.trim() || '-',
-                document.getElementById('cbKw3').value.trim() || '-',
-                document.getElementById('cbKw4').value.trim() || '-'
+                { keyword: document.getElementById('cbKw1').value.trim() || '-', volume: parseInt(document.getElementById('cbVol1').value.replace(/[^0-9]/g, '')) || 0 },
+                { keyword: document.getElementById('cbKw2').value.trim() || '-', volume: parseInt(document.getElementById('cbVol2').value.replace(/[^0-9]/g, '')) || 0 },
+                { keyword: document.getElementById('cbKw3').value.trim() || '-', volume: parseInt(document.getElementById('cbVol3').value.replace(/[^0-9]/g, '')) || 0 },
+                { keyword: document.getElementById('cbKw4').value.trim() || '-', volume: parseInt(document.getElementById('cbVol4').value.replace(/[^0-9]/g, '')) || 0 }
             ];
+
+            const totalSearchVol = keywords.reduce((sum, item) => sum + item.volume, 0);
+            if (totalSearchVol === 0) {
+                alert("少なくとも1つのキーワードの月間検索数を入力してください。");
+                return;
+            }
 
             // UI Update
             document.getElementById('cbStoreNameDisplay').innerText = `【${storeName}】`;
@@ -1446,20 +1458,26 @@
             const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
             document.getElementById('cbDateDisplay').innerText = `作成日: ${dateStr}`;
 
-            document.getElementById('cbKw1Display').innerText = keywords[0];
-            document.getElementById('cbKw2Display').innerText = keywords[1];
-            document.getElementById('cbKw3Display').innerText = keywords[2];
-            document.getElementById('cbKw4Display').innerText = keywords[3];
+            keywords.forEach((item, index) => {
+                const badge = document.getElementById(`cbKw${index + 1}Display`);
+                if (item.keyword === '-' && item.volume === 0) {
+                    badge.innerText = '-';
+                    badge.style.display = 'none';
+                } else {
+                    badge.innerText = `${item.keyword} (${item.volume.toLocaleString()}回)`;
+                    badge.style.display = 'inline-block';
+                }
+            });
 
-            const reach = Math.floor(searchVol * 0.7);
-            const attract = Math.floor(searchVol * convRate);
+            const reach = Math.floor(totalSearchVol * 0.7);
+            const attract = Math.floor(totalSearchVol * convRate);
             const revenue = unitPrice * attract;
 
             document.getElementById('cbReachDisplay').innerText = reach.toLocaleString();
             document.getElementById('cbAttractDisplay').innerText = attract.toLocaleString();
             document.getElementById('cbRevenueDisplay').innerText = revenue.toLocaleString();
             document.getElementById('cbUnitPriceDisplay').innerText = unitPrice.toLocaleString();
-            document.getElementById('cbConvRateLabel').innerText = `(検索数の${Math.round(convRate*100)}%)`;
+            document.getElementById('cbConvRateLabel').innerText = `(合計検索数の${Math.round(convRate*100)}%)`;
 
             document.getElementById('cbPreviewContainer').style.display = 'block';
 
@@ -1469,7 +1487,7 @@
                     const { error } = await supabase.from('cost_benefit_analyses').insert([{
                         store_name: storeName,
                         customer_unit_price: unitPrice,
-                        search_volume: searchVol,
+                        search_volume: totalSearchVol,
                         keywords: keywords,
                         conversion_rate: convRate
                     }]);
@@ -1492,12 +1510,27 @@
 
             document.getElementById('cbStoreName').value = data.store_name;
             document.getElementById('cbUnitPrice').value = data.customer_unit_price;
-            document.getElementById('cbSearchVolume').value = data.search_volume;
             
-            document.getElementById('cbKw1').value = data.keywords[0] || '';
-            document.getElementById('cbKw2').value = data.keywords[1] || '';
-            document.getElementById('cbKw3').value = data.keywords[2] || '';
-            document.getElementById('cbKw4').value = data.keywords[3] || '';
+            // Backward compatibility helper
+            const rawKeywords = data.keywords || [];
+            const keywords = [];
+            for (let i = 0; i < 4; i++) {
+                const raw = rawKeywords[i];
+                if (raw && typeof raw === 'object' && 'keyword' in raw) {
+                    keywords.push({ keyword: raw.keyword, volume: raw.volume || 0 });
+                } else if (raw && typeof raw === 'string') {
+                    // Legacy structure: array of strings
+                    keywords.push({ keyword: raw, volume: i === 0 ? (data.search_volume || 0) : 0 });
+                } else {
+                    keywords.push({ keyword: '-', volume: 0 });
+                }
+            }
+
+            for (let i = 1; i <= 4; i++) {
+                const kw = keywords[i-1];
+                document.getElementById(`cbKw${i}`).value = kw.keyword === '-' ? '' : kw.keyword;
+                document.getElementById(`cbVol${i}`).value = kw.volume || '';
+            }
 
             const radios = document.querySelectorAll('input[name="cbConvRate"]');
             radios.forEach(r => {
