@@ -444,27 +444,47 @@
                         </div>
                     </div>
                     <div>
-                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">狙うキーワード & 月間検索数 (4つ) <span style="font-size:11px; font-weight:normal; color:#E53E3E;">(左端の✓で非表示/モザイク)</span></label>
+                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">狙うキーワード & 過去3ヶ月の検索数 <span style="font-size:11px; font-weight:normal; color:#E53E3E;">(左端の✓で非表示/モザイク)</span></label>
                         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 15px;">
-                            <div style="display:grid; grid-template-columns: 30px 1.5fr 1fr; gap:10px; align-items:center;">
-                                <input type="checkbox" id="cbMask1" title="モザイクをかける" style="width:16px; height:16px; cursor:pointer;">
-                                <input type="text" id="cbKw1" placeholder="キーワード1" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
-                                <input type="text" id="cbVol1" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                            <!-- Header labels for columns -->
+                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr; gap:8px; font-size:11px; font-weight:bold; color:#718096; text-align:center;">
+                                <div>マスク</div>
+                                <div>キーワード名</div>
+                                <div>2ヶ月前</div>
+                                <div>1ヶ月前</div>
+                                <div>当月(最新)</div>
                             </div>
-                            <div style="display:grid; grid-template-columns: 30px 1.5fr 1fr; gap:10px; align-items:center;">
-                                <input type="checkbox" id="cbMask2" title="モザイクをかける" style="width:16px; height:16px; cursor:pointer;">
-                                <input type="text" id="cbKw2" placeholder="キーワード2" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
-                                <input type="text" id="cbVol2" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                            <!-- Row 1 -->
+                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr; gap:8px; align-items:center;">
+                                <div style="text-align:center;"><input type="checkbox" id="cbMask1" style="width:16px; height:16px; cursor:pointer;"></div>
+                                <input type="text" id="cbKw1" placeholder="キーワード1" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol2m1" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol1m1" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol0m1" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                             </div>
-                            <div style="display:grid; grid-template-columns: 30px 1.5fr 1fr; gap:10px; align-items:center;">
-                                <input type="checkbox" id="cbMask3" title="モザイクをかける" style="width:16px; height:16px; cursor:pointer;">
-                                <input type="text" id="cbKw3" placeholder="キーワード3" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
-                                <input type="text" id="cbVol3" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                            <!-- Row 2 -->
+                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr; gap:8px; align-items:center;">
+                                <div style="text-align:center;"><input type="checkbox" id="cbMask2" style="width:16px; height:16px; cursor:pointer;"></div>
+                                <input type="text" id="cbKw2" placeholder="キーワード2" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol2m2" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol1m2" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol0m2" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                             </div>
-                            <div style="display:grid; grid-template-columns: 30px 1.5fr 1fr; gap:10px; align-items:center;">
-                                <input type="checkbox" id="cbMask4" title="モザイクをかける" style="width:16px; height:16px; cursor:pointer;">
-                                <input type="text" id="cbKw4" placeholder="キーワード4" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
-                                <input type="text" id="cbVol4" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
+                            <!-- Row 3 -->
+                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr; gap:8px; align-items:center;">
+                                <div style="text-align:center;"><input type="checkbox" id="cbMask3" style="width:16px; height:16px; cursor:pointer;"></div>
+                                <input type="text" id="cbKw3" placeholder="キーワード3" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol2m3" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol1m3" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol0m3" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                            </div>
+                            <!-- Row 4 -->
+                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr; gap:8px; align-items:center;">
+                                <div style="text-align:center;"><input type="checkbox" id="cbMask4" style="width:16px; height:16px; cursor:pointer;"></div>
+                                <input type="text" id="cbKw4" placeholder="キーワード4" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol2m4" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol1m4" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbVol0m4" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                             </div>
                         </div>
                     </div>
@@ -484,8 +504,8 @@
                         <div style="display:flex; align-items:center; gap:12px;">
                             <img src="mapon-logo.png" style="height:45px; mix-blend-mode:multiply;">
                             <div>
-                                <div style="font-weight: 900; font-size: 26px; color:#2B3674; letter-spacing: 1px; line-height:1;">MapOn</div>
-                                <div style="font-size: 11px; color: #718096; font-weight: bold; margin-top:2px;">MEO COST-BENEFIT SIMULATION</div>
+                                <div style="font-weight: 900; font-size: 24px; color:#2B3674; letter-spacing: 1.5px; line-height:1;">MEO対策チャンネル</div>
+                                <div style="font-size: 10px; color: #718096; font-weight: bold; margin-top:3px; letter-spacing: 0.5px;">MEO COST-BENEFIT SIMULATION</div>
                             </div>
                         </div>
                         <div style="text-align:right;">
@@ -496,51 +516,59 @@
 
                     <h2 style="text-align:center; font-size: 26px; margin-bottom: 35px; color:#1A202C; font-weight: 900; letter-spacing:1px;">MEO対策 費用対効果シミュレーション</h2>
 
-                    <!-- Layout Grid: 2 Columns (KPIs on the left, Chart & Keywords on the right) -->
-                    <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap: 30px; margin-bottom: 35px; align-items: start;">
+                    <!-- Layout Grid: 2 Columns -->
+                    <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap: 30px; margin-bottom: 30px; align-items: start;">
                         <!-- Left Column: KPIs stacked vertically -->
                         <div style="display:flex; flex-direction:column; gap: 20px;">
                             <!-- Reach -->
-                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border-left: 6px solid #4285F4; box-shadow:0 4px 15px rgba(66,133,244,0.04);">
-                                <div style="font-size:13px; font-weight:bold; color:#718096; margin-bottom:5px;">推定リーチ数 <span style="font-size:10px; font-weight:normal;">(合計月間検索数の70%)</span></div>
+                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border-left: 6px solid #4285F4; box-shadow:0 4px 15px rgba(66,133,244,0.04); border: 1px solid #EDF2F7; border-left-width: 6px;">
+                                <div style="font-size:13px; font-weight:bold; color:#718096; margin-bottom:5px;">推定リーチ数</div>
                                 <div style="font-size:32px; font-weight:900; color:#4285F4; line-height:1.1; margin-bottom:2px;"><span id="cbReachDisplay">0</span><span style="font-size:16px; margin-left:4px; font-weight:700;">回</span></div>
                                 <div style="font-size:11px; color:#A0AEC0;">Googleマップ・検索結果での表示露出目安</div>
                             </div>
                             <!-- Attract -->
-                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border-left: 6px solid #34A853; box-shadow:0 4px 15px rgba(52,168,83,0.04);">
-                                <div style="font-size:13px; font-weight:bold; color:#718096; margin-bottom:5px;">推定集客数 <span id="cbConvRateLabel" style="font-size:10px; font-weight:normal;"></span></div>
+                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border-left: 6px solid #34A853; box-shadow:0 4px 15px rgba(52,168,83,0.04); border: 1px solid #EDF2F7; border-left-width: 6px;">
+                                <div style="font-size:13px; font-weight:bold; color:#718096; margin-bottom:5px; display:flex; align-items:center;">推定集客数 <span id="cbConvRateLabel" style="font-size:10px; font-weight:bold; background:#E6F4EA; color:#137333; padding:2px 6px; border-radius:4px; margin-left:8px;"></span></div>
                                 <div style="font-size:32px; font-weight:900; color:#34A853; line-height:1.1; margin-bottom:2px;"><span id="cbAttractDisplay">0</span><span style="font-size:16px; margin-left:4px; font-weight:700;">人/月</span></div>
                                 <div style="font-size:11px; color:#A0AEC0;">マップ経由での来店・お問い合わせ見込み</div>
                             </div>
                             <!-- Revenue -->
                             <div style="background:linear-gradient(135deg, #FFFFAF, #F6E05E); border-radius:16px; padding:20px; border:1px solid #D69E2E; box-shadow:0 6px 20px rgba(214,158,46,0.1);">
-                                <div style="font-size:13px; font-weight:bold; color:#744210; margin-bottom:5px;">推定月間売上 <span style="font-size:10px; font-weight:normal;">(客単価×推定集客数)</span></div>
+                                <div style="font-size:13px; font-weight:bold; color:#744210; margin-bottom:5px;">推定月間売上</div>
                                 <div style="font-size:32px; font-weight:900; color:#B7791F; line-height:1.1; margin-bottom:2px;"><span id="cbRevenueDisplay">0</span><span style="font-size:16px; margin-left:4px; font-weight:700;">円</span></div>
                                 <div style="font-size:11px; color:#975A16; font-weight:bold;">客単価 <span id="cbUnitPriceDisplay"></span>円 でシミュレーション</div>
                             </div>
                         </div>
 
-                        <!-- Right Column: Keywords List & Visual Bar Chart -->
+                        <!-- Right Column: Stacked Bar Chart -->
                         <div style="display:flex; flex-direction:column; gap: 20px;">
-                            <!-- Keyword List -->
-                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border:1px solid #EDF2F7;">
-                                <h3 style="font-size:14px; color:#4A5568; margin-bottom:12px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-tags" style="color:#DD6B20;"></i> 対象キーワード</h3>
-                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                                    <div class="cb-kw-badge" id="cbKw1Display" style="font-size:12px; padding:6px 10px; border-radius:8px; text-align:center;">-</div>
-                                    <div class="cb-kw-badge" id="cbKw2Display" style="font-size:12px; padding:6px 10px; border-radius:8px; text-align:center;">-</div>
-                                    <div class="cb-kw-badge" id="cbKw3Display" style="font-size:12px; padding:6px 10px; border-radius:8px; text-align:center;">-</div>
-                                    <div class="cb-kw-badge" id="cbKw4Display" style="font-size:12px; padding:6px 10px; border-radius:8px; text-align:center;">-</div>
-                                </div>
-                            </div>
-
                             <!-- Chart Container -->
-                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border:1px solid #EDF2F7;">
-                                <h3 style="font-size:14px; color:#4A5568; margin-bottom:12px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-chart-simple" style="color:#319795;"></i> キーワード別 検索ボリューム内訳</h3>
-                                <div style="position: relative; height: 180px; width: 100%;">
+                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border:1px solid #EDF2F7; box-shadow:0 4px 15px rgba(0,0,0,0.01);">
+                                <h3 style="font-size:14px; color:#4A5568; margin-bottom:12px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-chart-column" style="color:#319795;"></i> 月間検索ボリューム推移 (直近3ヶ月)</h3>
+                                <div style="position: relative; height: 215px; width: 100%;">
                                     <canvas id="cbChart"></canvas>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Detailed Breakdown Table at the bottom -->
+                    <div style="background:#F8FAFC; border-radius:16px; padding:20px; border:1px solid #EDF2F7; box-shadow:0 4px 15px rgba(0,0,0,0.01); margin-bottom: 25px;">
+                        <h3 style="font-size:14px; color:#4A5568; margin-bottom:15px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-table-list" style="color:#DD6B20;"></i> シミュレーション詳細内訳</h3>
+                        <table style="width:100%; border-collapse: collapse; text-align: center; font-size: 13px;">
+                            <thead>
+                                <tr style="background:#EDF2F7; color:#2B3674; font-weight: bold; border-bottom: 2px solid #CBD5E1;">
+                                    <th style="padding: 10px; text-align: left; border-radius: 8px 0 0 8px;">キーワード</th>
+                                    <th style="padding: 10px;">2ヶ月前</th>
+                                    <th style="padding: 10px;">1ヶ月前</th>
+                                    <th style="padding: 10px; background: #EBF8FF; color: #2B6CB0; border-left: 1px solid #BEE3F8; border-right: 1px solid #BEE3F8;">当月 (最新)</th>
+                                    <th style="padding: 10px; border-radius: 0 8px 8px 0;">当月推定集客数</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cbTableBody">
+                                <!-- Dynamically populated -->
+                            </tbody>
+                        </table>
                     </div>
 
                     <p style="font-size:12px; color:#A0AEC0; text-align:center; line-height:1.6;">
@@ -1449,7 +1477,9 @@
             document.getElementById('cbUnitPrice').value = '';
             for (let i = 1; i <= 4; i++) {
                 document.getElementById(`cbKw${i}`).value = '';
-                document.getElementById(`cbVol${i}`).value = '';
+                document.getElementById(`cbVol2m${i}`).value = '';
+                document.getElementById(`cbVol1m${i}`).value = '';
+                document.getElementById(`cbVol0m${i}`).value = '';
                 document.getElementById(`cbMask${i}`).checked = false;
             }
             document.getElementById('cbPreviewContainer').style.display = 'none';
@@ -1467,103 +1497,99 @@
             const unitPrice = parseInt(unitPriceStr);
             const convRate = parseFloat(document.querySelector('input[name="cbConvRate"]:checked').value);
             
-            const keywords = [
-                {
-                    keyword: document.getElementById('cbKw1').value.trim() || '-',
-                    volume: parseInt(document.getElementById('cbVol1').value.replace(/[^0-9]/g, '')) || 0,
-                    mask: document.getElementById('cbMask1').checked
-                },
-                {
-                    keyword: document.getElementById('cbKw2').value.trim() || '-',
-                    volume: parseInt(document.getElementById('cbVol2').value.replace(/[^0-9]/g, '')) || 0,
-                    mask: document.getElementById('cbMask2').checked
-                },
-                {
-                    keyword: document.getElementById('cbKw3').value.trim() || '-',
-                    volume: parseInt(document.getElementById('cbVol3').value.replace(/[^0-9]/g, '')) || 0,
-                    mask: document.getElementById('cbMask3').checked
-                },
-                {
-                    keyword: document.getElementById('cbKw4').value.trim() || '-',
-                    volume: parseInt(document.getElementById('cbVol4').value.replace(/[^0-9]/g, '')) || 0,
-                    mask: document.getElementById('cbMask4').checked
-                }
-            ];
+            const keywords = [];
+            for (let i = 1; i <= 4; i++) {
+                keywords.push({
+                    keyword: document.getElementById(`cbKw${i}`).value.trim() || '-',
+                    vol2m: parseInt(document.getElementById(`cbVol2m${i}`).value.replace(/[^0-9]/g, '')) || 0,
+                    vol1m: parseInt(document.getElementById(`cbVol1m${i}`).value.replace(/[^0-9]/g, '')) || 0,
+                    vol0m: parseInt(document.getElementById(`cbVol0m${i}`).value.replace(/[^0-9]/g, '')) || 0,
+                    mask: document.getElementById(`cbMask${i}`).checked
+                });
+            }
 
-            const totalSearchVol = keywords.reduce((sum, item) => sum + item.volume, 0);
-            if (totalSearchVol === 0) {
-                alert("少なくとも1つのキーワードの月間検索数を入力してください。");
+            const totalCurrentVol = keywords.reduce((sum, item) => sum + item.vol0m, 0);
+            const total1mVol = keywords.reduce((sum, item) => sum + item.vol1m, 0);
+            const total2mVol = keywords.reduce((sum, item) => sum + item.vol2m, 0);
+
+            if (totalCurrentVol === 0 && total1mVol === 0 && total2mVol === 0) {
+                alert("少なくとも1つのキーワードに検索数を入力してください。");
                 return;
             }
 
-            // UI Update
+            // UI Update: Header and Title
             document.getElementById('cbStoreNameDisplay').innerText = `【${storeName}】`;
             const today = new Date();
             const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
             document.getElementById('cbDateDisplay').innerText = `作成日: ${dateStr}`;
 
-            keywords.forEach((item, index) => {
-                const badge = document.getElementById(`cbKw${index + 1}Display`);
-                if (item.keyword === '-' && item.volume === 0) {
-                    badge.innerText = '-';
-                    badge.style.display = 'none';
-                } else {
-                    let displayText = item.keyword;
-                    let displayClass = '';
-                    if (item.mask) {
-                        displayText = '██████████';
-                        displayClass = 'cb-masked-effect';
-                    }
-                    badge.innerHTML = `<span class="${displayClass}">${displayText}</span> (${item.volume.toLocaleString()}回)`;
-                    badge.style.display = 'inline-block';
-                }
-            });
-
-            const reach = Math.floor(totalSearchVol * 0.7);
-            const attract = Math.floor(totalSearchVol * convRate);
+            // KPIs (Calculated ONLY using current month volumes)
+            const reach = Math.floor(totalCurrentVol * 0.7);
+            const attract = Math.floor(totalCurrentVol * convRate);
             const revenue = unitPrice * attract;
 
             document.getElementById('cbReachDisplay').innerText = reach.toLocaleString();
             document.getElementById('cbAttractDisplay').innerText = attract.toLocaleString();
             document.getElementById('cbRevenueDisplay').innerText = revenue.toLocaleString();
             document.getElementById('cbUnitPriceDisplay').innerText = unitPrice.toLocaleString();
-            document.getElementById('cbConvRateLabel').innerText = `(合計検索数の${Math.round(convRate*100)}%)`;
+            document.getElementById('cbConvRateLabel').innerText = `${Math.round(convRate*100)}%`;
 
-            // Chart Render/Update
-            const chartLabels = keywords.filter(k => k.keyword !== '-' || k.volume > 0).map((item, idx) => {
-                if (item.mask) return `非開示キーワード ${idx + 1}`;
-                return item.keyword;
+            // Stacked Bar Chart Render/Update
+            const chartLabels = ['2ヶ月前', '1ヶ月前', '当月(最新)'];
+            const activeKeywords = keywords.filter(k => k.keyword !== '-' || k.vol0m > 0 || k.vol1m > 0 || k.vol2m > 0);
+
+            // Chart.js Stacked Datasets
+            const colors = [
+                'rgba(49, 151, 149, 0.85)', // Teal
+                'rgba(66, 133, 244, 0.85)',  // Blue
+                'rgba(246, 173, 85, 0.85)',  // Gold
+                'rgba(160, 174, 192, 0.85)'   // Slate
+            ];
+            const borderColors = [
+                'rgba(49, 151, 149, 1)',
+                'rgba(66, 133, 244, 1)',
+                'rgba(246, 173, 85, 1)',
+                'rgba(160, 174, 192, 1)'
+            ];
+
+            const datasets = activeKeywords.map((k, idx) => {
+                const label = k.mask ? `非開示キーワード ${idx + 1}` : k.keyword;
+                return {
+                    label: label,
+                    data: [k.vol2m, k.vol1m, k.vol0m],
+                    backgroundColor: colors[idx % colors.length],
+                    borderColor: borderColors[idx % borderColors.length],
+                    borderWidth: 1.5,
+                    borderRadius: 4,
+                    barPercentage: 0.45
+                };
             });
-            const chartDataValues = keywords.filter(k => k.keyword !== '-' || k.volume > 0).map(item => item.volume);
 
             const cbCtx = document.getElementById('cbChart').getContext('2d');
             if (cbChartInstance) {
                 cbChartInstance.data.labels = chartLabels;
-                cbChartInstance.data.datasets[0].data = chartDataValues;
+                cbChartInstance.data.datasets = datasets;
                 cbChartInstance.update();
             } else {
                 cbChartInstance = new Chart(cbCtx, {
                     type: 'bar',
                     data: {
                         labels: chartLabels,
-                        datasets: [{
-                            label: '月間検索数',
-                            data: chartDataValues,
-                            backgroundColor: 'rgba(49, 151, 149, 0.75)',
-                            borderColor: 'rgba(49, 151, 149, 1)',
-                            borderWidth: 1.5,
-                            borderRadius: 6,
-                            barPercentage: 0.5
-                        }]
+                        datasets: datasets
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false }
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: { boxWidth: 12, font: { size: 10 } }
+                            }
                         },
                         scales: {
                             y: {
+                                stacked: true,
                                 beginAtZero: true,
                                 grid: { color: '#EDF2F7' },
                                 ticks: {
@@ -1572,6 +1598,7 @@
                                 }
                             },
                             x: {
+                                stacked: true,
                                 grid: { display: false },
                                 ticks: { font: { size: 10 } }
                             }
@@ -1579,6 +1606,50 @@
                     }
                 });
             }
+
+            // Populate Detailed Breakdown Table at the bottom
+            const tableBody = document.getElementById('cbTableBody');
+            tableBody.innerHTML = '';
+
+            activeKeywords.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #EDF2F7';
+
+                // Keyword Name
+                let displayText = item.keyword;
+                let displayClass = '';
+                if (item.mask) {
+                    displayText = '██████████';
+                    displayClass = 'cb-masked-effect';
+                }
+                const kwHtml = `<span class="${displayClass}">${displayText}</span>`;
+
+                // Attracted estimate
+                const kwAttract = Math.floor(item.vol0m * convRate);
+
+                tr.innerHTML = `
+                    <td style="padding: 10px; text-align: left; font-weight: bold; color: #2B3674;">${kwHtml}</td>
+                    <td style="padding: 10px; color: #718096;">${item.vol2m.toLocaleString()} 回</td>
+                    <td style="padding: 10px; color: #718096;">${item.vol1m.toLocaleString()} 回</td>
+                    <td style="padding: 10px; background: #F7FAFC; font-weight: bold; color: #2B6CB0; border-left: 1px solid #E2E8F0; border-right: 1px solid #E2E8F0;">${item.vol0m.toLocaleString()} 回</td>
+                    <td style="padding: 10px; font-weight: bold; color: #34A853;">${kwAttract.toLocaleString()} 人</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            // Add Sum Row
+            const sumTr = document.createElement('tr');
+            sumTr.style.background = '#EDF2F7';
+            sumTr.style.fontWeight = 'bold';
+            sumTr.style.borderTop = '2px solid #CBD5E1';
+            sumTr.innerHTML = `
+                <td style="padding: 12px; text-align: left; color: #2B3674; border-radius: 0 0 0 8px;">合計</td>
+                <td style="padding: 12px; color: #2B3674;">${total2mVol.toLocaleString()} 回</td>
+                <td style="padding: 12px; color: #2B3674;">${total1mVol.toLocaleString()} 回</td>
+                <td style="padding: 12px; background: #EBF8FF; color: #2B6CB0; border-left: 1px solid #CBD5E1; border-right: 1px solid #CBD5E1;">${totalCurrentVol.toLocaleString()} 回</td>
+                <td style="padding: 12px; color: #137333; border-radius: 0 0 8px 0;">${attract.toLocaleString()} 人</td>
+            `;
+            tableBody.appendChild(sumTr);
 
             document.getElementById('cbPreviewContainer').style.display = 'block';
 
@@ -1588,7 +1659,7 @@
                     const { error } = await supabase.from('cost_benefit_analyses').insert([{
                         store_name: storeName,
                         customer_unit_price: unitPrice,
-                        search_volume: totalSearchVol,
+                        search_volume: totalCurrentVol,
                         keywords: keywords,
                         conversion_rate: convRate
                     }]);
@@ -1617,28 +1688,41 @@
             const keywords = [];
             for (let i = 0; i < 4; i++) {
                 const raw = rawKeywords[i];
-                if (raw && typeof raw === 'object' && 'keyword' in raw) {
+                if (raw && typeof raw === 'object' && 'vol0m' in raw) {
                     keywords.push({
                         keyword: raw.keyword,
-                        volume: raw.volume || 0,
+                        vol2m: raw.vol2m || 0,
+                        vol1m: raw.vol1m || 0,
+                        vol0m: raw.vol0m || 0,
+                        mask: raw.mask || false
+                    });
+                } else if (raw && typeof raw === 'object' && 'volume' in raw) {
+                    keywords.push({
+                        keyword: raw.keyword,
+                        vol2m: 0,
+                        vol1m: 0,
+                        vol0m: raw.volume || 0,
                         mask: raw.mask || false
                     });
                 } else if (raw && typeof raw === 'string') {
-                    // Legacy structure: array of strings
                     keywords.push({
                         keyword: raw,
-                        volume: i === 0 ? (data.search_volume || 0) : 0,
+                        vol2m: 0,
+                        vol1m: 0,
+                        vol0m: i === 0 ? (data.search_volume || 0) : 0,
                         mask: false
                     });
                 } else {
-                    keywords.push({ keyword: '-', volume: 0, mask: false });
+                    keywords.push({ keyword: '-', vol2m: 0, vol1m: 0, vol0m: 0, mask: false });
                 }
             }
 
             for (let i = 1; i <= 4; i++) {
                 const kw = keywords[i-1];
                 document.getElementById(`cbKw${i}`).value = kw.keyword === '-' ? '' : kw.keyword;
-                document.getElementById(`cbVol${i}`).value = kw.volume || '';
+                document.getElementById(`cbVol2m${i}`).value = kw.vol2m || '';
+                document.getElementById(`cbVol1m${i}`).value = kw.vol1m || '';
+                document.getElementById(`cbVol0m${i}`).value = kw.vol0m || '';
                 document.getElementById(`cbMask${i}`).checked = kw.mask || false;
             }
 
