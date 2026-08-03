@@ -1535,7 +1535,6 @@
             document.getElementById('cbConvRateLabel').innerText = `${Math.round(convRate*100)}%`;
 
             // Stacked Bar Chart Render/Update
-            const chartLabels = ['2ヶ月前', '1ヶ月前', '当月(最新)'];
             const activeKeywords = keywords.filter(k => k.keyword !== '-' || k.vol0m > 0 || k.vol1m > 0 || k.vol2m > 0);
 
             // Chart.js Configuration: Swap Axis to Group by Keywords
