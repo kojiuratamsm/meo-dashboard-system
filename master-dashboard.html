@@ -156,6 +156,13 @@
         .cb-kw-badge {
             background: white; border: 2px solid #E2E8F0; padding: 10px 20px; border-radius: 50px; font-size: 15px; font-weight: 700; color: #2B3674; box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
+        .cb-masked-effect {
+            filter: blur(5px);
+            letter-spacing: -2px;
+            display: inline-block;
+            user-select: none;
+            opacity: 0.75;
+        }
 
         @media (max-width: 900px) {
             .analysis-grid {
@@ -437,21 +444,25 @@
                         </div>
                     </div>
                     <div>
-                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">狙うキーワード & 月間検索数 (4つ)</label>
+                        <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">狙うキーワード & 月間検索数 (4つ) <span style="font-size:11px; font-weight:normal; color:#E53E3E;">(左端の✓で非表示/モザイク)</span></label>
                         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 15px;">
-                            <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:10px;">
+                            <div style="display:grid; grid-template-columns: 30px 1.5fr 1fr; gap:10px; align-items:center;">
+                                <input type="checkbox" id="cbMask1" title="モザイクをかける" style="width:16px; height:16px; cursor:pointer;">
                                 <input type="text" id="cbKw1" placeholder="キーワード1" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
                                 <input type="text" id="cbVol1" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
                             </div>
-                            <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:10px;">
+                            <div style="display:grid; grid-template-columns: 30px 1.5fr 1fr; gap:10px; align-items:center;">
+                                <input type="checkbox" id="cbMask2" title="モザイクをかける" style="width:16px; height:16px; cursor:pointer;">
                                 <input type="text" id="cbKw2" placeholder="キーワード2" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
                                 <input type="text" id="cbVol2" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
                             </div>
-                            <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:10px;">
+                            <div style="display:grid; grid-template-columns: 30px 1.5fr 1fr; gap:10px; align-items:center;">
+                                <input type="checkbox" id="cbMask3" title="モザイクをかける" style="width:16px; height:16px; cursor:pointer;">
                                 <input type="text" id="cbKw3" placeholder="キーワード3" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
                                 <input type="text" id="cbVol3" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
                             </div>
-                            <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:10px;">
+                            <div style="display:grid; grid-template-columns: 30px 1.5fr 1fr; gap:10px; align-items:center;">
+                                <input type="checkbox" id="cbMask4" title="モザイクをかける" style="width:16px; height:16px; cursor:pointer;">
                                 <input type="text" id="cbKw4" placeholder="キーワード4" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
                                 <input type="text" id="cbVol4" placeholder="月間検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:13px;">
                             </div>
@@ -485,35 +496,50 @@
 
                     <h2 style="text-align:center; font-size: 26px; margin-bottom: 35px; color:#1A202C; font-weight: 900; letter-spacing:1px;">MEO対策 費用対効果シミュレーション</h2>
 
-                    <div style="background:#F8FAFC; border-radius:16px; padding:25px; margin-bottom:30px; border:1px solid #EDF2F7;">
-                        <h3 style="font-size:16px; color:#4A5568; margin-bottom:15px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-magnifying-glass-location" style="color:#4285F4;"></i> ターゲットキーワード</h3>
-                        <div style="display:flex; gap:15px; flex-wrap:wrap;">
-                            <div class="cb-kw-badge" id="cbKw1Display"></div>
-                            <div class="cb-kw-badge" id="cbKw2Display"></div>
-                            <div class="cb-kw-badge" id="cbKw3Display"></div>
-                            <div class="cb-kw-badge" id="cbKw4Display"></div>
+                    <!-- Layout Grid: 2 Columns (KPIs on the left, Chart & Keywords on the right) -->
+                    <div style="display:grid; grid-template-columns: 1fr 1.2fr; gap: 30px; margin-bottom: 35px; align-items: start;">
+                        <!-- Left Column: KPIs stacked vertically -->
+                        <div style="display:flex; flex-direction:column; gap: 20px;">
+                            <!-- Reach -->
+                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border-left: 6px solid #4285F4; box-shadow:0 4px 15px rgba(66,133,244,0.04);">
+                                <div style="font-size:13px; font-weight:bold; color:#718096; margin-bottom:5px;">推定リーチ数 <span style="font-size:10px; font-weight:normal;">(合計月間検索数の70%)</span></div>
+                                <div style="font-size:32px; font-weight:900; color:#4285F4; line-height:1.1; margin-bottom:2px;"><span id="cbReachDisplay">0</span><span style="font-size:16px; margin-left:4px; font-weight:700;">回</span></div>
+                                <div style="font-size:11px; color:#A0AEC0;">Googleマップ・検索結果での表示露出目安</div>
+                            </div>
+                            <!-- Attract -->
+                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border-left: 6px solid #34A853; box-shadow:0 4px 15px rgba(52,168,83,0.04);">
+                                <div style="font-size:13px; font-weight:bold; color:#718096; margin-bottom:5px;">推定集客数 <span id="cbConvRateLabel" style="font-size:10px; font-weight:normal;"></span></div>
+                                <div style="font-size:32px; font-weight:900; color:#34A853; line-height:1.1; margin-bottom:2px;"><span id="cbAttractDisplay">0</span><span style="font-size:16px; margin-left:4px; font-weight:700;">人/月</span></div>
+                                <div style="font-size:11px; color:#A0AEC0;">マップ経由での来店・お問い合わせ見込み</div>
+                            </div>
+                            <!-- Revenue -->
+                            <div style="background:linear-gradient(135deg, #FFFFAF, #F6E05E); border-radius:16px; padding:20px; border:1px solid #D69E2E; box-shadow:0 6px 20px rgba(214,158,46,0.1);">
+                                <div style="font-size:13px; font-weight:bold; color:#744210; margin-bottom:5px;">推定月間売上 <span style="font-size:10px; font-weight:normal;">(客単価×推定集客数)</span></div>
+                                <div style="font-size:32px; font-weight:900; color:#B7791F; line-height:1.1; margin-bottom:2px;"><span id="cbRevenueDisplay">0</span><span style="font-size:16px; margin-left:4px; font-weight:700;">円</span></div>
+                                <div style="font-size:11px; color:#975A16; font-weight:bold;">客単価 <span id="cbUnitPriceDisplay"></span>円 でシミュレーション</div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- 3 KPIs Grid -->
-                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; margin-bottom:40px;">
-                        <!-- Reach -->
-                        <div style="background:white; border-radius:16px; padding:25px; text-align:center; box-shadow:0 10px 25px rgba(66,133,244,0.08); border-top: 5px solid #4285F4;">
-                            <div style="font-size:14px; font-weight:bold; color:#718096; margin-bottom:10px;">推定リーチ数 <span style="font-size:11px; font-weight:normal;">(月間検索数の70%)</span></div>
-                            <div style="font-size:36px; font-weight:900; color:#4285F4; margin-bottom:5px; line-height:1;"><span id="cbReachDisplay">0</span><span style="font-size:18px; margin-left:4px;">回</span></div>
-                            <div style="font-size:12px; color:#A0AEC0;">Googleマップでの表示目安</div>
-                        </div>
-                        <!-- Attract -->
-                        <div style="background:white; border-radius:16px; padding:25px; text-align:center; box-shadow:0 10px 25px rgba(52,168,83,0.08); border-top: 5px solid #34A853;">
-                            <div style="font-size:14px; font-weight:bold; color:#718096; margin-bottom:10px;">推定集客数 <span id="cbConvRateLabel" style="font-size:11px; font-weight:normal;"></span></div>
-                            <div style="font-size:36px; font-weight:900; color:#34A853; margin-bottom:5px; line-height:1;"><span id="cbAttractDisplay">0</span><span style="font-size:18px; margin-left:4px;">人/月</span></div>
-                            <div style="font-size:12px; color:#A0AEC0;">マップ経由での来店目安</div>
-                        </div>
-                        <!-- Revenue -->
-                        <div style="background:linear-gradient(135deg, #FFFFAF, #F6E05E); border-radius:16px; padding:25px; text-align:center; box-shadow:0 10px 25px rgba(214,158,46,0.15); border:1px solid #D69E2E;">
-                            <div style="font-size:14px; font-weight:bold; color:#744210; margin-bottom:10px;">推定月間売上 <span style="font-size:11px; font-weight:normal;">(客単価×集客数)</span></div>
-                            <div style="font-size:36px; font-weight:900; color:#B7791F; margin-bottom:5px; line-height:1;"><span id="cbRevenueDisplay">0</span><span style="font-size:18px; margin-left:4px;">円</span></div>
-                            <div style="font-size:12px; color:#975A16; font-weight:bold;">客単価: <span id="cbUnitPriceDisplay"></span>円 で計算</div>
+                        <!-- Right Column: Keywords List & Visual Bar Chart -->
+                        <div style="display:flex; flex-direction:column; gap: 20px;">
+                            <!-- Keyword List -->
+                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border:1px solid #EDF2F7;">
+                                <h3 style="font-size:14px; color:#4A5568; margin-bottom:12px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-tags" style="color:#DD6B20;"></i> 対象キーワード</h3>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                                    <div class="cb-kw-badge" id="cbKw1Display" style="font-size:12px; padding:6px 10px; border-radius:8px; text-align:center;">-</div>
+                                    <div class="cb-kw-badge" id="cbKw2Display" style="font-size:12px; padding:6px 10px; border-radius:8px; text-align:center;">-</div>
+                                    <div class="cb-kw-badge" id="cbKw3Display" style="font-size:12px; padding:6px 10px; border-radius:8px; text-align:center;">-</div>
+                                    <div class="cb-kw-badge" id="cbKw4Display" style="font-size:12px; padding:6px 10px; border-radius:8px; text-align:center;">-</div>
+                                </div>
+                            </div>
+
+                            <!-- Chart Container -->
+                            <div style="background:#F8FAFC; border-radius:16px; padding:20px; border:1px solid #EDF2F7;">
+                                <h3 style="font-size:14px; color:#4A5568; margin-bottom:12px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-chart-simple" style="color:#319795;"></i> キーワード別 検索ボリューム内訳</h3>
+                                <div style="position: relative; height: 180px; width: 100%;">
+                                    <canvas id="cbChart"></canvas>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1391,6 +1417,7 @@
         // 費用対効果作成シート関連ロジック
         // ==========================
         let cbHistory = [];
+        let cbChartInstance = null;
 
         window.initSavedCostBenefitDropdown = async function() {
             let select = document.getElementById('savedCostBenefitSelect');
@@ -1423,6 +1450,7 @@
             for (let i = 1; i <= 4; i++) {
                 document.getElementById(`cbKw${i}`).value = '';
                 document.getElementById(`cbVol${i}`).value = '';
+                document.getElementById(`cbMask${i}`).checked = false;
             }
             document.getElementById('cbPreviewContainer').style.display = 'none';
         }
@@ -1440,10 +1468,26 @@
             const convRate = parseFloat(document.querySelector('input[name="cbConvRate"]:checked').value);
             
             const keywords = [
-                { keyword: document.getElementById('cbKw1').value.trim() || '-', volume: parseInt(document.getElementById('cbVol1').value.replace(/[^0-9]/g, '')) || 0 },
-                { keyword: document.getElementById('cbKw2').value.trim() || '-', volume: parseInt(document.getElementById('cbVol2').value.replace(/[^0-9]/g, '')) || 0 },
-                { keyword: document.getElementById('cbKw3').value.trim() || '-', volume: parseInt(document.getElementById('cbVol3').value.replace(/[^0-9]/g, '')) || 0 },
-                { keyword: document.getElementById('cbKw4').value.trim() || '-', volume: parseInt(document.getElementById('cbVol4').value.replace(/[^0-9]/g, '')) || 0 }
+                {
+                    keyword: document.getElementById('cbKw1').value.trim() || '-',
+                    volume: parseInt(document.getElementById('cbVol1').value.replace(/[^0-9]/g, '')) || 0,
+                    mask: document.getElementById('cbMask1').checked
+                },
+                {
+                    keyword: document.getElementById('cbKw2').value.trim() || '-',
+                    volume: parseInt(document.getElementById('cbVol2').value.replace(/[^0-9]/g, '')) || 0,
+                    mask: document.getElementById('cbMask2').checked
+                },
+                {
+                    keyword: document.getElementById('cbKw3').value.trim() || '-',
+                    volume: parseInt(document.getElementById('cbVol3').value.replace(/[^0-9]/g, '')) || 0,
+                    mask: document.getElementById('cbMask3').checked
+                },
+                {
+                    keyword: document.getElementById('cbKw4').value.trim() || '-',
+                    volume: parseInt(document.getElementById('cbVol4').value.replace(/[^0-9]/g, '')) || 0,
+                    mask: document.getElementById('cbMask4').checked
+                }
             ];
 
             const totalSearchVol = keywords.reduce((sum, item) => sum + item.volume, 0);
@@ -1464,7 +1508,13 @@
                     badge.innerText = '-';
                     badge.style.display = 'none';
                 } else {
-                    badge.innerText = `${item.keyword} (${item.volume.toLocaleString()}回)`;
+                    let displayText = item.keyword;
+                    let displayClass = '';
+                    if (item.mask) {
+                        displayText = '██████████';
+                        displayClass = 'cb-masked-effect';
+                    }
+                    badge.innerHTML = `<span class="${displayClass}">${displayText}</span> (${item.volume.toLocaleString()}回)`;
                     badge.style.display = 'inline-block';
                 }
             });
@@ -1478,6 +1528,57 @@
             document.getElementById('cbRevenueDisplay').innerText = revenue.toLocaleString();
             document.getElementById('cbUnitPriceDisplay').innerText = unitPrice.toLocaleString();
             document.getElementById('cbConvRateLabel').innerText = `(合計検索数の${Math.round(convRate*100)}%)`;
+
+            // Chart Render/Update
+            const chartLabels = keywords.filter(k => k.keyword !== '-' || k.volume > 0).map((item, idx) => {
+                if (item.mask) return `非開示キーワード ${idx + 1}`;
+                return item.keyword;
+            });
+            const chartDataValues = keywords.filter(k => k.keyword !== '-' || k.volume > 0).map(item => item.volume);
+
+            const cbCtx = document.getElementById('cbChart').getContext('2d');
+            if (cbChartInstance) {
+                cbChartInstance.data.labels = chartLabels;
+                cbChartInstance.data.datasets[0].data = chartDataValues;
+                cbChartInstance.update();
+            } else {
+                cbChartInstance = new Chart(cbCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            label: '月間検索数',
+                            data: chartDataValues,
+                            backgroundColor: 'rgba(49, 151, 149, 0.75)',
+                            borderColor: 'rgba(49, 151, 149, 1)',
+                            borderWidth: 1.5,
+                            borderRadius: 6,
+                            barPercentage: 0.5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#EDF2F7' },
+                                ticks: {
+                                    callback: value => value.toLocaleString(),
+                                    font: { size: 10 }
+                                }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10 } }
+                            }
+                        }
+                    }
+                });
+            }
 
             document.getElementById('cbPreviewContainer').style.display = 'block';
 
@@ -1517,12 +1618,20 @@
             for (let i = 0; i < 4; i++) {
                 const raw = rawKeywords[i];
                 if (raw && typeof raw === 'object' && 'keyword' in raw) {
-                    keywords.push({ keyword: raw.keyword, volume: raw.volume || 0 });
+                    keywords.push({
+                        keyword: raw.keyword,
+                        volume: raw.volume || 0,
+                        mask: raw.mask || false
+                    });
                 } else if (raw && typeof raw === 'string') {
                     // Legacy structure: array of strings
-                    keywords.push({ keyword: raw, volume: i === 0 ? (data.search_volume || 0) : 0 });
+                    keywords.push({
+                        keyword: raw,
+                        volume: i === 0 ? (data.search_volume || 0) : 0,
+                        mask: false
+                    });
                 } else {
-                    keywords.push({ keyword: '-', volume: 0 });
+                    keywords.push({ keyword: '-', volume: 0, mask: false });
                 }
             }
 
@@ -1530,6 +1639,7 @@
                 const kw = keywords[i-1];
                 document.getElementById(`cbKw${i}`).value = kw.keyword === '-' ? '' : kw.keyword;
                 document.getElementById(`cbVol${i}`).value = kw.volume || '';
+                document.getElementById(`cbMask${i}`).checked = kw.mask || false;
             }
 
             const radios = document.querySelectorAll('input[name="cbConvRate"]');
