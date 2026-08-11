@@ -724,7 +724,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
                 <div id="diagPreviewWrapper" style="width: 100%; overflow: hidden; display: block; box-sizing: border-box; position: relative;">
                     <div id="diagSheetCaptureArea" style="width: 1280px; height: 720px; padding: 20px 30px; background: white; border-radius:16px; border:1px solid #E2E8F0; box-shadow: 0 4px 25px rgba(0,0,0,0.04); box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; transform-origin: top left;">
                         <!-- Header Row matching mockup -->
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 3px solid #CBD5E1; padding-bottom: 10px; margin-bottom: 12px; height: 60px; box-sizing: border-box; flex-shrink:0;">
+                        <div class="diagRowHeader" style="display:flex; justify-content:space-between; align-items:center; border-bottom: 3px solid #CBD5E1; padding-bottom: 10px; margin-bottom: 12px; height: 60px; box-sizing: border-box; flex-shrink:0;">
                             <!-- Branding with MapOn Logo -->
                             <div style="display:flex; align-items:center; gap:10px;">
                                 <img src="mapon-logo.png" style="height:36px; mix-blend-mode:multiply;">
@@ -744,7 +744,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
                         </div>
 
                         <!-- Middle Row: 2-column layout (Left: Keywords Summary, Right: GMB Status Cards) -->
-                        <div style="display:grid; grid-template-columns: 1.3fr 1fr; gap: 15px; margin-bottom: 10px; height: 165px; align-items: stretch; flex-shrink: 0; box-sizing: border-box;">
+                        <div class="diagRowMiddle" style="display:grid; grid-template-columns: 1.3fr 1fr; gap: 15px; margin-bottom: 10px; height: 165px; align-items: stretch; flex-shrink: 0; box-sizing: border-box;">
                             <!-- Left: Keyword Analysis Summary -->
                             <div style="border: 1.5px solid #CBD5E1; border-radius:8px; overflow:hidden; background:#FFFFFF; display:flex; flex-direction:column; box-shadow: 0 2px 8px rgba(0,0,0,0.01); box-sizing: border-box; height: 100%;">
                                 <div style="background:#EDF2F7; color:#2B3674; text-align:center; padding:4px; font-weight:bold; font-size:10.5px; border-bottom:1.5px solid #CBD5E1; flex-shrink:0;">① 対策キーワード別 検索＆集客インパクト</div>
@@ -844,9 +844,9 @@ Googleの評価システム上、成果には一定期間を要しますが、
                         </div>
 
                         <!-- Row 3: 集客インパクト分析 / 改善点+総括（案D改） -->
-                        <div style="display:grid; grid-template-columns: 1.25fr 1fr; gap: 15px; margin-bottom: 10px; flex-grow:1; flex-shrink:0; align-items: stretch; min-height: 120px;">
+                        <div class="diagRowImpact" style="display:grid; grid-template-columns: 1.25fr 1fr; gap: 15px; margin-bottom: 10px; flex-grow:1; flex-shrink:0; align-items: stretch; min-height: 120px;">
                             <!-- Box 1: 集客インパクト分析（棒グラフ） -->
-                            <div style="border: 1px solid #E2E8F0; border-radius:10px; overflow:visible; background:#FAFBFD; display:flex; flex-direction:column; box-shadow: 0 2px 8px rgba(0,0,0,0.01); padding:10px 16px 8px 16px;">
+                            <div class="diagBoxImpact" style="border: 1px solid #E2E8F0; border-radius:10px; overflow:visible; background:#FAFBFD; display:flex; flex-direction:column; box-shadow: 0 2px 8px rgba(0,0,0,0.01); padding:10px 16px 8px 16px;">
                                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-shrink:0;">
                                     <div style="display:flex; align-items:center; gap:7px; font-size:11px; font-weight:800; color:#1E2333;">
                                         <span style="width:19px; height:19px; border-radius:6px; background:#1467E8; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9.5px; flex-shrink:0;"><i class="fa-solid fa-chart-simple"></i></span>
@@ -854,7 +854,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
                                     </div>
                                     <span id="diagAttractPill" style="font-size:9px; font-weight:800; color:#1467E8; background:#E8F0FE; padding:3px 9px; border-radius:12px; white-space:nowrap;">想定来店 -人/月</span>
                                 </div>
-                                <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed #E7EAF0; flex-shrink:0;">
+                                <div class="diagScoreRow" style="display:flex; align-items:center; gap:14px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed #E7EAF0; flex-shrink:0;">
                                     <svg width="56" height="56" viewBox="0 0 56 56">
                                         <circle cx="28" cy="28" r="23" fill="none" stroke="#EEF1F6" stroke-width="7"/>
                                         <circle id="diagScoreArc" cx="28" cy="28" r="23" fill="none" stroke="#1467E8" stroke-width="7" stroke-dasharray="144.51" stroke-dashoffset="144.51" stroke-linecap="round" transform="rotate(-90 28 28)"/>
@@ -868,7 +868,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
                                 <div id="diagAttractForecast" style="font-size:9px; line-height:1.55; color:#8A93A6; flex-shrink:0;"></div>
                             </div>
                             <!-- Box 2: 改善点 + 総括 -->
-                            <div style="border: 1px solid #E2E8F0; border-radius:10px; overflow:visible; background:#FAFBFD; display:flex; flex-direction:column; box-shadow: 0 2px 8px rgba(0,0,0,0.01); padding:10px 16px 12px 16px;">
+                            <div class="diagBoxImprove" style="border: 1px solid #E2E8F0; border-radius:10px; overflow:visible; background:#FAFBFD; display:flex; flex-direction:column; box-shadow: 0 2px 8px rgba(0,0,0,0.01); padding:10px 16px 12px 16px;">
                                 <div style="display:flex; align-items:center; gap:7px; font-size:11px; font-weight:800; color:#1E2333; margin-bottom:8px; flex-shrink:0;">
                                     <span style="width:19px; height:19px; border-radius:6px; background:#B45309; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9.5px; flex-shrink:0;"><i class="fa-solid fa-flag"></i></span>
                                     改善点
@@ -882,21 +882,21 @@ Googleの評価システム上、成果には一定期間を要しますが、
                         </div>
 
                         <!-- Row 4: Competitor Analysis -->
-                        <div style="border: 1px solid #CBD5E1; border-radius:8px; overflow:hidden; background:#FFFFFF; margin-bottom: 8px; flex-shrink:0; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
+                        <div class="diagRowCompetitor" style="border: 1px solid #CBD5E1; border-radius:8px; overflow:hidden; background:#FFFFFF; margin-bottom: 8px; flex-shrink:0; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
                             <div style="background:#F1F3F4; color:#3C4043; text-align:center; padding:4px; font-weight:bold; font-size:11px; border-bottom:1px solid #CBD5E1;">競合調査</div>
                             <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1px; background:#CBD5E1; align-items:stretch;">
                                 <!-- Comp 1 -->
-                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; min-height:110px; overflow:visible; box-sizing:border-box; display:flex; flex-direction:column;">
+                                <div class="diagCompCell" style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; min-height:110px; overflow:visible; box-sizing:border-box; display:flex; flex-direction:column;">
                                     <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompName1"></div>
                                     <div style="color:#5F6368; line-height:1.4; flex-grow:1; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompDesc1"></div>
                                 </div>
                                 <!-- Comp 2 -->
-                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; min-height:110px; overflow:visible; box-sizing:border-box; display:flex; flex-direction:column;">
+                                <div class="diagCompCell" style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; min-height:110px; overflow:visible; box-sizing:border-box; display:flex; flex-direction:column;">
                                     <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompName2"></div>
                                     <div style="color:#5F6368; line-height:1.4; flex-grow:1; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompDesc2"></div>
                                 </div>
                                 <!-- Comp 3 -->
-                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; min-height:110px; overflow:visible; box-sizing:border-box; display:flex; flex-direction:column;">
+                                <div class="diagCompCell" style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; min-height:110px; overflow:visible; box-sizing:border-box; display:flex; flex-direction:column;">
                                     <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompName3"></div>
                                     <div style="color:#5F6368; line-height:1.4; flex-grow:1; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompDesc3"></div>
                                 </div>
@@ -904,7 +904,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
                         </div>
 
                         <!-- Footnote -->
-                        <p style="font-size:9px; color:#A0AEC0; text-align:center; line-height:1.4; margin: 0; flex-shrink:0;">
+                        <p id="diagFootnote" style="font-size:9px; color:#A0AEC0; text-align:center; line-height:1.4; margin: 0; flex-shrink:0;">
                             当データは他社への公開・共有を一切禁止いたします。万一、無断での公開・共有が発覚した場合は、損害賠償を請求する場合がございます。<br>
                             また、本データは効果や数値の正確性を保証するものではありません。季節や流行、TVCM、地域政策、イベント開催などにより地域情報は変動し、それに伴いウェブ上のデータも随時変化いたしますので、あらかじめご了承ください。
                         </p>
@@ -1881,6 +1881,145 @@ Googleの評価システム上、成果には一定期間を要しますが、
             document.getElementById('cbPreviewContainer').style.display = 'none';
         }
 
+        // ============================================================
+        // MEO分析診断シート: 固定720pxキャンバスからのはみ出し自動防止
+        // 競合調査コメントや改善点の文章量が多いと、下部の注意書き(フッター)が
+        // overflow:hidden で見切れてしまうことがあるため、内容量に応じて
+        // 段階的に余白・文字サイズを縮小し、常に720px内に収める。
+        // 注意書き自体の文字サイズは可読性のため縮小対象から除外している。
+        // ============================================================
+        const DIAG_FIT_LEVELS = [
+            // Level 0: 標準デザイン（変更なし）
+            {
+                '.diagRowHeader':      { marginBottom: '12px' },
+                '.diagRowMiddle':      { marginBottom: '10px' },
+                '.diagRowImpact':      { marginBottom: '10px' },
+                '.diagRowCompetitor':  { marginBottom: '8px' },
+                '.diagBoxImpact':      { padding: '10px 16px 8px 16px' },
+                '.diagBoxImprove':     { padding: '10px 16px 12px 16px' },
+                '.diagScoreRow':       { marginBottom: '10px', paddingBottom: '10px' },
+                '.diagCompCell':       { padding: '8px', minHeight: '110px' },
+                '#diagResult':         { fontSize: '9.5px', lineHeight: '1.6', paddingTop: '8px' },
+                '#diagAttractForecast':{ fontSize: '9px', lineHeight: '1.55' },
+                '#diagImprovementTags':{ marginBottom: '8px' },
+                '#diagImprovementTags span': { fontSize: '9px', padding: '4px 9px' },
+                '#diagConclusionStrip':{ marginTop: '8px', padding: '7px 11px' },
+                '#diagBarChart > div': { marginBottom: '6px' },
+                '.diagCompCell > div:nth-child(2)': { fontSize: '10px', lineHeight: '1.4' }
+            },
+            // Level 1: まず余白のみを詰める（文字サイズはほぼ変えない）
+            {
+                '.diagRowHeader':      { marginBottom: '9px' },
+                '.diagRowMiddle':      { marginBottom: '7px' },
+                '.diagRowImpact':      { marginBottom: '7px' },
+                '.diagRowCompetitor':  { marginBottom: '5px' },
+                '.diagBoxImpact':      { padding: '8px 14px 6px 14px' },
+                '.diagBoxImprove':     { padding: '8px 14px 8px 14px' },
+                '.diagScoreRow':       { marginBottom: '7px', paddingBottom: '7px' },
+                '.diagCompCell':       { padding: '6px', minHeight: '95px' },
+                '#diagResult':         { fontSize: '9.5px', lineHeight: '1.5', paddingTop: '6px' },
+                '#diagAttractForecast':{ fontSize: '9px', lineHeight: '1.4' },
+                '#diagImprovementTags':{ marginBottom: '6px' },
+                '#diagImprovementTags span': { fontSize: '9px', padding: '3px 8px' },
+                '#diagConclusionStrip':{ marginTop: '6px', padding: '6px 10px' },
+                '#diagBarChart > div': { marginBottom: '4px' },
+                '.diagCompCell > div:nth-child(2)': { fontSize: '9.7px', lineHeight: '1.32' }
+            },
+            // Level 2: 文字サイズも少し縮小
+            {
+                '.diagRowHeader':      { marginBottom: '7px' },
+                '.diagRowMiddle':      { marginBottom: '5px' },
+                '.diagRowImpact':      { marginBottom: '5px' },
+                '.diagRowCompetitor':  { marginBottom: '4px' },
+                '.diagBoxImpact':      { padding: '7px 12px 5px 12px' },
+                '.diagBoxImprove':     { padding: '7px 12px 6px 12px' },
+                '.diagScoreRow':       { marginBottom: '5px', paddingBottom: '5px' },
+                '.diagCompCell':       { padding: '5px', minHeight: '85px' },
+                '#diagResult':         { fontSize: '9.2px', lineHeight: '1.4', paddingTop: '5px' },
+                '#diagAttractForecast':{ fontSize: '8.7px', lineHeight: '1.32' },
+                '#diagImprovementTags':{ marginBottom: '5px' },
+                '#diagImprovementTags span': { fontSize: '8.7px', padding: '3px 7px' },
+                '#diagConclusionStrip':{ marginTop: '5px', padding: '5px 9px' },
+                '#diagBarChart > div': { marginBottom: '3px' },
+                '.diagCompCell > div:nth-child(2)': { fontSize: '9.3px', lineHeight: '1.24' }
+            },
+            // Level 3: さらに縮小
+            {
+                '.diagRowHeader':      { marginBottom: '6px' },
+                '.diagRowMiddle':      { marginBottom: '4px' },
+                '.diagRowImpact':      { marginBottom: '4px' },
+                '.diagRowCompetitor':  { marginBottom: '3px' },
+                '.diagBoxImpact':      { padding: '6px 10px 4px 10px' },
+                '.diagBoxImprove':     { padding: '6px 10px 5px 10px' },
+                '.diagScoreRow':       { marginBottom: '4px', paddingBottom: '4px' },
+                '.diagCompCell':       { padding: '4px', minHeight: '75px' },
+                '#diagResult':         { fontSize: '9px', lineHeight: '1.32', paddingTop: '4px' },
+                '#diagAttractForecast':{ fontSize: '8.4px', lineHeight: '1.25' },
+                '#diagImprovementTags':{ marginBottom: '4px' },
+                '#diagImprovementTags span': { fontSize: '8.4px', padding: '2px 6px' },
+                '#diagConclusionStrip':{ marginTop: '4px', padding: '5px 8px' },
+                '#diagBarChart > div': { marginBottom: '2px' },
+                '.diagCompCell > div:nth-child(2)': { fontSize: '9px', lineHeight: '1.18' }
+            },
+            // Level 4: 最終手段（極端に長い文章の場合のみ到達）
+            {
+                '.diagRowHeader':      { marginBottom: '5px' },
+                '.diagRowMiddle':      { marginBottom: '3px' },
+                '.diagRowImpact':      { marginBottom: '3px' },
+                '.diagRowCompetitor':  { marginBottom: '2px' },
+                '.diagBoxImpact':      { padding: '5px 9px 3px 9px' },
+                '.diagBoxImprove':     { padding: '5px 9px 4px 9px' },
+                '.diagScoreRow':       { marginBottom: '3px', paddingBottom: '3px' },
+                '.diagCompCell':       { padding: '3px', minHeight: '68px' },
+                '#diagResult':         { fontSize: '8.6px', lineHeight: '1.24', paddingTop: '3px' },
+                '#diagAttractForecast':{ fontSize: '8px', lineHeight: '1.18' },
+                '#diagImprovementTags':{ marginBottom: '3px' },
+                '#diagImprovementTags span': { fontSize: '8px', padding: '2px 5px' },
+                '#diagConclusionStrip':{ marginTop: '3px', padding: '4px 7px' },
+                '#diagBarChart > div': { marginBottom: '2px' },
+                '.diagCompCell > div:nth-child(2)': { fontSize: '8.6px', lineHeight: '1.12' }
+            }
+        ];
+
+        function applyDiagFitLevel(level) {
+            const area = document.getElementById('diagSheetCaptureArea');
+            if (!area) return;
+            const rules = DIAG_FIT_LEVELS[level];
+            Object.keys(rules).forEach(selector => {
+                const props = rules[selector];
+                area.querySelectorAll(selector).forEach(el => {
+                    Object.keys(props).forEach(prop => {
+                        el.style[prop] = props[prop];
+                    });
+                });
+            });
+        }
+
+        // 診断シート生成後に呼び出す。内容量（競合調査コメント・改善点・結果文など）に応じて
+        // 自動で余白・文字サイズを縮小し、注意書き（フッター）を含む全要素が
+        // 必ず720pxの枠内に収まるようにする。
+        window.fitDiagSheetToCanvas = function() {
+            const area = document.getElementById('diagSheetCaptureArea');
+            if (!area) return;
+            // row3(集客インパクト分析/改善点)はflex-grow:1で残り余白を常に埋め切る設計のため、
+            // 通常量のコンテンツでも scrollHeight は 720px ぎりぎりまで達するのが正常な状態。
+            // そのため基準値は「clientHeightちょうど」を使い、サブピクセル誤差(1px程度)のみ許容する。
+            // ここを720pxより小さく取りすぎると、はみ出していない通常のシートにまで
+            // 不要な圧縮がかかってしまうので注意。
+            const target = area.clientHeight + 1;
+            for (let level = 0; level < DIAG_FIT_LEVELS.length; level++) {
+                applyDiagFitLevel(level);
+                void area.offsetHeight; // 強制リフローしてから実測
+                if (area.scrollHeight <= target) {
+                    if (level > 0) {
+                        console.log(`[診断シート] 内容量が多いため自動フィット Level ${level} を適用しました（実測${area.scrollHeight}px / 上限${target}px）。`);
+                    }
+                    return;
+                }
+            }
+            console.warn(`[診断シート] 内容量が非常に多いため、最大圧縮を適用してもなお枠(720px)を超過している可能性があります（実測${area.scrollHeight}px）。競合調査や改善点・結果の文章量を減らすことを推奨します。`);
+        };
+
         window.generateCostBenefitPreview = async function(isNew = true, data = null) {
             const storeName = document.getElementById('cbStoreName').value.trim();
             const unitPriceStr = document.getElementById('cbUnitPrice').value.replace(/[^0-9]/g, '');
@@ -2239,6 +2378,9 @@ Googleの評価システム上、成果には一定期間を要しますが、
                         document.getElementById(`diagCompDesc${i}`).innerHTML = (c.desc || '').replace(/\n/g, '<br>');
                     });
                 }
+
+                // 内容量に応じて自動フィット（下部の注意書きが見切れないよう保証する）
+                fitDiagSheetToCanvas();
             } else {
                 document.getElementById('diagPreviewHeader').style.display = 'none';
                 document.getElementById('diagPreviewWrapper').style.display = 'none';
