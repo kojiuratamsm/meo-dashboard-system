@@ -2155,7 +2155,10 @@ Googleの評価システム上、成果には一定期間を要しますが、
                     document.getElementById('diagStatusHP').innerText = diagnosisData.status.hp || '-';
                     document.getElementById('diagStatusSNS').innerText = diagnosisData.status.sns || '-';
                 }
-                document.getElementById('diagCurrentDesc').innerHTML = (diagnosisData.currentDesc || '').replace(/\n/g, '<br>');
+                const diagCurrentDescEl = document.getElementById('diagCurrentDesc');
+                if (diagCurrentDescEl) {
+                    diagCurrentDescEl.innerHTML = (diagnosisData.currentDesc || '').replace(/\n/g, '<br>');
+                }
 
                 // Lower boxes
                 document.getElementById('diagImprovements').innerHTML = (diagnosisData.improvements || '').replace(/\n/g, '<br>');
