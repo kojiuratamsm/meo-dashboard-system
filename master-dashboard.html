@@ -1544,10 +1544,10 @@
                 return;
             }
 
-            // Calculate 3-month average attracted volume keyword-by-keyword
+            // Calculate attracted volume based on estimated reach (70% of current month volume)
             keywords.forEach(k => {
-                k.avgVol = (k.vol2m + k.vol1m + k.vol0m) / 3;
-                k.attract = Math.floor(k.avgVol * convRate);
+                k.reach = Math.floor(k.vol0m * 0.7);
+                k.attract = Math.floor(k.reach * convRate);
             });
 
             // UI Update: Header and Title
