@@ -737,145 +737,108 @@ Googleの評価システム上、成果には一定期間を要しますが、
                                 <!-- Score Grid -->
                                 <div style="display:grid; grid-template-rows: 1.2fr 2fr; border: 1.5px solid #CBD5E1; border-radius: 8px; overflow: hidden; width: 100px; height: 60px; background: white; text-align: center; box-sizing: border-box; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.03);">
                                     <div style="font-size: 10px; font-weight: 900; color: #4A5568; background: #F1F3F4; display: flex; align-items: center; justify-content: center; border-bottom: 1.5px solid #CBD5E1; line-height: 1; letter-spacing: 0.5px;">スコア</div>
-                                    <div style="display:flex; justify-content:center; align-items:center; font-size: 32px; font-weight: 900; color: #E53E3E; line-height: 1;" id="diagScoreDisplay">82</div>
+                                    <div style="display:flex; justify-content:center; align-items:center; font-size: 32px; font-weight: 900; color: #3182CE; line-height: 1;" id="diagScoreDisplay">82</div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Row 1: Target Keywords and Rankings Grid -->
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; flex-shrink:0;">
-                            <!-- Left: KW 1 & 2 -->
-                            <div style="display:flex; flex-direction:column; gap:6px;">
-                                <!-- KW1 -->
-                                <div style="display:grid; grid-template-columns: 1.2fr 3fr 1fr 1fr; border: 1px solid #C2E0C6; border-radius:6px; overflow:hidden; font-size:11px; height:24px; align-items:center; text-align:center;">
-                                    <div style="background:#E6F4EA; color:#137333; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px;">メインKW1</div>
-                                    <div id="diagKw1" style="font-weight:bold; color:#1A202C; text-align:left; padding-left:10px; background:#FFFFFF; height:100%; display:flex; align-items:center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></div>
-                                    <div style="background:#F1F3F4; color:#5F6368; height:100%; display:flex; align-items:center; justify-content:center;">現順位</div>
-                                    <div id="diagRank1" style="background:#E8F0FE; color:#1A73E8; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">-</div>
-                                </div>
-                                <!-- KW2 -->
-                                <div style="display:grid; grid-template-columns: 1.2fr 3fr 1fr 1fr; border: 1px solid #D2E3FC; border-radius:6px; overflow:hidden; font-size:11px; height:24px; align-items:center; text-align:center;">
-                                    <div style="background:#E8F0FE; color:#1A73E8; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px;">メインKW2</div>
-                                    <div id="diagKw2" style="font-weight:bold; color:#1A202C; text-align:left; padding-left:10px; background:#FFFFFF; height:100%; display:flex; align-items:center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></div>
-                                    <div style="background:#F1F3F4; color:#5F6368; height:100%; display:flex; align-items:center; justify-content:center;">現順位</div>
-                                    <div id="diagRank2" style="background:#E8F0FE; color:#1A73E8; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">-</div>
-                                </div>
-                            </div>
-                            <!-- Right: KW 3 & 4 -->
-                            <div style="display:flex; flex-direction:column; gap:6px;">
-                                <!-- KW3 -->
-                                <div style="display:grid; grid-template-columns: 1.2fr 3fr 1fr 1fr; border: 1px solid #FAD2CF; border-radius:6px; overflow:hidden; font-size:11px; height:24px; align-items:center; text-align:center;">
-                                    <div style="background:#FCE8E6; color:#C5221F; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px;">メインKW3</div>
-                                    <div id="diagKw3" style="font-weight:bold; color:#1A202C; text-align:left; padding-left:10px; background:#FFFFFF; height:100%; display:flex; align-items:center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></div>
-                                    <div style="background:#F1F3F4; color:#5F6368; height:100%; display:flex; align-items:center; justify-content:center;">現順位</div>
-                                    <div id="diagRank3" style="background:#E8F0FE; color:#1A73E8; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">-</div>
-                                </div>
-                                <!-- KW4 -->
-                                <div style="display:grid; grid-template-columns: 1.2fr 3fr 1fr 1fr; border: 1px solid #FEEFC3; border-radius:6px; overflow:hidden; font-size:11px; height:24px; align-items:center; text-align:center;">
-                                    <div style="background:#FEF7E0; color:#B06000; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px;">メインKW4</div>
-                                    <div id="diagKw4" style="font-weight:bold; color:#1A202C; text-align:left; padding-left:10px; background:#FFFFFF; height:100%; display:flex; align-items:center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></div>
-                                    <div style="background:#F1F3F4; color:#5F6368; height:100%; display:flex; align-items:center; justify-content:center;">現順位</div>
-                                    <div id="diagRank4" style="background:#E8F0FE; color:#1A73E8; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">-</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Row 2: Search Volume Tables & Status Grid -->
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 2fr; gap: 15px; margin-bottom: 10px; align-items: stretch; flex-shrink:0;">
-                            <!-- KW1 & 2 stats table -->
-                            <div style="border: 1px solid #CBD5E1; border-radius:6px; overflow:hidden; background:#FFFFFF;">
-                                <table style="width:100%; border-collapse: collapse; text-align: center; font-size: 10px; height: 100%;">
-                                    <tbody>
-                                        <tr style="border-bottom: 1px solid #E2E8F0; background:#E6F4EA;">
-                                            <td style="padding:4px; font-weight:bold; color:#137333; text-align:left;">KW1月間検索数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagVol0m1">-</td>
-                                        </tr>
-                                        <tr style="border-bottom: 1px solid #E2E8F0;">
-                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW1月間流入数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagReach1">-</td>
-                                        </tr>
-                                        <tr style="border-bottom: 1.5px solid #CBD5E1;">
-                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW1月間リーチ数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right; color:#1A73E8;" id="diagAttract1">-</td>
-                                        </tr>
-                                        <tr style="border-bottom: 1px solid #E2E8F0; background:#E8F0FE;">
-                                            <td style="padding:4px; font-weight:bold; color:#1A73E8; text-align:left;">KW2月間検索数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagVol0m2">-</td>
-                                        </tr>
-                                        <tr style="border-bottom: 1px solid #E2E8F0;">
-                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW2月間流入数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagReach2">-</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW2月間リーチ数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right; color:#1A73E8;" id="diagAttract2">-</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- KW3 & 4 stats table -->
-                            <div style="border: 1px solid #CBD5E1; border-radius:6px; overflow:hidden; background:#FFFFFF;">
-                                <table style="width:100%; border-collapse: collapse; text-align: center; font-size: 10px; height: 100%;">
-                                    <tbody>
-                                        <tr style="border-bottom: 1px solid #E2E8F0; background:#FCE8E6;">
-                                            <td style="padding:4px; font-weight:bold; color:#C5221F; text-align:left;">KW3月間検索数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagVol0m3">-</td>
-                                        </tr>
-                                        <tr style="border-bottom: 1px solid #E2E8F0;">
-                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW3月間流入数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagReach3">-</td>
-                                        </tr>
-                                        <tr style="border-bottom: 1.5px solid #CBD5E1;">
-                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW3月間リーチ数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right; color:#1A73E8;" id="diagAttract3">-</td>
-                                        </tr>
-                                        <tr style="border-bottom: 1px solid #E2E8F0; background:#FEF7E0;">
-                                            <td style="padding:4px; font-weight:bold; color:#B06000; text-align:left;">KW4月間検索数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagVol0m4">-</td>
-                                        </tr>
-                                        <tr style="border-bottom: 1px solid #E2E8F0;">
-                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW4月間流入数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagReach4">-</td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW4月間リーチ数</td>
-                                            <td style="padding:4px; font-weight:bold; text-align:right; color:#1A73E8;" id="diagAttract4">-</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Status Grid Table (No description, compact and professional) -->
-                            <div style="border: 1px solid #CBD5E1; border-radius:6px; overflow:hidden; background:#FFFFFF; display:flex; align-items:center;">
-                                <table style="width:100%; border-collapse: collapse; text-align: center; font-size: 10.5px; box-sizing:border-box; height:100%;">
+                        <!-- Middle Row: 2-column layout (Left: Keywords Summary, Right: GMB Status Cards) -->
+                        <div style="display:grid; grid-template-columns: 1.3fr 1fr; gap: 15px; margin-bottom: 10px; height: 165px; align-items: stretch; flex-shrink: 0; box-sizing: border-box;">
+                            <!-- Left: Keyword Analysis Summary -->
+                            <div style="border: 1.5px solid #CBD5E1; border-radius:8px; overflow:hidden; background:#FFFFFF; display:flex; flex-direction:column; box-shadow: 0 2px 8px rgba(0,0,0,0.01); box-sizing: border-box; height: 100%;">
+                                <div style="background:#EDF2F7; color:#2B3674; text-align:center; padding:4px; font-weight:bold; font-size:10.5px; border-bottom:1.5px solid #CBD5E1; flex-shrink:0;">① 対策キーワード別 検索＆集客インパクト</div>
+                                <table style="width:100%; border-collapse: collapse; text-align: center; font-size: 9.5px; flex-grow:1; box-sizing: border-box;">
                                     <thead>
-                                        <tr style="background:#F1F3F4; color:#3C4043; border-bottom: 1px solid #CBD5E1; font-weight:bold; height: 26px;">
-                                            <th style="padding: 4px; border-right:1px solid #CBD5E1; font-size:9.5px; background:#EDF2F7; width:12%;">現在の状況</th>
-                                            <th style="padding: 4px; border-right:1px solid #E2E8F0; width:11%;">評価</th>
-                                            <th style="padding: 4px; border-right:1px solid #E2E8F0; width:11%;">口コミ数</th>
-                                            <th style="padding: 4px; border-right:1px solid #E2E8F0; width:11%;">口コミ返信</th>
-                                            <th style="padding: 4px; border-right:1px solid #E2E8F0; width:11%;">投稿数</th>
-                                            <th style="padding: 4px; border-right:1px solid #E2E8F0; width:11%;">写真・動画</th>
-                                            <th style="padding: 4px; border-right:1px solid #E2E8F0; width:11%;">メニュー</th>
-                                            <th style="padding: 4px; border-right:1px solid #E2E8F0; width:11%;">HPの有無</th>
-                                            <th style="padding: 4px; width:11%;">SNSリンク</th>
+                                        <tr style="background:#F8FAFC; color:#4A5568; border-bottom: 1.5px solid #CBD5E1; font-weight:bold; height:24px;">
+                                            <th style="padding:4px; text-align:left; padding-left:8px; width:30%;">対策キーワード</th>
+                                            <th style="padding:4px; width:15%;">月間検索数</th>
+                                            <th style="padding:4px; width:18%;">想定流入数(70%)</th>
+                                            <th style="padding:4px; width:22%;">想定集客可能数</th>
+                                            <th style="padding:4px; width:15%;">現在の順位</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr style="font-size:14px; font-weight:bold; color:#1A202C; height: 32px;">
-                                            <td style="padding:4px; font-size:9.5px; background:#F8FAFC; color:#4A5568; border-right:1px solid #CBD5E1; font-weight:bold;">GBP対策状況</td>
-                                            <td id="diagStatusRating" style="padding:4px; border-right:1px solid #E2E8F0;">-</td>
-                                            <td id="diagStatusReviews" style="padding:4px; border-right:1px solid #E2E8F0;">-</td>
-                                            <td id="diagStatusReplies" style="padding:4px; border-right:1px solid #E2E8F0;">-</td>
-                                            <td id="diagStatusPosts" style="padding:4px; border-right:1px solid #E2E8F0;">-</td>
-                                            <td id="diagStatusMedia" style="padding:4px; border-right:1px solid #E2E8F0;">-</td>
-                                            <td id="diagStatusMenu" style="padding:4px; border-right:1px solid #E2E8F0;">-</td>
-                                            <td id="diagStatusHP" style="padding:4px; border-right:1px solid #E2E8F0;">-</td>
-                                            <td id="diagStatusSNS" style="padding:4px;">-</td>
+                                        <!-- Row 1 -->
+                                        <tr style="border-bottom: 1px solid #E2E8F0; height: 28px;">
+                                            <td style="padding:4px 8px; text-align:left; font-weight:bold; background:#E6F4EA; color:#137333;" id="diagKw1">-</td>
+                                            <td style="padding:4px; font-weight:bold;" id="diagVol0m1">-</td>
+                                            <td style="padding:4px;" id="diagReach1">-</td>
+                                            <td style="padding:4px; color:#2B6CB0; font-weight:bold;" id="diagAttract1">-</td>
+                                            <td style="padding:4px; font-weight:bold;" id="diagRank1">-</td>
+                                        </tr>
+                                        <!-- Row 2 -->
+                                        <tr style="border-bottom: 1px solid #E2E8F0; height: 28px;">
+                                            <td style="padding:4px 8px; text-align:left; font-weight:bold; background:#E8F0FE; color:#1A73E8;" id="diagKw2">-</td>
+                                            <td style="padding:4px; font-weight:bold;" id="diagVol0m2">-</td>
+                                            <td style="padding:4px;" id="diagReach2">-</td>
+                                            <td style="padding:4px; color:#2B6CB0; font-weight:bold;" id="diagAttract2">-</td>
+                                            <td style="padding:4px; font-weight:bold;" id="diagRank2">-</td>
+                                        </tr>
+                                        <!-- Row 3 -->
+                                        <tr style="border-bottom: 1px solid #E2E8F0; height: 28px;">
+                                            <td style="padding:4px 8px; text-align:left; font-weight:bold; background:#FCE8E6; color:#C5221F;" id="diagKw3">-</td>
+                                            <td style="padding:4px; font-weight:bold;" id="diagVol0m3">-</td>
+                                            <td style="padding:4px;" id="diagReach3">-</td>
+                                            <td style="padding:4px; color:#2B6CB0; font-weight:bold;" id="diagAttract3">-</td>
+                                            <td style="padding:4px; font-weight:bold;" id="diagRank3">-</td>
+                                        </tr>
+                                        <!-- Row 4 -->
+                                        <tr style="height: 28px;">
+                                            <td style="padding:4px 8px; text-align:left; font-weight:bold; background:#FEF7E0; color:#B06000;" id="diagKw4">-</td>
+                                            <td style="padding:4px; font-weight:bold;" id="diagVol0m4">-</td>
+                                            <td style="padding:4px;" id="diagReach4">-</td>
+                                            <td style="padding:4px; color:#2B6CB0; font-weight:bold;" id="diagAttract4">-</td>
+                                            <td style="padding:4px; font-weight:bold;" id="diagRank4">-</td>
                                         </tr>
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <!-- Right: GBP Operational Status Grid -->
+                            <div style="border: 1.5px solid #CBD5E1; border-radius:8px; overflow:hidden; background:#FFFFFF; display:flex; flex-direction:column; box-shadow: 0 2px 8px rgba(0,0,0,0.01); box-sizing: border-box; height: 100%;">
+                                <div style="background:#EDF2F7; color:#2B3674; text-align:center; padding:4px; font-weight:bold; font-size:10.5px; border-bottom:1.5px solid #CBD5E1; flex-shrink:0;">② GBP (Googleプロフィール) 対策状況</div>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 4px 15px; padding: 8px 12px; flex-grow:1; box-sizing:border-box; align-content:space-around; background:#FAFBFD;">
+                                    <!-- Col 1 -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:2px 0;">
+                                        <span style="font-size:9.5px; color:#4A5568; font-weight:bold;">Google評価</span>
+                                        <span style="font-size:10.5px; font-weight:bold; color:#1A202C;" id="diagStatusRating">-</span>
+                                    </div>
+                                    <!-- Col 2 -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:2px 0;">
+                                        <span style="font-size:9.5px; color:#4A5568; font-weight:bold;">口コミ数</span>
+                                        <span style="font-size:10.5px; font-weight:bold; color:#1A202C;" id="diagStatusReviews">-</span>
+                                    </div>
+                                    <!-- Col 3 -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:2px 0;">
+                                        <span style="font-size:9.5px; color:#4A5568; font-weight:bold;">口コミ返信率</span>
+                                        <span id="diagStatusReplies">-</span>
+                                    </div>
+                                    <!-- Col 4 -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:2px 0;">
+                                        <span style="font-size:9.5px; color:#4A5568; font-weight:bold;">月間投稿頻度</span>
+                                        <span style="font-size:10.5px; font-weight:bold; color:#1A202C;" id="diagStatusPosts">-</span>
+                                    </div>
+                                    <!-- Col 5 -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:2px 0;">
+                                        <span style="font-size:9.5px; color:#4A5568; font-weight:bold;">写真・動画数</span>
+                                        <span style="font-size:10.5px; font-weight:bold; color:#1A202C;" id="diagStatusMedia">-</span>
+                                    </div>
+                                    <!-- Col 6 -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #E2E8F0; padding:2px 0;">
+                                        <span style="font-size:9.5px; color:#4A5568; font-weight:bold;">メニュー登録</span>
+                                        <span id="diagStatusMenu">-</span>
+                                    </div>
+                                    <!-- Col 7 -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0;">
+                                        <span style="font-size:9.5px; color:#4A5568; font-weight:bold;">ホームページ有無</span>
+                                        <span id="diagStatusHP">-</span>
+                                    </div>
+                                    <!-- Col 8 -->
+                                    <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0;">
+                                        <span style="font-size:9.5px; color:#4A5568; font-weight:bold;">SNSリンク連携</span>
+                                        <span style="font-size:10.5px; font-weight:bold; color:#1A202C;" id="diagStatusSNS">-</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -2144,16 +2107,29 @@ Googleの評価システム上、成果には一定期間を要しますが、
                     }
                 });
 
-                // Status table
+                // Status table with professional color badges
                 if (diagnosisData.status) {
                     document.getElementById('diagStatusRating').innerText = diagnosisData.status.rating || '-';
                     document.getElementById('diagStatusReviews').innerText = diagnosisData.status.reviews || '-';
-                    document.getElementById('diagStatusReplies').innerText = diagnosisData.status.replies || '-';
                     document.getElementById('diagStatusPosts').innerText = diagnosisData.status.posts || '-';
                     document.getElementById('diagStatusMedia').innerText = diagnosisData.status.media || '-';
-                    document.getElementById('diagStatusMenu').innerText = diagnosisData.status.menu || '-';
-                    document.getElementById('diagStatusHP').innerText = diagnosisData.status.hp || '-';
                     document.getElementById('diagStatusSNS').innerText = diagnosisData.status.sns || '-';
+
+                    const renderBadge = (val) => {
+                        const v = (val || '').trim();
+                        if (v === '〇') {
+                            return `<span style="background:#E6F4EA; color:#137333; font-size:8.5px; font-weight:900; padding:2px 8px; border-radius:10px; border:1px solid #C2E0C6; display:inline-block; line-height:1; letter-spacing:0.5px;">〇 良好</span>`;
+                        } else if (v === '△') {
+                            return `<span style="background:#FEF7E0; color:#B06000; font-size:8.5px; font-weight:900; padding:2px 8px; border-radius:10px; border:1px solid #FEEFC3; display:inline-block; line-height:1; letter-spacing:0.5px;">△ 改善あり</span>`;
+                        } else if (v === '×') {
+                            return `<span style="background:#FCE8E6; color:#C5221F; font-size:8.5px; font-weight:900; padding:2px 8px; border-radius:10px; border:1px solid #FAD2CF; display:inline-block; line-height:1; letter-spacing:0.5px;">× 要対策</span>`;
+                        }
+                        return `<span style="font-weight:bold; color:#1A202C;">${v || '-'}</span>`;
+                    };
+
+                    document.getElementById('diagStatusReplies').innerHTML = renderBadge(diagnosisData.status.replies);
+                    document.getElementById('diagStatusMenu').innerHTML = renderBadge(diagnosisData.status.menu);
+                    document.getElementById('diagStatusHP').innerHTML = renderBadge(diagnosisData.status.hp);
                 }
                 const diagCurrentDescEl = document.getElementById('diagCurrentDesc');
                 if (diagCurrentDescEl) {
