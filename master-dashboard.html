@@ -447,45 +447,143 @@
                         <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">狙うキーワード & 過去3ヶ月の検索数 <span style="font-size:11px; font-weight:normal; color:#E53E3E;">(左端の✓で非表示/モザイク)</span></label>
                         <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 15px;">
                             <!-- Header labels for columns -->
-                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr; gap:8px; font-size:11px; font-weight:bold; color:#718096; text-align:center;">
+                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr 1.2fr; gap:8px; font-size:11px; font-weight:bold; color:#718096; text-align:center;">
                                 <div>マスク</div>
                                 <div>キーワード名</div>
                                 <div>2ヶ月前</div>
                                 <div>1ヶ月前</div>
                                 <div>当月(最新)</div>
+                                <div>現在の順位</div>
                             </div>
                             <!-- Row 1 -->
-                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr; gap:8px; align-items:center;">
+                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr 1.2fr; gap:8px; align-items:center;">
                                 <div style="text-align:center;"><input type="checkbox" id="cbMask1" style="width:16px; height:16px; cursor:pointer;"></div>
                                 <input type="text" id="cbKw1" placeholder="キーワード1" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol2m1" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol1m1" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol0m1" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbRank1" placeholder="例: 14" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                             </div>
                             <!-- Row 2 -->
-                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr; gap:8px; align-items:center;">
+                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr 1.2fr; gap:8px; align-items:center;">
                                 <div style="text-align:center;"><input type="checkbox" id="cbMask2" style="width:16px; height:16px; cursor:pointer;"></div>
                                 <input type="text" id="cbKw2" placeholder="キーワード2" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol2m2" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol1m2" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol0m2" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbRank2" placeholder="例: 19" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                             </div>
                             <!-- Row 3 -->
-                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr; gap:8px; align-items:center;">
+                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr 1.2fr; gap:8px; align-items:center;">
                                 <div style="text-align:center;"><input type="checkbox" id="cbMask3" style="width:16px; height:16px; cursor:pointer;"></div>
                                 <input type="text" id="cbKw3" placeholder="キーワード3" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol2m3" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol1m3" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol0m3" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbRank3" placeholder="例: 18" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                             </div>
                             <!-- Row 4 -->
-                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr; gap:8px; align-items:center;">
+                            <div style="display:grid; grid-template-columns: 35px 1.5fr 1fr 1fr 1fr 1.2fr; gap:8px; align-items:center;">
                                 <div style="text-align:center;"><input type="checkbox" id="cbMask4" style="width:16px; height:16px; cursor:pointer;"></div>
                                 <input type="text" id="cbKw4" placeholder="キーワード4" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol2m4" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol1m4" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                                 <input type="text" id="cbVol0m4" placeholder="検索数" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                <input type="text" id="cbRank4" placeholder="例: 26" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MEO Analysis Diagnosis Form Section -->
+                <div style="border-top: 1px solid #EDF2F7; padding-top: 20px; margin-top: 10px;">
+                    <h4 style="margin-bottom: 15px; color: #2B3674;"><i class="fa-solid fa-stethoscope"></i> MEO分析診断シート用 診断データ</h4>
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 20px;">
+                        <!-- Diag Basics -->
+                        <div>
+                            <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">診断スコア (点数)</label>
+                            <input type="text" id="cbDiagScore" placeholder="例: 82" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; margin-bottom:15px; font-size:13px;">
+                            
+                            <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">診断区分 (ヘッダー表示)</label>
+                            <input type="text" id="cbDiagClass" placeholder="例: Normal / Excellent" value="Normal" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; margin-bottom:15px; font-size:13px;">
+                        </div>
+
+                        <!-- Current Status Grid -->
+                        <div>
+                            <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">現在の状況評価</label>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
+                                <div>
+                                    <span style="font-size:11px; color:#718096; display:block; margin-bottom:2px;">評価 (星)</span>
+                                    <input type="text" id="cbStatusRating" placeholder="例: 5" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                </div>
+                                <div>
+                                    <span style="font-size:11px; color:#718096; display:block; margin-bottom:2px;">口コミ数</span>
+                                    <input type="text" id="cbStatusReviews" placeholder="例: 6" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                </div>
+                                <div>
+                                    <span style="font-size:11px; color:#718096; display:block; margin-bottom:2px;">口コミ返信</span>
+                                    <input type="text" id="cbStatusReplies" placeholder="例: △" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                </div>
+                                <div>
+                                    <span style="font-size:11px; color:#718096; display:block; margin-bottom:2px;">投稿数</span>
+                                    <input type="text" id="cbStatusPosts" placeholder="例: 0~5" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                </div>
+                                <div>
+                                    <span style="font-size:11px; color:#718096; display:block; margin-bottom:2px;">写真・動画</span>
+                                    <input type="text" id="cbStatusMedia" placeholder="例: 20~30" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                </div>
+                                <div>
+                                    <span style="font-size:11px; color:#718096; display:block; margin-bottom:2px;">メニュー</span>
+                                    <input type="text" id="cbStatusMenu" placeholder="例: △" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                </div>
+                                <div>
+                                    <span style="font-size:11px; color:#718096; display:block; margin-bottom:2px;">HPの有無</span>
+                                    <input type="text" id="cbStatusHP" placeholder="例: 〇" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                </div>
+                                <div>
+                                    <span style="font-size:11px; color:#718096; display:block; margin-bottom:2px;">SNSリンク</span>
+                                    <input type="text" id="cbStatusSNS" placeholder="例: IG" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">現在の状況説明</label>
+                            <textarea id="cbDiagCurrentDesc" rows="3" placeholder="現在のGoogleマップ上の状況について簡単に記載してください。" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; font-size:13px; resize: vertical; outline: none;"></textarea>
+                        </div>
+                        <div>
+                            <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">改善点BOX (改行で箇条書き)</label>
+                            <textarea id="cbDiagImprovements" rows="3" placeholder="例: ①内部施策・外部施策を施すことで順位向上が見込めます。&#10;②口コミ数を増やしましょう。" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; font-size:13px; resize: vertical; outline: none;"></textarea>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">結果 (総括) BOX</label>
+                            <textarea id="cbDiagResult" rows="3" placeholder="例: エリア内の競合が対策に力を入れているため、今すぐの対策を強く推奨します。" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; font-size:13px; resize: vertical; outline: none;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Competitor rows -->
+                    <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:10px;">競合調査 (最大3社)</label>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div style="border: 1px solid #E2E8F0; padding:12px; border-radius:8px; background:#F8FAFC;">
+                            <span style="font-weight:bold; font-size:12px; color:#4A5568; display:block; margin-bottom:6px;">競合1</span>
+                            <input type="text" id="cbCompName1" placeholder="店舗名" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; margin-bottom:8px;">
+                            <textarea id="cbCompDesc1" rows="3" placeholder="詳細データ（口コミ数や投稿頻度など）" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; resize: vertical; outline: none;"></textarea>
+                        </div>
+                        <div style="border: 1px solid #E2E8F0; padding:12px; border-radius:8px; background:#F8FAFC;">
+                            <span style="font-weight:bold; font-size:12px; color:#4A5568; display:block; margin-bottom:6px;">競合2</span>
+                            <input type="text" id="cbCompName2" placeholder="店舗名" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; margin-bottom:8px;">
+                            <textarea id="cbCompDesc2" rows="3" placeholder="詳細データ（口コミ数や投稿頻度など）" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; resize: vertical; outline: none;"></textarea>
+                        </div>
+                        <div style="border: 1px solid #E2E8F0; padding:12px; border-radius:8px; background:#F8FAFC;">
+                            <span style="font-weight:bold; font-size:12px; color:#4A5568; display:block; margin-bottom:6px;">競合3</span>
+                            <input type="text" id="cbCompName3" placeholder="店舗名" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; margin-bottom:8px;">
+                            <textarea id="cbCompDesc3" rows="3" placeholder="詳細データ（口コミ数や投稿頻度など）" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; resize: vertical; outline: none;"></textarea>
                         </div>
                     </div>
                 </div>
@@ -494,13 +592,18 @@
 
             <!-- Preview Card -->
             <div class="card" id="cbPreviewContainer" style="display:none; position: relative;">
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 20px; gap: 10px;">
-                    <button class="btn-action" style="background:#E53E3E;" onclick="exportCBPDF()"><i class="fa-solid fa-file-pdf"></i> PDFで保存</button>
-                    <button class="btn-action" style="background:#3182CE;" onclick="exportCBPNG()"><i class="fa-solid fa-image"></i> PNGで保存</button>
+                
+                <!-- Section 1: Cost Benefit Sheet Preview -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #EDF2F7; padding-bottom: 10px;">
+                    <h3 style="color: #2B3674; margin: 0; font-size: 16px;"><i class="fa-solid fa-calculator"></i> ① MEO対策 費用対効果シミュレーション</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-action" style="background:#E53E3E;" onclick="exportCBPDF()"><i class="fa-solid fa-file-pdf"></i> PDFで保存</button>
+                        <button class="btn-action" style="background:#3182CE;" onclick="exportCBPNG()"><i class="fa-solid fa-image"></i> PNGで保存</button>
+                    </div>
                 </div>
 
                 <!-- Scale wrapper to scale the 1280x720 area on smaller screens -->
-                <div id="cbPreviewWrapper" style="width: 100%; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; box-sizing: border-box;">
+                <div id="cbPreviewWrapper" style="width: 100%; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; box-sizing: border-box; margin-bottom: 40px;">
                     <div id="cbSheetCaptureArea" style="width: 1280px; height: 720px; padding: 25px 40px; background: white; border-radius:16px; border:1px solid #E2E8F0; box-shadow: 0 4px 25px rgba(0,0,0,0.04); box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; transform-origin: top center;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom: 3px solid #F4F7FE; padding-bottom: 12px; margin-bottom: 10px;">
                             <div style="display:flex; align-items:center; gap:12px;">
@@ -530,7 +633,7 @@
                             <div style="background:#F8FAFC; border-radius:10px; padding:12px 15px; border-left: 5px solid #34A853; border: 1px solid #EDF2F7; border-left-width: 5px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center;">
                                 <div style="font-size:11px; font-weight:bold; color:#718096; margin-bottom:2px; display:flex; align-items:center;">推定集客数 <span id="cbConvRateLabel" style="font-size:8px; font-weight:bold; background:#E6F4EA; color:#137333; padding:1px 3px; border-radius:3px; margin-left:5px;"></span></div>
                                 <div style="font-size:24px; font-weight:900; color:#34A853; line-height:1.1; margin-bottom:1px;"><span id="cbAttractDisplay">0</span><span style="font-size:13px; margin-left:3px; font-weight:700;">人/月</span></div>
-                                <div style="font-size:9px; color:#A0AEC0;">3ヶ月平均検索数の10%か30%での算出目安</div>
+                                <div style="font-size:9px; color:#A0AEC0;">検索ボリュームの70%（流入数）に対する選定割合での算出目安</div>
                             </div>
                             <!-- Revenue -->
                             <div style="background:linear-gradient(135deg, #FFFFAF, #F6E05E); border-radius:10px; padding:12px 15px; border:1px solid #D69E2E; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center;">
@@ -572,13 +675,231 @@
                             </div>
                         </div>
 
-                    <p style="font-size:12px; color:#A0AEC0; text-align:center; line-height:1.6;">
-                        ※本シミュレーション結果は、過去のデータと弊社独自のアルゴリズムに基づき算出された目安であり、将来の成果を保証するものではありません。<br>
-                        ※MEO対策の効果は、業種・地域・競合状況によって変動する場合がございます。
-                    </p>
+                        <p style="font-size:12px; color:#A0AEC0; text-align:center; line-height:1.6; margin:0;">
+                            ※本シミュレーション結果は、過去のデータと弊社独自のアルゴリズムに基づき算出された目安であり、将来の成果を保証するものではありません。<br>
+                            ※MEO対策の効果は、業種・地域・競合状況によって変動する場合がございます。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Section 2: MEO Analysis Sheet Preview -->
+                <div id="diagPreviewHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #EDF2F7; padding-bottom: 10px; padding-top: 20px; border-top: 2px dashed #E2E8F0;">
+                    <h3 style="color: #2B3674; margin: 0; font-size: 16px;"><i class="fa-solid fa-stethoscope"></i> ② MEOキーワード分析診断レポート</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-action" style="background:#E53E3E;" onclick="exportDiagPDF()"><i class="fa-solid fa-file-pdf"></i> PDFで保存</button>
+                        <button class="btn-action" style="background:#3182CE;" onclick="exportDiagPNG()"><i class="fa-solid fa-image"></i> PNGで保存</button>
+                    </div>
+                </div>
+
+                <div id="diagPreviewWrapper" style="width: 100%; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; box-sizing: border-box;">
+                    <div id="diagSheetCaptureArea" style="width: 1280px; height: 720px; padding: 20px 30px; background: white; border-radius:16px; border:1px solid #E2E8F0; box-shadow: 0 4px 25px rgba(0,0,0,0.04); box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; transform-origin: top center;">
+                        <!-- Header Row matching mockup -->
+                        <div style="display:grid; grid-template-columns: 1.2fr 2fr 1.2fr 1fr; border: 1.5px solid #CBD5E1; border-radius: 8px; overflow: hidden; height: 60px; box-sizing: border-box; margin-bottom: 10px; flex-shrink:0;">
+                            <!-- Branding logo -->
+                            <div style="display:flex; justify-content:center; align-items:center; background:#EDF2F7; border-right: 1.5px solid #CBD5E1;">
+                                <div style="font-weight:900; font-size:18px; color:#2B3674; letter-spacing: 1px;">MEO KeyWord MSM</div>
+                            </div>
+                            <!-- Store Name -->
+                            <div style="display:flex; justify-content:center; align-items:center; border-right: 1.5px solid #CBD5E1; background:#FFFFFF;">
+                                <div id="diagStoreNameDisplay" style="font-size: 20px; font-weight: 800; color: #1A202C;">(店舗名)</div>
+                            </div>
+                            <!-- Diag Class -->
+                            <div style="display:flex; justify-content:center; align-items:center; border-right: 1.5px solid #CBD5E1; background:#FFFFFF;">
+                                <div id="diagClassDisplay" style="font-size: 28px; font-weight: 900; color: #3182CE; letter-spacing:1.5px;">Normal</div>
+                            </div>
+                            <!-- Score -->
+                            <div style="display:grid; grid-template-rows: 1fr 2fr; background:#FFFFFF;">
+                                <div style="font-size: 9px; font-weight: bold; color: #4A5568; background: #EDF2F7; text-align: center; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #CBD5E1; line-height: 1;">スコア</div>
+                                <div style="display:flex; justify-content:center; align-items:center; font-size: 32px; font-weight: 900; color: #1A202C; line-height: 1;" id="diagScoreDisplay">82</div>
+                            </div>
+                        </div>
+
+                        <!-- Row 1: Target Keywords and Rankings Grid -->
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px; flex-shrink:0;">
+                            <!-- Left: KW 1 & 2 -->
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <!-- KW1 -->
+                                <div style="display:grid; grid-template-columns: 1.2fr 3fr 1fr 1fr; border: 1px solid #C2E0C6; border-radius:6px; overflow:hidden; font-size:11px; height:24px; align-items:center; text-align:center;">
+                                    <div style="background:#E6F4EA; color:#137333; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px;">メインKW1</div>
+                                    <div id="diagKw1" style="font-weight:bold; color:#1A202C; text-align:left; padding-left:10px; background:#FFFFFF; height:100%; display:flex; align-items:center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></div>
+                                    <div style="background:#F1F3F4; color:#5F6368; height:100%; display:flex; align-items:center; justify-content:center;">現順位</div>
+                                    <div id="diagRank1" style="background:#E8F0FE; color:#1A73E8; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">-</div>
+                                </div>
+                                <!-- KW2 -->
+                                <div style="display:grid; grid-template-columns: 1.2fr 3fr 1fr 1fr; border: 1px solid #D2E3FC; border-radius:6px; overflow:hidden; font-size:11px; height:24px; align-items:center; text-align:center;">
+                                    <div style="background:#E8F0FE; color:#1A73E8; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px;">メインKW2</div>
+                                    <div id="diagKw2" style="font-weight:bold; color:#1A202C; text-align:left; padding-left:10px; background:#FFFFFF; height:100%; display:flex; align-items:center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></div>
+                                    <div style="background:#F1F3F4; color:#5F6368; height:100%; display:flex; align-items:center; justify-content:center;">現順位</div>
+                                    <div id="diagRank2" style="background:#E8F0FE; color:#1A73E8; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">-</div>
+                                </div>
+                            </div>
+                            <!-- Right: KW 3 & 4 -->
+                            <div style="display:flex; flex-direction:column; gap:6px;">
+                                <!-- KW3 -->
+                                <div style="display:grid; grid-template-columns: 1.2fr 3fr 1fr 1fr; border: 1px solid #FAD2CF; border-radius:6px; overflow:hidden; font-size:11px; height:24px; align-items:center; text-align:center;">
+                                    <div style="background:#FCE8E6; color:#C5221F; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px;">メインKW3</div>
+                                    <div id="diagKw3" style="font-weight:bold; color:#1A202C; text-align:left; padding-left:10px; background:#FFFFFF; height:100%; display:flex; align-items:center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></div>
+                                    <div style="background:#F1F3F4; color:#5F6368; height:100%; display:flex; align-items:center; justify-content:center;">現順位</div>
+                                    <div id="diagRank3" style="background:#E8F0FE; color:#1A73E8; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">-</div>
+                                </div>
+                                <!-- KW4 -->
+                                <div style="display:grid; grid-template-columns: 1.2fr 3fr 1fr 1fr; border: 1px solid #FEEFC3; border-radius:6px; overflow:hidden; font-size:11px; height:24px; align-items:center; text-align:center;">
+                                    <div style="background:#FEF7E0; color:#B06000; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center; font-size:10px;">メインKW4</div>
+                                    <div id="diagKw4" style="font-weight:bold; color:#1A202C; text-align:left; padding-left:10px; background:#FFFFFF; height:100%; display:flex; align-items:center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"></div>
+                                    <div style="background:#F1F3F4; color:#5F6368; height:100%; display:flex; align-items:center; justify-content:center;">現順位</div>
+                                    <div id="diagRank4" style="background:#E8F0FE; color:#1A73E8; font-weight:bold; height:100%; display:flex; align-items:center; justify-content:center;">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: Search Volume Tables & Status Grid -->
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 2fr; gap: 15px; margin-bottom: 10px; align-items: stretch; flex-shrink:0;">
+                            <!-- KW1 & 2 stats table -->
+                            <div style="border: 1px solid #CBD5E1; border-radius:6px; overflow:hidden; background:#FFFFFF;">
+                                <table style="width:100%; border-collapse: collapse; text-align: center; font-size: 10px; height: 100%;">
+                                    <tbody>
+                                        <tr style="border-bottom: 1px solid #E2E8F0; background:#E6F4EA;">
+                                            <td style="padding:4px; font-weight:bold; color:#137333; text-align:left;">KW1月間検索数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagVol0m1">-</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #E2E8F0;">
+                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW1月間流入数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagReach1">-</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1.5px solid #CBD5E1;">
+                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW1月間リーチ数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right; color:#1A73E8;" id="diagAttract1">-</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #E2E8F0; background:#E8F0FE;">
+                                            <td style="padding:4px; font-weight:bold; color:#1A73E8; text-align:left;">KW2月間検索数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagVol0m2">-</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #E2E8F0;">
+                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW2月間流入数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagReach2">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW2月間リーチ数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right; color:#1A73E8;" id="diagAttract2">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- KW3 & 4 stats table -->
+                            <div style="border: 1px solid #CBD5E1; border-radius:6px; overflow:hidden; background:#FFFFFF;">
+                                <table style="width:100%; border-collapse: collapse; text-align: center; font-size: 10px; height: 100%;">
+                                    <tbody>
+                                        <tr style="border-bottom: 1px solid #E2E8F0; background:#FCE8E6;">
+                                            <td style="padding:4px; font-weight:bold; color:#C5221F; text-align:left;">KW3月間検索数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagVol0m3">-</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #E2E8F0;">
+                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW3月間流入数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagReach3">-</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1.5px solid #CBD5E1;">
+                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW3月間リーチ数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right; color:#1A73E8;" id="diagAttract3">-</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #E2E8F0; background:#FEF7E0;">
+                                            <td style="padding:4px; font-weight:bold; color:#B06000; text-align:left;">KW4月間検索数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagVol0m4">-</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #E2E8F0;">
+                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW4月間流入数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right;" id="diagReach4">-</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:4px; color:#5F6368; text-align:left;">KW4月間リーチ数</td>
+                                            <td style="padding:4px; font-weight:bold; text-align:right; color:#1A73E8;" id="diagAttract4">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Status Grid Table -->
+                            <div style="border: 1px solid #CBD5E1; border-radius:6px; overflow:hidden; background:#FFFFFF; display:flex; flex-direction:column; justify-content:space-between;">
+                                <table style="width:100%; border-collapse: collapse; text-align: center; font-size: 10px; box-sizing:border-box;">
+                                    <thead>
+                                        <tr style="background:#F1F3F4; color:#3C4043; border-bottom: 1px solid #CBD5E1; font-weight:bold;">
+                                            <th style="padding: 4px; border-right:1px solid #E2E8F0; font-size:9px;" rowspan="2">現在の状況</th>
+                                            <th style="padding: 4px; border-right:1px solid #E2E8F0;">評価</th>
+                                            <th style="padding: 4px; border-right:1px solid #E2E8F0;">口コミ数</th>
+                                            <th style="padding: 4px; border-right:1px solid #E2E8F0;">口コミ返信</th>
+                                            <th style="padding: 4px; border-right:1px solid #E2E8F0;">投稿数</th>
+                                            <th style="padding: 4px; border-right:1px solid #E2E8F0;">写真・動画</th>
+                                            <th style="padding: 4px; border-right:1px solid #E2E8F0;">メニュー</th>
+                                            <th style="padding: 4px; border-right:1px solid #E2E8F0;">HPの有無</th>
+                                            <th style="padding: 4px;">SNSリンク</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr style="font-size:14px; font-weight:bold; color:#1A202C;">
+                                            <td id="diagStatusRating" style="padding:6px; border-right:1px solid #E2E8F0; border-top: 1px solid #E2E8F0;">-</td>
+                                            <td id="diagStatusReviews" style="padding:6px; border-right:1px solid #E2E8F0; border-top: 1px solid #E2E8F0;">-</td>
+                                            <td id="diagStatusReplies" style="padding:6px; border-right:1px solid #E2E8F0; border-top: 1px solid #E2E8F0;">-</td>
+                                            <td id="diagStatusPosts" style="padding:6px; border-right:1px solid #E2E8F0; border-top: 1px solid #E2E8F0;">-</td>
+                                            <td id="diagStatusMedia" style="padding:6px; border-right:1px solid #E2E8F0; border-top: 1px solid #E2E8F0;">-</td>
+                                            <td id="diagStatusMenu" style="padding:6px; border-right:1px solid #E2E8F0; border-top: 1px solid #E2E8F0;">-</td>
+                                            <td id="diagStatusHP" style="padding:6px; border-right:1px solid #E2E8F0; border-top: 1px solid #E2E8F0;">-</td>
+                                            <td id="diagStatusSNS" style="padding:6px; border-top: 1px solid #E2E8F0;">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div style="font-size:10px; color:#4A5568; background:#F8FAFC; padding:8px; border-top:1px solid #CBD5E1; text-align:left; flex-grow:1; box-sizing:border-box; line-height:1.4; overflow-y:auto; max-height:48px;" id="diagCurrentDesc"></div>
+                            </div>
+                        </div>
+
+                        <!-- Row 3: 3-column split (改善点 / 集客見込み / 結果) -->
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 10px; flex-grow:1; align-items: stretch; min-height: 120px;">
+                            <!-- Box 1: 改善点 -->
+                            <div style="border: 1px solid #FAD2CF; border-radius:8px; overflow:hidden; background:#FFFFFF; display:flex; flex-direction:column; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
+                                <div style="background:#FCE8E6; color:#C5221F; text-align:center; padding:4px; font-weight:bold; font-size:11px; flex-shrink:0;">改善点</div>
+                                <div style="padding:8px 12px; font-size:10.5px; color:#1A202C; text-align:left; line-height:1.5; overflow-y:auto; flex-grow:1;" id="diagImprovements"></div>
+                            </div>
+                            <!-- Box 2: 集客見込み -->
+                            <div style="border: 1px solid #FFE0B2; border-radius:8px; overflow:hidden; background:#FFFFFF; display:flex; flex-direction:column; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
+                                <div style="background:#FFF3E0; color:#E65100; text-align:center; padding:4px; font-weight:bold; font-size:11px; flex-shrink:0;">集客見込み</div>
+                                <div style="padding:8px 12px; font-size:10.5px; color:#1A202C; text-align:left; line-height:1.5; overflow-y:auto; flex-grow:1;" id="diagAttractForecast"></div>
+                            </div>
+                            <!-- Box 3: 結果 -->
+                            <div style="border: 1px solid #D2E3FC; border-radius:8px; overflow:hidden; background:#FFFFFF; display:flex; flex-direction:column; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
+                                <div style="background:#E8F0FE; color:#1A73E8; text-align:center; padding:4px; font-weight:bold; font-size:11px; flex-shrink:0;">結果</div>
+                                <div style="padding:8px 12px; font-size:10.5px; color:#1A202C; text-align:left; line-height:1.5; overflow-y:auto; flex-grow:1;" id="diagResult"></div>
+                            </div>
+                        </div>
+
+                        <!-- Row 4: Competitor Analysis -->
+                        <div style="border: 1px solid #CBD5E1; border-radius:8px; overflow:hidden; background:#FFFFFF; margin-bottom: 8px; flex-shrink:0; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
+                            <div style="background:#F1F3F4; color:#3C4043; text-align:center; padding:4px; font-weight:bold; font-size:11px; border-bottom:1px solid #CBD5E1;">競合調査</div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1px; background:#CBD5E1;">
+                                <!-- Comp 1 -->
+                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; height:90px; overflow-y:auto; box-sizing:border-box; display:flex; flex-direction:column;">
+                                    <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" id="diagCompName1"></div>
+                                    <div style="color:#5F6368; line-height:1.4; flex-grow:1; overflow-y:auto;" id="diagCompDesc1"></div>
+                                </div>
+                                <!-- Comp 2 -->
+                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; height:90px; overflow-y:auto; box-sizing:border-box; display:flex; flex-direction:column;">
+                                    <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" id="diagCompName2"></div>
+                                    <div style="color:#5F6368; line-height:1.4; flex-grow:1; overflow-y:auto;" id="diagCompDesc2"></div>
+                                </div>
+                                <!-- Comp 3 -->
+                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; height:90px; overflow-y:auto; box-sizing:border-box; display:flex; flex-direction:column;">
+                                    <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" id="diagCompName3"></div>
+                                    <div style="color:#5F6368; line-height:1.4; flex-grow:1; overflow-y:auto;" id="diagCompDesc3"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footnote -->
+                        <p style="font-size:9px; color:#A0AEC0; text-align:center; line-height:1.4; margin: 0; flex-shrink:0;">
+                            当データは他社への公開・共有を一切禁止いたします。万一、無断での公開・共有が発生した場合は、損害賠償を請求する場合がございます。<br>
+                            また、本データは効果や数値の正確性を保証するものではありません。季節や流行、TVCM、地域政策、イベント開催などにより地域情報は変動し、それに伴いウェブ上のデータも随時変化いたしますので、あらかじめご了承ください。
+                        </p>
+                    </div>
                 </div>
             </div>
-        </div>
 
         <!-- クライアント追加モーダル -->
         <div id="addClientModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
@@ -1512,7 +1833,7 @@
             document.getElementById('cbPreviewContainer').style.display = 'none';
         }
 
-        window.generateCostBenefitPreview = async function(isNew = true) {
+        window.generateCostBenefitPreview = async function(isNew = true, data = null) {
             const storeName = document.getElementById('cbStoreName').value.trim();
             const unitPriceStr = document.getElementById('cbUnitPrice').value.replace(/[^0-9]/g, '');
             
@@ -1531,6 +1852,7 @@
                     vol2m: parseInt(document.getElementById(`cbVol2m${i}`).value.replace(/[^0-9]/g, '')) || 0,
                     vol1m: parseInt(document.getElementById(`cbVol1m${i}`).value.replace(/[^0-9]/g, '')) || 0,
                     vol0m: parseInt(document.getElementById(`cbVol0m${i}`).value.replace(/[^0-9]/g, '')) || 0,
+                    rank: parseInt(document.getElementById(`cbRank${i}`).value.replace(/[^0-9]/g, '')) || 0,
                     mask: document.getElementById(`cbMask${i}`).checked
                 });
             }
@@ -1693,6 +2015,120 @@
             `;
             tableBody.appendChild(sumTr);
 
+            // ==========================
+            // MEO分析診断シートの描画処理
+            // ==========================
+            const diagnosisData = isNew ? {
+                score: parseInt(document.getElementById('cbDiagScore').value.replace(/[^0-9]/g, '')) || 0,
+                diagClass: document.getElementById('cbDiagClass').value.trim() || 'Normal',
+                status: {
+                    rating: document.getElementById('cbStatusRating').value.trim() || '-',
+                    reviews: document.getElementById('cbStatusReviews').value.trim() || '-',
+                    replies: document.getElementById('cbStatusReplies').value.trim() || '-',
+                    posts: document.getElementById('cbStatusPosts').value.trim() || '-',
+                    media: document.getElementById('cbStatusMedia').value.trim() || '-',
+                    menu: document.getElementById('cbStatusMenu').value.trim() || '-',
+                    hp: document.getElementById('cbStatusHP').value.trim() || '-',
+                    sns: document.getElementById('cbStatusSNS').value.trim() || '-'
+                },
+                currentDesc: document.getElementById('cbDiagCurrentDesc').value.trim() || '',
+                improvements: document.getElementById('cbDiagImprovements').value.trim() || '',
+                result: document.getElementById('cbDiagResult').value.trim() || '',
+                competitors: [
+                    { name: document.getElementById('cbCompName1').value.trim() || '', desc: document.getElementById('cbCompDesc1').value.trim() || '' },
+                    { name: document.getElementById('cbCompName2').value.trim() || '', desc: document.getElementById('cbCompDesc2').value.trim() || '' },
+                    { name: document.getElementById('cbCompName3').value.trim() || '', desc: document.getElementById('cbCompDesc3').value.trim() || '' }
+                ]
+            } : ((data && data.diagnosis_data) || {});
+
+            // Show/Hide Section 2 depending on whether we have diagnosis data
+            const hasDiagnosis = diagnosisData && (diagnosisData.score > 0 || diagnosisData.improvements || diagnosisData.result);
+            if (hasDiagnosis) {
+                document.getElementById('diagPreviewHeader').style.display = 'flex';
+                document.getElementById('diagPreviewWrapper').style.display = 'flex';
+
+                // Headers
+                document.getElementById('diagStoreNameDisplay').innerText = `【${storeName}】`;
+                document.getElementById('diagClassDisplay').innerText = diagnosisData.diagClass || 'Normal';
+                document.getElementById('diagScoreDisplay').innerText = diagnosisData.score || 0;
+
+                // Keyword Rankings & Search volumes
+                keywords.forEach((k, idx) => {
+                    const i = idx + 1;
+                    let displayKw = k.keyword;
+                    let displayClass = '';
+                    if (k.mask) {
+                        displayKw = '██████████';
+                        displayClass = 'cb-masked-effect';
+                    }
+                    
+                    const kwContainer = document.getElementById(`diagKw${i}`);
+                    if (kwContainer) {
+                        kwContainer.innerHTML = `<span class="${displayClass}">${displayKw}</span>`;
+                    }
+                    
+                    const rankContainer = document.getElementById(`diagRank${i}`);
+                    if (rankContainer) {
+                        rankContainer.innerText = k.rank || '-';
+                    }
+
+                    // Volumes in the stats tables
+                    const vol0mContainer = document.getElementById(`diagVol0m${i}`);
+                    if (vol0mContainer) {
+                        vol0mContainer.innerHTML = `<span class="${displayClass}">${k.mask ? '██████████' : k.vol0m.toLocaleString()}</span>`;
+                    }
+                    const reachContainer = document.getElementById(`diagReach${i}`);
+                    if (reachContainer) {
+                        reachContainer.innerHTML = `<span class="${displayClass}">${k.mask ? '██████████' : k.reach.toLocaleString()}</span>`;
+                    }
+                    const attractContainer = document.getElementById(`diagAttract${i}`);
+                    if (attractContainer) {
+                        attractContainer.innerHTML = `<span class="${displayClass}">${k.mask ? '██████████' : k.attract.toLocaleString()}</span>`;
+                    }
+                });
+
+                // Status table
+                if (diagnosisData.status) {
+                    document.getElementById('diagStatusRating').innerText = diagnosisData.status.rating || '-';
+                    document.getElementById('diagStatusReviews').innerText = diagnosisData.status.reviews || '-';
+                    document.getElementById('diagStatusReplies').innerText = diagnosisData.status.replies || '-';
+                    document.getElementById('diagStatusPosts').innerText = diagnosisData.status.posts || '-';
+                    document.getElementById('diagStatusMedia').innerText = diagnosisData.status.media || '-';
+                    document.getElementById('diagStatusMenu').innerText = diagnosisData.status.menu || '-';
+                    document.getElementById('diagStatusHP').innerText = diagnosisData.status.hp || '-';
+                    document.getElementById('diagStatusSNS').innerText = diagnosisData.status.sns || '-';
+                }
+                document.getElementById('diagCurrentDesc').innerHTML = (diagnosisData.currentDesc || '').replace(/\n/g, '<br>');
+
+                // Lower boxes
+                document.getElementById('diagImprovements').innerHTML = (diagnosisData.improvements || '').replace(/\n/g, '<br>');
+                document.getElementById('diagResult').innerHTML = (diagnosisData.result || '').replace(/\n/g, '<br>');
+
+                // Dynamic Forecast Explanation
+                const forecastHtml = `以上の4つのキーワードは月間${totalCurrentVol.toLocaleString()}回検索されており、<br>
+                その中の約7割はマップ上の結果を参考にします。<br>
+                そのため4キーワード合計でマップ上の結果への流入数は約${reach.toLocaleString()}回と想定されます。<br><br>
+                上位10位以内に入ることが成功した場合、<br>
+                マップ上の結果を参照する約${Math.round(convRate * 100)}%の方が来店につながったとしたら、<br>
+                月間約${attract.toLocaleString()}人程度の来店確度が高い人たちへリーチができます。<br><br>
+                一方で実際に電話をかけたり、来店することは、<br>
+                写真や口コミなど様々な要素によって変動するため<br>
+                予測は不可能であることもご承知ください。`;
+                document.getElementById('diagAttractForecast').innerHTML = forecastHtml;
+
+                // Competitor Analysis
+                if (diagnosisData.competitors) {
+                    diagnosisData.competitors.forEach((c, idx) => {
+                        const i = idx + 1;
+                        document.getElementById(`diagCompName${i}`).innerText = c.name || `競合${i}`;
+                        document.getElementById(`diagCompDesc${i}`).innerHTML = (c.desc || '').replace(/\n/g, '<br>');
+                    });
+                }
+            } else {
+                document.getElementById('diagPreviewHeader').style.display = 'none';
+                document.getElementById('diagPreviewWrapper').style.display = 'none';
+            }
+
             document.getElementById('cbPreviewContainer').style.display = 'block';
             
             // Adjust scaling to fit container on screen
@@ -1706,7 +2142,8 @@
                         customer_unit_price: unitPrice,
                         search_volume: totalCurrentVol,
                         keywords: keywords,
-                        conversion_rate: convRate
+                        conversion_rate: convRate,
+                        diagnosis_data: diagnosisData
                     }]);
                     if (error) console.error("Error saving cost benefit:", error);
                     else initSavedCostBenefitDropdown();
@@ -1739,6 +2176,7 @@
                         vol2m: raw.vol2m || 0,
                         vol1m: raw.vol1m || 0,
                         vol0m: raw.vol0m || 0,
+                        rank: raw.rank || 0,
                         mask: raw.mask || false
                     });
                 } else if (raw && typeof raw === 'object' && 'volume' in raw) {
@@ -1747,6 +2185,7 @@
                         vol2m: 0,
                         vol1m: 0,
                         vol0m: raw.volume || 0,
+                        rank: 0,
                         mask: raw.mask || false
                     });
                 } else if (raw && typeof raw === 'string') {
@@ -1755,10 +2194,11 @@
                         vol2m: 0,
                         vol1m: 0,
                         vol0m: i === 0 ? (data.search_volume || 0) : 0,
+                        rank: 0,
                         mask: false
                     });
                 } else {
-                    keywords.push({ keyword: '-', vol2m: 0, vol1m: 0, vol0m: 0, mask: false });
+                    keywords.push({ keyword: '-', vol2m: 0, vol1m: 0, vol0m: 0, rank: 0, mask: false });
                 }
             }
 
@@ -1768,7 +2208,47 @@
                 document.getElementById(`cbVol2m${i}`).value = kw.vol2m || '';
                 document.getElementById(`cbVol1m${i}`).value = kw.vol1m || '';
                 document.getElementById(`cbVol0m${i}`).value = kw.vol0m || '';
+                document.getElementById(`cbRank${i}`).value = kw.rank || '';
                 document.getElementById(`cbMask${i}`).checked = kw.mask || false;
+            }
+
+            const diag = data.diagnosis_data || {};
+            document.getElementById('cbDiagScore').value = diag.score || '';
+            document.getElementById('cbDiagClass').value = diag.diagClass || 'Normal';
+            if (diag.status) {
+                document.getElementById('cbStatusRating').value = diag.status.rating || '';
+                document.getElementById('cbStatusReviews').value = diag.status.reviews || '';
+                document.getElementById('cbStatusReplies').value = diag.status.replies || '';
+                document.getElementById('cbStatusPosts').value = diag.status.posts || '';
+                document.getElementById('cbStatusMedia').value = diag.status.media || '';
+                document.getElementById('cbStatusMenu').value = diag.status.menu || '';
+                document.getElementById('cbStatusHP').value = diag.status.hp || '';
+                document.getElementById('cbStatusSNS').value = diag.status.sns || '';
+            } else {
+                document.getElementById('cbStatusRating').value = '';
+                document.getElementById('cbStatusReviews').value = '';
+                document.getElementById('cbStatusReplies').value = '';
+                document.getElementById('cbStatusPosts').value = '';
+                document.getElementById('cbStatusMedia').value = '';
+                document.getElementById('cbStatusMenu').value = '';
+                document.getElementById('cbStatusHP').value = '';
+                document.getElementById('cbStatusSNS').value = '';
+            }
+            document.getElementById('cbDiagCurrentDesc').value = diag.currentDesc || '';
+            document.getElementById('cbDiagImprovements').value = diag.improvements || '';
+            document.getElementById('cbDiagResult').value = diag.result || '';
+
+            if (diag.competitors) {
+                diag.competitors.forEach((c, idx) => {
+                    const i = idx + 1;
+                    document.getElementById(`cbCompName${i}`).value = c.name || '';
+                    document.getElementById(`cbCompDesc${i}`).value = c.desc || '';
+                });
+            } else {
+                for (let i = 1; i <= 3; i++) {
+                    document.getElementById(`cbCompName${i}`).value = '';
+                    document.getElementById(`cbCompDesc${i}`).value = '';
+                }
             }
 
             const radios = document.querySelectorAll('input[name="cbConvRate"]');
@@ -1776,7 +2256,7 @@
                 if (parseFloat(r.value) === data.conversion_rate) r.checked = true;
             });
 
-            generateCostBenefitPreview(false); // Render without saving a duplicate
+            generateCostBenefitPreview(false, data); // Render without saving a duplicate
             
             // Override the date to match the saved record
             const d = new Date(data.created_at);
@@ -1865,6 +2345,72 @@
             const today = new Date();
             const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
             const filename = `【${storeName}】費用対効果シミュレーション_${dateStr}.png`;
+
+            html2canvas(area, { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' }).then(canvas => {
+                // Restore scaling
+                area.style.transform = originalTransform;
+                area.style.margin = originalMargin;
+                wrapper.style.height = originalHeight;
+
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        window.exportDiagPDF = function() {
+            const area = document.getElementById('diagSheetCaptureArea');
+            const wrapper = document.getElementById('diagPreviewWrapper');
+            if (!area || !wrapper) return;
+
+            const originalTransform = area.style.transform;
+            const originalHeight = wrapper.style.height;
+            const originalMargin = area.style.margin;
+
+            // Reset scale transform to capture at full resolution
+            area.style.transform = 'none';
+            area.style.margin = '0';
+            wrapper.style.height = 'auto';
+
+            const storeName = document.getElementById('cbStoreNameDisplay').innerText.replace(/【|】/g, '') || '店舗';
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+            
+            const opt = {
+                margin:       0,
+                filename:     `【${storeName}】MEOキーワード分析診断レポート_${dateStr}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'px', format: [1280, 720], orientation: 'landscape' }
+            };
+            
+            html2pdf().set(opt).from(area).save().then(() => {
+                // Restore scaling
+                area.style.transform = originalTransform;
+                area.style.margin = originalMargin;
+                wrapper.style.height = originalHeight;
+            });
+        }
+
+        window.exportDiagPNG = function() {
+            const area = document.getElementById('diagSheetCaptureArea');
+            const wrapper = document.getElementById('diagPreviewWrapper');
+            if (!area || !wrapper) return;
+
+            const originalTransform = area.style.transform;
+            const originalHeight = wrapper.style.height;
+            const originalMargin = area.style.margin;
+
+            // Reset scale transform to capture at full resolution
+            area.style.transform = 'none';
+            area.style.margin = '0';
+            wrapper.style.height = 'auto';
+
+            const storeName = document.getElementById('cbStoreNameDisplay').innerText.replace(/【|】/g, '') || '店舗';
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+            const filename = `【${storeName}】MEOキーワード分析診断レポート_${dateStr}.png`;
 
             html2canvas(area, { scale: 2, useCORS: true, backgroundColor: '#FFFFFF' }).then(canvas => {
                 // Restore scaling
