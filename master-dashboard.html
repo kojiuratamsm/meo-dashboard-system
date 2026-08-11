@@ -864,21 +864,21 @@ Googleの評価システム上、成果には一定期間を要しますが、
                         <!-- Row 4: Competitor Analysis -->
                         <div style="border: 1px solid #CBD5E1; border-radius:8px; overflow:hidden; background:#FFFFFF; margin-bottom: 8px; flex-shrink:0; box-shadow: 0 2px 8px rgba(0,0,0,0.01);">
                             <div style="background:#F1F3F4; color:#3C4043; text-align:center; padding:4px; font-weight:bold; font-size:11px; border-bottom:1px solid #CBD5E1;">競合調査</div>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1px; background:#CBD5E1;">
+                            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1px; background:#CBD5E1; align-items:stretch;">
                                 <!-- Comp 1 -->
-                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; height:90px; overflow-y:auto; box-sizing:border-box; display:flex; flex-direction:column;">
-                                    <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" id="diagCompName1"></div>
-                                    <div style="color:#5F6368; line-height:1.4; flex-grow:1; overflow-y:auto;" id="diagCompDesc1"></div>
+                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; min-height:110px; overflow:visible; box-sizing:border-box; display:flex; flex-direction:column;">
+                                    <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompName1"></div>
+                                    <div style="color:#5F6368; line-height:1.4; flex-grow:1; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompDesc1"></div>
                                 </div>
                                 <!-- Comp 2 -->
-                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; height:90px; overflow-y:auto; box-sizing:border-box; display:flex; flex-direction:column;">
-                                    <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" id="diagCompName2"></div>
-                                    <div style="color:#5F6368; line-height:1.4; flex-grow:1; overflow-y:auto;" id="diagCompDesc2"></div>
+                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; min-height:110px; overflow:visible; box-sizing:border-box; display:flex; flex-direction:column;">
+                                    <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompName2"></div>
+                                    <div style="color:#5F6368; line-height:1.4; flex-grow:1; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompDesc2"></div>
                                 </div>
                                 <!-- Comp 3 -->
-                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; height:90px; overflow-y:auto; box-sizing:border-box; display:flex; flex-direction:column;">
-                                    <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;" id="diagCompName3"></div>
-                                    <div style="color:#5F6368; line-height:1.4; flex-grow:1; overflow-y:auto;" id="diagCompDesc3"></div>
+                                <div style="background:#FFFFFF; padding:8px; text-align:left; font-size:10px; min-height:110px; overflow:visible; box-sizing:border-box; display:flex; flex-direction:column;">
+                                    <div style="font-weight:bold; color:#2B3674; margin-bottom:3px; border-bottom:1px solid #EDF2F7; padding-bottom:2px; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompName3"></div>
+                                    <div style="color:#5F6368; line-height:1.4; flex-grow:1; white-space:normal; word-break:break-word; overflow-wrap:break-word;" id="diagCompDesc3"></div>
                                 </div>
                             </div>
                         </div>
@@ -1258,6 +1258,11 @@ Googleの評価システム上、成果には一定期間を要しますが、
                     if(!n.style.background.includes('linear-gradient')) n.classList.remove('active');
                 });
                 if(!el.style.background.includes('linear-gradient')) el.classList.add('active');
+            }
+            // 費用対効果作成シート画面を開くたびに「過去のシート」プルダウンを最新化する
+            // （ページ読み込み後に他の担当者が保存したデータも反映されるように）
+            if (viewId === 'view-cost-benefit' && typeof initSavedCostBenefitDropdown === 'function') {
+                initSavedCostBenefitDropdown();
             }
         };
 
@@ -1765,10 +1770,12 @@ Googleの評価システム上、成果には一定期間を要しますが、
             select.innerHTML = '<option value="">読み込み中...</option>';
             
             const { data, error } = await supabase.from('cost_benefit_analyses').select('*').order('created_at', { ascending: false });
-            
+
             if (error) {
                 console.error("Error loading saved cost benefits:", error);
-                select.innerHTML = '<option value="">エラーが発生しました</option>';
+                select.innerHTML = `<option value="">読み込みエラー: ${error.message || '不明なエラー'}</option>`;
+                // データベース側の権限設定（RLS）が原因の可能性が高いため、管理者に分かるよう明示する
+                console.warn("cost_benefit_analyses テーブルの取得に失敗しました。Supabase側でRLS(Row Level Security)のSELECTポリシーが未設定/制限されている可能性があります。詳細:", error);
                 return;
             }
             
@@ -2181,10 +2188,23 @@ Googleの評価システム上、成果には一定期間を要しますが、
                         conversion_rate: convRate,
                         diagnosis_data: diagnosisData
                     }]);
-                    if (error) console.error("Error saving cost benefit:", error);
-                    else initSavedCostBenefitDropdown();
+                    if (error) {
+                        console.error("Error saving cost benefit:", error);
+                        // 保存失敗を必ずユーザーに知らせる（サイレントに失敗させない）。
+                        // RLS(Row Level Security)のINSERTポリシー未設定が典型的な原因。
+                        alert(
+                            "⚠️ シートの自動保存に失敗しました。プレビューは表示されていますが、" +
+                            "データベースには保存されていません。\n\n" +
+                            "エラー内容: " + (error.message || JSON.stringify(error)) + "\n\n" +
+                            "この画面を閉じる前に、管理者にこのエラー内容をお伝えください" +
+                            "（Supabase側の cost_benefit_analyses テーブルのアクセス権限(RLS)設定が原因の可能性があります）。"
+                        );
+                    } else {
+                        initSavedCostBenefitDropdown();
+                    }
                 } catch (err) {
                     console.error("Exception saving cost benefit:", err);
+                    alert("⚠️ シートの保存中に予期しないエラーが発生しました。\n\n" + (err.message || err));
                 }
             }
         }
