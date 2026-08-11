@@ -603,8 +603,8 @@
                 </div>
 
                 <!-- Scale wrapper to scale the 1280x720 area on smaller screens -->
-                <div id="cbPreviewWrapper" style="width: 100%; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; box-sizing: border-box; margin-bottom: 40px;">
-                    <div id="cbSheetCaptureArea" style="width: 1280px; height: 720px; padding: 25px 40px; background: white; border-radius:16px; border:1px solid #E2E8F0; box-shadow: 0 4px 25px rgba(0,0,0,0.04); box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; transform-origin: top center;">
+                <div id="cbPreviewWrapper" style="width: 100%; overflow: hidden; display: block; box-sizing: border-box; margin-bottom: 40px; position: relative;">
+                    <div id="cbSheetCaptureArea" style="width: 1280px; height: 720px; padding: 25px 40px; background: white; border-radius:16px; border:1px solid #E2E8F0; box-shadow: 0 4px 25px rgba(0,0,0,0.04); box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; transform-origin: top left;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-end; border-bottom: 3px solid #F4F7FE; padding-bottom: 12px; margin-bottom: 10px;">
                             <div style="display:flex; align-items:center; gap:12px;">
                                 <img src="mapon-logo.png" style="height:42px; mix-blend-mode:multiply;">
@@ -691,8 +691,8 @@
                     </div>
                 </div>
 
-                <div id="diagPreviewWrapper" style="width: 100%; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; box-sizing: border-box;">
-                    <div id="diagSheetCaptureArea" style="width: 1280px; height: 720px; padding: 20px 30px; background: white; border-radius:16px; border:1px solid #E2E8F0; box-shadow: 0 4px 25px rgba(0,0,0,0.04); box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; transform-origin: top center;">
+                <div id="diagPreviewWrapper" style="width: 100%; overflow: hidden; display: block; box-sizing: border-box; position: relative;">
+                    <div id="diagSheetCaptureArea" style="width: 1280px; height: 720px; padding: 20px 30px; background: white; border-radius:16px; border:1px solid #E2E8F0; box-shadow: 0 4px 25px rgba(0,0,0,0.04); box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; transform-origin: top left;">
                         <!-- Header Row matching mockup -->
                         <div style="display:grid; grid-template-columns: 1.2fr 2fr 1.2fr 1fr; border: 1.5px solid #CBD5E1; border-radius: 8px; overflow: hidden; height: 60px; box-sizing: border-box; margin-bottom: 10px; flex-shrink:0;">
                             <!-- Branding logo -->
@@ -1795,23 +1795,35 @@
         }
 
         window.adjustPreviewScale = function() {
-            const area = document.getElementById('cbSheetCaptureArea');
-            const wrapper = document.getElementById('cbPreviewWrapper');
-            if (!area || !wrapper) return;
-            
-            // Reset transform to measure naturally
-            area.style.transform = 'none';
-            area.style.margin = '0';
-            
-            const wrapperWidth = wrapper.clientWidth;
-            let ratio = wrapperWidth / 1280;
-            if (ratio > 1) ratio = 1; // Don't upscale past 100%
-            
-            area.style.transform = `scale(${ratio})`;
-            area.style.transformOrigin = 'top center';
-            
-            // Set the height of the wrapper to match the scaled height
-            wrapper.style.height = `${720 * ratio}px`;
+            // Scale Cost Benefit Sheet
+            const cbArea = document.getElementById('cbSheetCaptureArea');
+            const cbWrapper = document.getElementById('cbPreviewWrapper');
+            if (cbArea && cbWrapper) {
+                cbArea.style.transform = 'none';
+                cbArea.style.margin = '0';
+                const wrapperWidth = cbWrapper.clientWidth;
+                let ratio = wrapperWidth / 1280;
+                if (ratio > 1) ratio = 1;
+                cbArea.style.transform = `scale(${ratio})`;
+                cbArea.style.transformOrigin = 'top left';
+                cbArea.style.marginLeft = `${(wrapperWidth - (1280 * ratio)) / 2}px`;
+                cbWrapper.style.height = `${720 * ratio}px`;
+            }
+
+            // Scale MEO Diagnosis Sheet
+            const diagArea = document.getElementById('diagSheetCaptureArea');
+            const diagWrapper = document.getElementById('diagPreviewWrapper');
+            if (diagArea && diagWrapper) {
+                diagArea.style.transform = 'none';
+                diagArea.style.margin = '0';
+                const wrapperWidth = diagWrapper.clientWidth;
+                let ratio = wrapperWidth / 1280;
+                if (ratio > 1) ratio = 1;
+                diagArea.style.transform = `scale(${ratio})`;
+                diagArea.style.transformOrigin = 'top left';
+                diagArea.style.marginLeft = `${(wrapperWidth - (1280 * ratio)) / 2}px`;
+                diagWrapper.style.height = `${720 * ratio}px`;
+            }
         };
 
         window.addEventListener('resize', () => {
@@ -2072,18 +2084,18 @@
                         rankContainer.innerText = k.rank || '-';
                     }
 
-                    // Volumes in the stats tables
+                    // Volumes in the stats tables (DO NOT MASK numbers, only keyword names)
                     const vol0mContainer = document.getElementById(`diagVol0m${i}`);
                     if (vol0mContainer) {
-                        vol0mContainer.innerHTML = `<span class="${displayClass}">${k.mask ? '██████████' : k.vol0m.toLocaleString()}</span>`;
+                        vol0mContainer.innerText = k.vol0m.toLocaleString();
                     }
                     const reachContainer = document.getElementById(`diagReach${i}`);
                     if (reachContainer) {
-                        reachContainer.innerHTML = `<span class="${displayClass}">${k.mask ? '██████████' : k.reach.toLocaleString()}</span>`;
+                        reachContainer.innerText = k.reach.toLocaleString();
                     }
                     const attractContainer = document.getElementById(`diagAttract${i}`);
                     if (attractContainer) {
-                        attractContainer.innerHTML = `<span class="${displayClass}">${k.mask ? '██████████' : k.attract.toLocaleString()}</span>`;
+                        attractContainer.innerText = k.attract.toLocaleString();
                     }
                 });
 
@@ -2301,10 +2313,12 @@
             const originalTransform = area.style.transform;
             const originalHeight = wrapper.style.height;
             const originalMargin = area.style.margin;
+            const originalMarginLeft = area.style.marginLeft;
 
             // Reset scale transform to capture at full resolution
             area.style.transform = 'none';
             area.style.margin = '0';
+            area.style.marginLeft = '0';
             wrapper.style.height = 'auto';
 
             const storeName = document.getElementById('cbStoreNameDisplay').innerText.replace(/【|】/g, '') || '店舗';
@@ -2323,6 +2337,7 @@
                 // Restore scaling
                 area.style.transform = originalTransform;
                 area.style.margin = originalMargin;
+                area.style.marginLeft = originalMarginLeft;
                 wrapper.style.height = originalHeight;
             });
         }
@@ -2335,10 +2350,12 @@
             const originalTransform = area.style.transform;
             const originalHeight = wrapper.style.height;
             const originalMargin = area.style.margin;
+            const originalMarginLeft = area.style.marginLeft;
 
             // Reset scale transform to capture at full resolution
             area.style.transform = 'none';
             area.style.margin = '0';
+            area.style.marginLeft = '0';
             wrapper.style.height = 'auto';
 
             const storeName = document.getElementById('cbStoreNameDisplay').innerText.replace(/【|】/g, '') || '店舗';
@@ -2350,6 +2367,7 @@
                 // Restore scaling
                 area.style.transform = originalTransform;
                 area.style.margin = originalMargin;
+                area.style.marginLeft = originalMarginLeft;
                 wrapper.style.height = originalHeight;
 
                 const link = document.createElement('a');
@@ -2367,10 +2385,12 @@
             const originalTransform = area.style.transform;
             const originalHeight = wrapper.style.height;
             const originalMargin = area.style.margin;
+            const originalMarginLeft = area.style.marginLeft;
 
             // Reset scale transform to capture at full resolution
             area.style.transform = 'none';
             area.style.margin = '0';
+            area.style.marginLeft = '0';
             wrapper.style.height = 'auto';
 
             const storeName = document.getElementById('cbStoreNameDisplay').innerText.replace(/【|】/g, '') || '店舗';
@@ -2389,6 +2409,7 @@
                 // Restore scaling
                 area.style.transform = originalTransform;
                 area.style.margin = originalMargin;
+                area.style.marginLeft = originalMarginLeft;
                 wrapper.style.height = originalHeight;
             });
         }
@@ -2401,13 +2422,15 @@
             const originalTransform = area.style.transform;
             const originalHeight = wrapper.style.height;
             const originalMargin = area.style.margin;
+            const originalMarginLeft = area.style.marginLeft;
 
             // Reset scale transform to capture at full resolution
             area.style.transform = 'none';
             area.style.margin = '0';
+            area.style.marginLeft = '0';
             wrapper.style.height = 'auto';
 
-            const storeName = document.getElementById('cbStoreNameDisplay').innerText.replace(/【|】/g, '') || '店舗';
+            const storeName = document.getElementById('cbStoreNameDisplay').innerText.replace(/【|21】/g, '') || '店舗';
             const today = new Date();
             const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
             const filename = `【${storeName}】MEOキーワード分析診断レポート_${dateStr}.png`;
@@ -2416,6 +2439,7 @@
                 // Restore scaling
                 area.style.transform = originalTransform;
                 area.style.margin = originalMargin;
+                area.style.marginLeft = originalMarginLeft;
                 wrapper.style.height = originalHeight;
 
                 const link = document.createElement('a');
