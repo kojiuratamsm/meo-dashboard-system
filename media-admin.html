@@ -47,6 +47,13 @@
 
         .btn-primary { background: linear-gradient(135deg, #DD6B20, #ED8936); border: none; color: white; padding: 12px 25px; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(237, 137, 54, 0.2); }
+        .btn-primary:disabled, .btn-draft:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .btn-draft { background: #FFFFFF; border: 2px solid #ED8936; color: #DD6B20; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-draft:hover { background: #FFFAF0; }
+
+        .draft-status-badge { display: inline-block; background: #FEF3C7; color: #92400E; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .save-status-msg { font-size: 12px; color: #718096; margin-left: 12px; transition: opacity 0.3s; }
         
         /* Quill Editor customization */
         .ql-toolbar.ql-snow { width: 100%; border: none !important; background: transparent; display: flex; flex-direction: row; flex-wrap: wrap; padding: 0 !important; box-shadow: none; margin-bottom: 20px; }
@@ -157,10 +164,17 @@
                     <button class="mobile-menu-btn" onclick="toggleAdminSidebar()"><i class="fa-solid fa-bars"></i></button>
                     <h1 id="page-title">新しい記事を書く</h1>
                 </div>
-                <button class="btn-primary" id="publishBtn" onclick="saveArticle()"><i class="fa-solid fa-upload"></i> <span class="publish-text">記事を公開する</span></button>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span id="saveStatusMsg" class="save-status-msg"></span>
+                    <button class="btn-draft" id="draftBtn" onclick="saveArticle(false)"><i class="fa-solid fa-floppy-disk"></i> 下書き保存</button>
+                    <button class="btn-primary" id="publishBtn" onclick="saveArticle(true)"><i class="fa-solid fa-upload"></i> <span class="publish-text">記事を公開する</span></button>
+                </div>
             </div>
-            <div id="list-search-container" style="display:none; margin-right: auto; margin-left: 30px;">
+            <div id="list-search-container" style="display:none; margin-right: auto; margin-left: 30px; align-items:center; gap:15px;">
                 <input type="text" id="articleSearch" class="form-control" style="width:250px; padding:8px 15px; border-radius:20px;" placeholder="執筆者で検索..." oninput="filterArticleList()">
+                <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:#4A5568; font-weight:600; cursor:pointer; white-space:nowrap;">
+                    <input type="checkbox" id="draftOnlyFilter" onchange="filterArticleList()"> 下書きのみ表示
+                </label>
             </div>
         </header>
 
@@ -289,6 +303,7 @@
 
         // 認証チェック
         let editingArticleId = null; // 編集中の記事ID
+        let currentArticleStatus = null; // 編集中の記事のステータス ('draft' | 'published' | null=新規)
         let allArticles = [];
 
         window.toggleAdminSidebar = function() {
@@ -325,16 +340,18 @@
                 document.getElementById('editor-view').style.display = 'block';
                 document.getElementById('list-view').style.display = 'none';
                 document.getElementById('list-search-container').style.display = 'none';
-                document.getElementById('page-title').innerText = editingArticleId ? '記事の編集' : '新しい記事を書く';
+                document.getElementById('page-title').innerText = editingArticleId ? (currentArticleStatus === 'draft' ? '記事の編集（下書き）' : '記事の編集') : '新しい記事を書く';
                 document.getElementById('publishBtn').style.display = 'flex';
+                document.getElementById('draftBtn').style.display = 'flex';
                 document.getElementById('toolbar-container').style.display = 'block';
             } else {
                 if(document.getElementById('nav-list')) document.getElementById('nav-list').classList.add('active');
                 document.getElementById('editor-view').style.display = 'none';
                 document.getElementById('list-view').style.display = 'block';
-                document.getElementById('list-search-container').style.display = 'block';
+                document.getElementById('list-search-container').style.display = 'flex';
                 document.getElementById('page-title').innerText = '作成した記事一覧';
                 document.getElementById('publishBtn').style.display = 'none';
+                document.getElementById('draftBtn').style.display = 'none';
                 document.getElementById('toolbar-container').style.display = 'none';
                 
                 loadArticleList();
@@ -343,9 +360,12 @@
 
         window.resetEditor = function() {
             if (window.innerWidth <= 900) toggleAdminSidebar();
-            
+
             editingArticleId = null;
+            currentArticleStatus = null;
             document.getElementById('page-title').innerText = '新しい記事を書く';
+            const statusMsgEl = document.getElementById('saveStatusMsg');
+            if (statusMsgEl) statusMsgEl.innerText = '';
             document.getElementById('blogTitle').value = '';
             document.getElementById('seoGbpUrl').value = '';
             document.getElementById('seoExternalLink').value = '';
@@ -439,12 +459,17 @@
             }
 
             let query = supabase.from('blogs')
-                .select('id, title, author_name, published_date, created_at, tags, image_url, seo_keywords, store_name, phone, address, gbp_url, external_link')
+                .select('id, title, author_name, published_date, created_at, tags, image_url, seo_keywords, store_name, phone, address, gbp_url, external_link, status')
                 .order('created_at', { ascending: false });
 
             const q = document.getElementById('articleSearch').value.trim();
             if (q) {
                 query = query.or(`title.ilike.%${q}%,author_name.ilike.%${q}%`);
+            }
+
+            const draftOnly = document.getElementById('draftOnlyFilter') && document.getElementById('draftOnlyFilter').checked;
+            if (draftOnly) {
+                query = query.eq('status', 'draft');
             }
 
             const start = currentAdminPage * ADMIN_ITEMS_PER_PAGE;
@@ -489,24 +514,29 @@
                     const dateStr = dateRaw.split('T')[0];
                     const imgUrl = article.image_url || 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=200';
                     const articleUrl = window.location.origin + '/media.html?id=' + article.id;
+                    const isDraft = article.status === 'draft';
+                    const draftBadge = isDraft ? '<span class="draft-status-badge"><i class="fa-solid fa-pen"></i> 下書き（未公開）</span>' : '';
+                    const linkRow = isDraft
+                        ? `<div style="display:flex; align-items:center; gap:8px; font-size:11px; color:#92400E; background:#FEF3C7; padding:4px 8px; border-radius:6px; width:fit-content; max-width:100%; box-sizing:border-box;">まだ公開されていません。公開すると記事URLが発行されます。</div>`
+                        : `<div style="display:flex; align-items:center; gap:8px; font-size:11px; color:#4A5568; background:#F8FAFC; padding:4px 8px; border-radius:6px; width:fit-content; max-width:100%; border:1px solid #E2E8F0; box-sizing:border-box;" onclick="event.stopPropagation();">
+                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; flex:1; min-width:0; font-family:monospace; color:#718096;">${articleUrl}</span>
+                                        <button onclick="copyToClipboard('${articleUrl}', this)" style="background:#ED8936; color:white; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold; display:flex; align-items:center; gap:4px; transition:all 0.2s; white-space:nowrap; flex-shrink:0;">
+                                            <i class="fa-regular fa-copy"></i> コピー
+                                        </button>
+                                    </div>`;
                     listHTML += `
-                        <div class="article-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#fff; border:1px solid #E2E8F0; border-radius:12px; transition:0.2s; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                        <div class="article-item" style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:#fff; border:1px solid ${isDraft ? '#F59E0B' : '#E2E8F0'}; border-radius:12px; transition:0.2s; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
                             <div style="display:flex; align-items:center; gap:20px; flex:1; min-width:0; cursor:pointer;" onclick="loadArticleForEdit('${article.id}')">
                                 <div style="width:100px; height:70px; border-radius:8px; overflow:hidden; flex-shrink:0;">
                                     <img src="${imgUrl}" style="width:100%; height:100%; object-fit:cover;">
                                 </div>
                                 <div style="flex:1; min-width:0;">
-                                    <div class="article-item-title article-item-title-clickable" style="font-size:16px; font-weight:bold; color:#2D3748; margin-bottom:8px; transition: 0.2s; white-space: normal; word-break: break-word;">${article.title || '(タイトルなし)'}</div>
+                                    <div class="article-item-title article-item-title-clickable" style="font-size:16px; font-weight:bold; color:#2D3748; margin-bottom:8px; transition: 0.2s; white-space: normal; word-break: break-word;">${draftBadge} ${article.title || '(タイトルなし)'}</div>
                                     <div style="font-size:12px; color:#718096; display:flex; gap:15px; margin-bottom:8px;">
                                         <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
                                         <span><i class="fa-solid fa-pen-nib"></i> ${article.author_name || '不明'}</span>
                                     </div>
-                                    <div style="display:flex; align-items:center; gap:8px; font-size:11px; color:#4A5568; background:#F8FAFC; padding:4px 8px; border-radius:6px; width:fit-content; max-width:100%; border:1px solid #E2E8F0; box-sizing:border-box;" onclick="event.stopPropagation();">
-                                        <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; flex:1; min-width:0; font-family:monospace; color:#718096;">${articleUrl}</span>
-                                        <button onclick="copyToClipboard('${articleUrl}', this)" style="background:#ED8936; color:white; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:bold; display:flex; align-items:center; gap:4px; transition:all 0.2s; white-space:nowrap; flex-shrink:0;">
-                                            <i class="fa-regular fa-copy"></i> コピー
-                                        </button>
-                                    </div>
+                                    ${linkRow}
                                 </div>
                             </div>
                             <div style="display:flex; gap:10px; flex-shrink:0; margin-left:20px;">
@@ -542,6 +572,7 @@
             if (!article) return;
             
             editingArticleId = id;
+            currentArticleStatus = article.status || 'published'; // 旧データ(statusカラム追加前)は公開済み扱い
             document.getElementById('blogTitle').value = article.title || '';
             
             let authorVal = article.author_name || '';
@@ -579,8 +610,10 @@
             quill.root.innerHTML = '<p style="color:#718096;">本文を読み込み中...</p>';
             
             const btnText = document.querySelector('.publish-text');
-            if (btnText) btnText.innerText = '更新する';
-            
+            if (btnText) btnText.innerText = (currentArticleStatus === 'draft') ? '記事を公開する' : '更新する';
+            const statusMsgEl = document.getElementById('saveStatusMsg');
+            if (statusMsgEl) statusMsgEl.innerText = '';
+
             switchView('editor');
             document.querySelector('.main-content').scrollTop = 0;
 
@@ -866,7 +899,8 @@
             window.location.href = '/media-login.html';
         };
 
-        window.saveArticle = async function() {
+        // publish: true = 「記事を公開する/更新する」ボタン。false = 「下書き保存」ボタン。
+        window.saveArticle = async function(publish) {
             const title = document.getElementById('blogTitle').value.trim();
             const category = document.getElementById('blogCategory').value;
             const thumbnail = document.getElementById('blogThumbnail').value.trim();
@@ -877,7 +911,7 @@
             const address = document.getElementById('seoAddress').value.trim();
             const gbpUrl = document.getElementById('seoGbpUrl').value.trim();
             const externalLink = document.getElementById('seoExternalLink').value.trim();
-            
+
             let contentHTML = quill.root.innerHTML;
 
             if(!title || contentHTML === '<p><br></p>') {
@@ -885,10 +919,14 @@
                 return;
             }
 
-            const btn = document.querySelector('#publishBtn');
-            const originalBtnText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span class="publish-text">保存中...</span>';
-            btn.disabled = true;
+            const publishBtn = document.querySelector('#publishBtn');
+            const draftBtn = document.querySelector('#draftBtn');
+            const activeBtn = publish ? publishBtn : draftBtn;
+            const originalPublishHTML = publishBtn.innerHTML;
+            const originalDraftHTML = draftBtn.innerHTML;
+            activeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (publish ? '<span class="publish-text">保存中...</span>' : '保存中...');
+            publishBtn.disabled = true;
+            draftBtn.disabled = true;
 
             const payload = {
                 title: title,
@@ -903,39 +941,65 @@
                 tags: [category],
                 seo_keywords: tagsList,
                 image_url: thumbnail,
+                status: publish ? 'published' : 'draft',
             };
 
             let saveError = null;
+            const wasNewArticle = !editingArticleId;
 
             try {
                 if (editingArticleId) {
-                    // 更新
+                    // 更新（既存の下書き or 公開済み記事）
                     const { error } = await supabase.from('blogs').update(payload).eq('id', editingArticleId);
                     saveError = error;
                 } else {
-                    // 新規作成
-                    const { error } = await supabase.from('blogs').insert([payload]);
+                    // 新規作成（公開 or 下書きどちらの初回保存でもinsert。以降は上のupdate分岐でこの行のIDを使い続ける）
+                    const { data: inserted, error } = await supabase.from('blogs').insert([payload]).select('id').single();
                     saveError = error;
+                    if (!error && inserted) {
+                        editingArticleId = inserted.id;
+                    }
                 }
             } catch (err) {
                 console.error("Uncaught exception in saveArticle:", err);
                 alert('通信エラーまたはサーバーエラーが発生しました。時間を置いて再度お試しください。\nエラー詳細: ' + (err.message || err));
-                btn.innerHTML = originalBtnText;
-                btn.disabled = false;
+                publishBtn.innerHTML = originalPublishHTML;
+                draftBtn.innerHTML = originalDraftHTML;
+                publishBtn.disabled = false;
+                draftBtn.disabled = false;
                 return;
             }
 
             if (saveError) {
                 console.error(saveError);
                 alert('保存に失敗しました。詳細: ' + (saveError.message || JSON.stringify(saveError)));
-                btn.innerHTML = originalBtnText;
-                btn.disabled = false;
-            } else {
-                // 完了後は新規作成モードに戻して一覧更新
-                alert(editingArticleId ? '記事を更新しました！' : '記事を公開しました！');
+                publishBtn.innerHTML = originalPublishHTML;
+                draftBtn.innerHTML = originalDraftHTML;
+                publishBtn.disabled = false;
+                draftBtn.disabled = false;
+                return;
+            }
+
+            publishBtn.disabled = false;
+            draftBtn.disabled = false;
+            publishBtn.innerHTML = originalPublishHTML;
+            draftBtn.innerHTML = originalDraftHTML;
+
+            if (publish) {
+                // 公開（新規公開、下書きからの公開、公開済み記事の更新のいずれも）
+                alert(wasNewArticle ? '記事を公開しました！' : (currentArticleStatus === 'draft' ? '下書きを公開しました！' : '記事を更新しました！'));
                 clearDraft();
                 resetEditor();
                 switchView('list');
+            } else {
+                // 下書き保存：エディタに留まり、公開はしない
+                currentArticleStatus = 'draft';
+                clearDraft();
+                const statusMsgEl = document.getElementById('saveStatusMsg');
+                if (statusMsgEl) statusMsgEl.innerText = '下書きを保存しました（' + new Date().toLocaleTimeString('ja-JP') + '）';
+                document.getElementById('page-title').innerText = '記事の編集（下書き）';
+                const btnText = document.querySelector('.publish-text');
+                if (btnText) btnText.innerText = '記事を公開する';
             }
         };
 

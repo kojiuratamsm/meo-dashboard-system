@@ -294,8 +294,9 @@
 
             let query = supabase.from('blogs')
                 .select('id, title, author_name, published_date, created_at, tags, image_url')
+                .eq('status', 'published')
                 .order('created_at', { ascending: false });
-            
+
             if (categoryFilter) {
                 query = query.contains('tags', `["${categoryFilter}"]`);
             }
@@ -438,8 +439,9 @@
         }
 
         async function loadArticle(id) {
-            const { data: blog, error } = await supabase.from('blogs').select('*').eq('id', id).single();
-            
+            // status='published' の記事のみ公開ページで閲覧可能（下書きはURLを直接知っていても表示されない）
+            const { data: blog, error } = await supabase.from('blogs').select('*').eq('id', id).eq('status', 'published').single();
+
             if (error || !blog) {
                 app.innerHTML = `
                     <div style="padding: 100px 20px; text-align: center;">
