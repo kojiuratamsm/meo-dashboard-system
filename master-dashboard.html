@@ -572,6 +572,16 @@
                     <div style="display:grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px;">
                         <div>
                             <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">改善点BOX (改行で箇条書き)</label>
+                            <div style="position:relative; margin-bottom:6px;">
+                                <button type="button" id="cbImprovementStockToggleBtn" onclick="toggleImprovementStockPanel()" style="font-size:12px; padding:6px 12px; border:1px solid #CBD5E1; background:#F8FAFC; border-radius:6px; cursor:pointer; color:#2B3674; font-weight:bold;">
+                                    <i class="fa-solid fa-box-archive"></i> ストックから選ぶ <span id="cbImprovementStockCount" style="font-weight:normal; color:#718096;"></span>
+                                </button>
+                                <div id="cbImprovementStockPanel" style="display:none; position:absolute; z-index:50; top:36px; left:0; width:380px; max-width: 90vw; max-height:280px; overflow-y:auto; background:#FFFFFF; border:1px solid #CBD5E1; border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,0.15); padding:10px; box-sizing:border-box;">
+                                    <input type="text" id="cbImprovementStockSearch" placeholder="ストックを検索..." oninput="renderImprovementStockList()" style="width:100%; padding:6px 8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; margin-bottom:8px; box-sizing:border-box;">
+                                    <div id="cbImprovementStockList" style="display:flex; flex-direction:column; gap:4px;"></div>
+                                    <div id="cbImprovementStockEmpty" style="display:none; font-size:12px; color:#A0AEC0; text-align:center; padding:10px 0;"></div>
+                                </div>
+                            </div>
                             <textarea id="cbDiagImprovements" rows="6" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; font-size:13px; resize: vertical; outline: none;">①内部施策・外部施策を施すことによって順位が向上する可能性が高い。
 
 ②カテゴリーを塗装工しか設定されておらず、アピール不足
@@ -580,6 +590,7 @@
 定期的な投稿習慣をつけることを推奨。
 
 ④口コミ数を年内に30件を目標にしましょう。</textarea>
+                            <div style="font-size:11px; color:#A0AEC0; margin-top:4px;">保存すると、この中の各行が自動的に「ストック」へ追加され、次回以降「ストックから選ぶ」で再利用できます。</div>
                         </div>
                     </div>
 
@@ -1295,6 +1306,10 @@ Googleの評価システム上、成果には一定期間を要しますが、
             if (viewId === 'view-cost-benefit' && typeof initSavedCostBenefitDropdown === 'function') {
                 initSavedCostBenefitDropdown();
             }
+            // 同様に、改善点ストックも画面を開くたびに最新化する（他の担当者が追加した分も反映）
+            if (viewId === 'view-cost-benefit' && typeof initImprovementStock === 'function') {
+                initImprovementStock();
+            }
         };
 
         const dropZone = document.getElementById('csvDropZone');
@@ -1796,6 +1811,168 @@ Googleの評価システム上、成果には一定期間を要しますが、
         let cbHistory = [];
         let cbChartInstance = null;
 
+        // ==========================
+        // 改善点BOX ストック機能
+        // 過去に書いた改善点(1行=1項目)を保存しておき、選んで挿入できるようにする。
+        // 通常はSupabaseのcb_improvement_stockテーブルに保存し、他の担当者とも共有される。
+        // 万が一そのテーブルが無い/通信できない場合は、ブラウザ内保存に自動で切り替えて動作を止めない。
+        // ==========================
+        let cbImprovementStock = []; // [{id, text}]
+        let cbImprovementStockUseSupabase = true;
+        const CB_IMPROVEMENT_STOCK_LOCAL_KEY = 'cb_improvement_stock_fallback_v1';
+
+        function loadImprovementStockFromLocal() {
+            try {
+                const raw = localStorage.getItem(CB_IMPROVEMENT_STOCK_LOCAL_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) { return []; }
+        }
+
+        function saveImprovementStockToLocal(list) {
+            try { localStorage.setItem(CB_IMPROVEMENT_STOCK_LOCAL_KEY, JSON.stringify(list)); } catch (e) {}
+        }
+
+        window.initImprovementStock = async function() {
+            try {
+                const { data, error } = await supabase.from('cb_improvement_stock').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                cbImprovementStock = (data || []).map(r => ({ id: r.id, text: r.text }));
+                cbImprovementStockUseSupabase = true;
+            } catch (e) {
+                console.warn('[改善点ストック] Supabaseのcb_improvement_stockテーブルを利用できないため、ブラウザ内保存で動作します（他の担当者とは共有されません）。', e && e.message);
+                cbImprovementStockUseSupabase = false;
+                cbImprovementStock = loadImprovementStockFromLocal();
+            }
+            renderImprovementStockList();
+        };
+
+        async function addToImprovementStock(text) {
+            const trimmed = (text || '').trim();
+            if (!trimmed) return;
+            // 完全一致するものが既にある場合は追加しない
+            if (cbImprovementStock.some(item => item.text === trimmed)) return;
+
+            if (cbImprovementStockUseSupabase) {
+                try {
+                    const { data, error } = await supabase.from('cb_improvement_stock').insert([{ text: trimmed }]).select();
+                    if (error) throw error;
+                    cbImprovementStock.unshift({ id: (data && data[0] && data[0].id) || `local_${Date.now()}`, text: trimmed });
+                    return;
+                } catch (e) {
+                    console.warn('[改善点ストック] Supabaseへの追加に失敗したため、ブラウザ内保存に切り替えます。', e && e.message);
+                    cbImprovementStockUseSupabase = false;
+                }
+            }
+            cbImprovementStock.unshift({ id: `local_${Date.now()}_${Math.random().toString(36).slice(2)}`, text: trimmed });
+            saveImprovementStockToLocal(cbImprovementStock);
+        }
+
+        // 改善点BOXの内容を1行ずつ確認し、まだストックに無い行を自動でストックへ追加する
+        window.syncImprovementBoxToStock = async function() {
+            const box = document.getElementById('cbDiagImprovements');
+            if (!box) return;
+            const lines = box.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            for (const line of lines) {
+                await addToImprovementStock(line);
+            }
+            renderImprovementStockList();
+        };
+
+        window.toggleImprovementStockPanel = function() {
+            const panel = document.getElementById('cbImprovementStockPanel');
+            if (!panel) return;
+            const willShow = panel.style.display === 'none';
+            panel.style.display = willShow ? 'block' : 'none';
+            if (willShow) {
+                const searchEl = document.getElementById('cbImprovementStockSearch');
+                if (searchEl) searchEl.value = '';
+                renderImprovementStockList();
+            }
+        };
+
+        window.renderImprovementStockList = function() {
+            const listEl = document.getElementById('cbImprovementStockList');
+            const emptyEl = document.getElementById('cbImprovementStockEmpty');
+            const countEl = document.getElementById('cbImprovementStockCount');
+            if (!listEl || !emptyEl) return;
+            if (countEl) countEl.innerText = cbImprovementStock.length ? `(${cbImprovementStock.length}件)` : '';
+
+            const searchEl = document.getElementById('cbImprovementStockSearch');
+            const keyword = searchEl ? searchEl.value.trim() : '';
+            const filtered = keyword ? cbImprovementStock.filter(item => item.text.includes(keyword)) : cbImprovementStock;
+
+            listEl.innerHTML = '';
+            if (filtered.length === 0) {
+                emptyEl.style.display = 'block';
+                emptyEl.innerText = cbImprovementStock.length === 0
+                    ? 'まだストックがありません。改善点を書いて保存すると、自動でここに追加されます。'
+                    : '該当するストックが見つかりません。';
+                return;
+            }
+            emptyEl.style.display = 'none';
+
+            filtered.forEach((item) => {
+                const row = document.createElement('div');
+                row.style.cssText = 'padding:6px 8px; border-radius:6px; font-size:12px; cursor:pointer; border:1px solid #EDF2F7; display:flex; justify-content:space-between; align-items:flex-start; gap:6px;';
+                row.onmouseover = () => row.style.background = '#F8FAFC';
+                row.onmouseout = () => row.style.background = '#FFFFFF';
+
+                const textSpan = document.createElement('span');
+                textSpan.innerText = item.text;
+                textSpan.style.cssText = 'flex:1; white-space:pre-wrap; word-break:break-word;';
+                textSpan.onclick = () => insertImprovementStockItem(item.text);
+
+                const delBtn = document.createElement('span');
+                delBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                delBtn.title = 'ストックから削除';
+                delBtn.style.cssText = 'color:#CBD5E1; font-size:11px; flex-shrink:0; padding:2px 4px;';
+                delBtn.onmouseover = (e) => { e.stopPropagation(); delBtn.style.color = '#E53E3E'; };
+                delBtn.onmouseout = (e) => { e.stopPropagation(); delBtn.style.color = '#CBD5E1'; };
+                delBtn.onclick = (e) => { e.stopPropagation(); removeFromImprovementStock(item); };
+
+                row.appendChild(textSpan);
+                row.appendChild(delBtn);
+                listEl.appendChild(row);
+            });
+        };
+
+        window.insertImprovementStockItem = function(text) {
+            const box = document.getElementById('cbDiagImprovements');
+            if (!box) return;
+            const current = box.value;
+            const alreadyPresent = current.split('\n').map(l => l.trim()).includes(text.trim());
+            if (!alreadyPresent) {
+                box.value = current.trim() ? `${current.replace(/\s+$/, '')}\n\n${text}` : text;
+            }
+            const panel = document.getElementById('cbImprovementStockPanel');
+            if (panel) panel.style.display = 'none';
+        };
+
+        window.removeFromImprovementStock = async function(item) {
+            if (!confirm(`ストックから削除しますか？\n\n「${item.text}」`)) return;
+            cbImprovementStock = cbImprovementStock.filter(i => i !== item);
+            if (cbImprovementStockUseSupabase && !String(item.id).startsWith('local_')) {
+                try {
+                    const { error } = await supabase.from('cb_improvement_stock').delete().eq('id', item.id);
+                    if (error) throw error;
+                } catch (e) {
+                    console.warn('[改善点ストック] Supabaseからの削除に失敗しました。', e && e.message);
+                }
+            } else {
+                saveImprovementStockToLocal(cbImprovementStock);
+            }
+            renderImprovementStockList();
+        };
+
+        // ストックのパネルを、外側クリックで閉じる
+        document.addEventListener('click', function(e) {
+            const panel = document.getElementById('cbImprovementStockPanel');
+            const btn = document.getElementById('cbImprovementStockToggleBtn');
+            if (!panel || panel.style.display === 'none') return;
+            if (panel.contains(e.target) || (btn && btn.contains(e.target))) return;
+            panel.style.display = 'none';
+        });
+
         window.initSavedCostBenefitDropdown = async function() {
             let select = document.getElementById('savedCostBenefitSelect');
             select.innerHTML = '<option value="">読み込み中...</option>';
@@ -2038,6 +2215,11 @@ Googleの評価システム上、成果には一定期間を要しますが、
             if (!storeName || !unitPriceStr) {
                 alert("店舗名と推定客単価は必須項目です。");
                 return;
+            }
+
+            // 改善点BOXの内容を、非同期でストックへ同期する（保存処理自体は待たせない）
+            if (typeof syncImprovementBoxToStock === 'function') {
+                syncImprovementBoxToStock();
             }
 
             const unitPrice = parseInt(unitPriceStr);
@@ -2746,6 +2928,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
             loadClients();
             initSavedAnalysisDropdown();
             initSavedCostBenefitDropdown();
+            initImprovementStock();
 
             // 更新通知の表示
             setTimeout(() => {
