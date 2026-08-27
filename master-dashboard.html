@@ -438,9 +438,14 @@
                         <input type="text" id="cbUnitPrice" placeholder="例: 5000" onkeyup="this.value=this.value.replace(/[^0-9]/g,'')" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; margin-bottom:15px;">
 
                         <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">推定集客数の割合</label>
-                        <div style="display:flex; gap:15px; margin-bottom: 15px;">
-                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="cbConvRate" value="0.1" checked> 10% (堅実)</label>
-                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="cbConvRate" value="0.3"> 30% (強気)</label>
+                        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:15px; margin-bottom: 15px;">
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="cbConvRate" value="0.1" id="cbConvRate10" checked onchange="document.getElementById('cbConvRateCustom').value='';"> 10% (堅実)</label>
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;"><input type="radio" name="cbConvRate" value="0.3" id="cbConvRate30" onchange="document.getElementById('cbConvRateCustom').value='';"> 30% (強気)</label>
+                            <label style="display:flex; align-items:center; gap:5px; cursor:pointer;">
+                                <input type="radio" name="cbConvRate" value="custom" id="cbConvRateCustomRadio"> その他
+                                <input type="number" id="cbConvRateCustom" min="0" max="100" step="0.1" placeholder="5" style="width:60px; padding:6px; border:1px solid #E2E8F0; border-radius:6px;" onfocus="document.getElementById('cbConvRateCustomRadio').checked=true" oninput="document.getElementById('cbConvRateCustomRadio').checked=true">
+                                %
+                            </label>
                         </div>
                     </div>
                     <div>
@@ -603,17 +608,23 @@ Googleの評価システム上、成果には一定期間を要しますが、
                         <div style="border: 1px solid #E2E8F0; padding:12px; border-radius:8px; background:#F8FAFC;">
                             <span style="font-weight:bold; font-size:12px; color:#4A5568; display:block; margin-bottom:6px;">競合1</span>
                             <input type="text" id="cbCompName1" placeholder="店舗名" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; margin-bottom:8px;">
-                            <textarea id="cbCompDesc1" rows="3" placeholder="詳細データ（口コミ数や投稿頻度など）" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; resize: vertical; outline: none;"></textarea>
+                            <textarea id="cbCompDesc1" rows="3" placeholder="詳細データ（口コミ数や投稿頻度など）" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; resize: vertical; outline: none;">評価:
+口コミ:
+連携SNS:</textarea>
                         </div>
                         <div style="border: 1px solid #E2E8F0; padding:12px; border-radius:8px; background:#F8FAFC;">
                             <span style="font-weight:bold; font-size:12px; color:#4A5568; display:block; margin-bottom:6px;">競合2</span>
                             <input type="text" id="cbCompName2" placeholder="店舗名" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; margin-bottom:8px;">
-                            <textarea id="cbCompDesc2" rows="3" placeholder="詳細データ（口コミ数や投稿頻度など）" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; resize: vertical; outline: none;"></textarea>
+                            <textarea id="cbCompDesc2" rows="3" placeholder="詳細データ（口コミ数や投稿頻度など）" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; resize: vertical; outline: none;">評価:
+口コミ:
+連携SNS:</textarea>
                         </div>
                         <div style="border: 1px solid #E2E8F0; padding:12px; border-radius:8px; background:#F8FAFC;">
                             <span style="font-weight:bold; font-size:12px; color:#4A5568; display:block; margin-bottom:6px;">競合3</span>
                             <input type="text" id="cbCompName3" placeholder="店舗名" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; margin-bottom:8px;">
-                            <textarea id="cbCompDesc3" rows="3" placeholder="詳細データ（口コミ数や投稿頻度など）" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; resize: vertical; outline: none;"></textarea>
+                            <textarea id="cbCompDesc3" rows="3" placeholder="詳細データ（口コミ数や投稿頻度など）" style="width:100%; padding:8px; border:1px solid #E2E8F0; border-radius:6px; font-size:12px; resize: vertical; outline: none;">評価:
+口コミ:
+連携SNS:</textarea>
                         </div>
                     </div>
                 </div>
@@ -1876,7 +1887,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
             document.getElementById('cbDiagConclusion').value = '今すぐ対策を強めるべきフェーズです';
             for (let i = 1; i <= 3; i++) {
                 document.getElementById(`cbCompName${i}`).value = '';
-                document.getElementById(`cbCompDesc${i}`).value = '';
+                document.getElementById(`cbCompDesc${i}`).value = '評価:\n口コミ:\n連携SNS:';
             }
             document.getElementById('cbPreviewContainer').style.display = 'none';
         }
@@ -2030,8 +2041,19 @@ Googleの評価システム上、成果には一定期間を要しますが、
             }
 
             const unitPrice = parseInt(unitPriceStr);
-            const convRate = parseFloat(document.querySelector('input[name="cbConvRate"]:checked').value);
-            
+            const checkedConvRateInput = document.querySelector('input[name="cbConvRate"]:checked');
+            let convRate;
+            if (checkedConvRateInput.value === 'custom') {
+                const customPercent = parseFloat(document.getElementById('cbConvRateCustom').value);
+                if (isNaN(customPercent) || customPercent <= 0 || customPercent > 100) {
+                    alert("推定集客数の割合（その他）には、0より大きく100以下の数値（%）を入力してください。");
+                    return;
+                }
+                convRate = customPercent / 100;
+            } else {
+                convRate = parseFloat(checkedConvRateInput.value);
+            }
+
             const keywords = [];
             for (let i = 1; i <= 4; i++) {
                 keywords.push({
@@ -2515,19 +2537,29 @@ Googleの評価システム上、成果には一定期間を要しますが、
                 diag.competitors.forEach((c, idx) => {
                     const i = idx + 1;
                     document.getElementById(`cbCompName${i}`).value = c.name || '';
-                    document.getElementById(`cbCompDesc${i}`).value = c.desc || '';
+                    document.getElementById(`cbCompDesc${i}`).value = (c.desc && c.desc.trim()) ? c.desc : '評価:\n口コミ:\n連携SNS:';
                 });
             } else {
                 for (let i = 1; i <= 3; i++) {
                     document.getElementById(`cbCompName${i}`).value = '';
-                    document.getElementById(`cbCompDesc${i}`).value = '';
+                    document.getElementById(`cbCompDesc${i}`).value = '評価:\n口コミ:\n連携SNS:';
                 }
             }
 
             const radios = document.querySelectorAll('input[name="cbConvRate"]');
+            let cbConvRateMatched = false;
             radios.forEach(r => {
-                if (parseFloat(r.value) === data.conversion_rate) r.checked = true;
+                if (r.value !== 'custom' && parseFloat(r.value) === data.conversion_rate) {
+                    r.checked = true;
+                    cbConvRateMatched = true;
+                }
             });
+            if (!cbConvRateMatched && typeof data.conversion_rate === 'number' && !isNaN(data.conversion_rate)) {
+                document.getElementById('cbConvRateCustomRadio').checked = true;
+                document.getElementById('cbConvRateCustom').value = Math.round(data.conversion_rate * 1000) / 10;
+            } else {
+                document.getElementById('cbConvRateCustom').value = '';
+            }
 
             generateCostBenefitPreview(false, data); // Render without saving a duplicate
             
