@@ -45,12 +45,42 @@ function urlCard() {
         urlRow('ログインページ', '/login', '申し込み後は、このページから登録したメールアドレスとパスワードでログインすると、MapOn NEO の管理画面が開きます。'));
 }
 
+// 契約者の管理画面「設問」欄の【確認する】ボタンのリンク先
+function guideUrlCard(current) {
+    const input = el('input', { class: 'input grow', value: current || '', placeholder: 'https://', inputmode: 'url' });
+    const msg = el('p', { class: 'msg' });
+    const saveBtn = el('button', { class: 'btn small', type: 'button' }, '保存');
+    const openBtn = el('a', { class: 'btn small sub', target: '_blank', rel: 'noopener', href: current || '#' }, '開く');
+    const syncOpen = () => { const v = input.value.trim(); openBtn.href = v || '#'; openBtn.style.visibility = v ? 'visible' : 'hidden'; };
+    syncOpen();
+    input.addEventListener('input', () => { msg.textContent = ''; syncOpen(); });
+    saveBtn.addEventListener('click', async () => {
+        const v = input.value.trim();
+        if (v && !/^https:\/\/[^\s/?#]+\.\S+$/.test(v)) {
+            msg.className = 'msg ng'; msg.textContent = 'https:// で始まるURLを貼り付けてください。'; return;
+        }
+        saveBtn.disabled = true;
+        const { error } = await supabase.from('neo_settings')
+            .upsert({ key: 'question_guide_url', value: v || null, updated_at: new Date().toISOString() });
+        saveBtn.disabled = false;
+        if (error) { msg.className = 'msg ng'; msg.textContent = '保存できませんでした: ' + error.message; return; }
+        msg.className = 'msg ok';
+        msg.textContent = v ? '保存しました。契約者の管理画面に【確認する】ボタンが表示されます。' : '空欄で保存しました。【確認する】ボタンは表示されません。';
+    });
+    return el('div', { class: 'card' },
+        el('h2', { text: '設問の書き方ガイドのURL' }),
+        el('div', { class: 'row' }, input, saveBtn, openBtn), msg,
+        el('p', { class: 'muted', style: { marginTop: '6px', fontSize: '12px', lineHeight: '1.7' },
+            text: '契約者の管理画面(アンケート作成の「設問」欄)にある【確認する】ボタンのリンク先です。空欄のときは、ボタンは表示されません。' }));
+}
+
 async function render() {
     app.replaceChildren(el('p', { class: 'muted', text: '読み込み中...' }));
-    const [clientsRes, surveysRes, statsRes] = await Promise.all([
+    const [clientsRes, surveysRes, statsRes, settingRes] = await Promise.all([
         supabase.from('clients').select('id, company_name, email, created_at, auth_id').eq('plan', NEO_PLAN).order('created_at', { ascending: false }),
         supabase.from('neo_surveys').select('id, client_id').is('deleted_at', null),
         supabase.from('neo_survey_stats').select('survey_id, response_count'),
+        supabase.from('neo_settings').select('value').eq('key', 'question_guide_url').maybeSingle(),
     ]);
     const error = clientsRes.error || surveysRes.error || statsRes.error;
     if (error) {
@@ -94,6 +124,10 @@ async function render() {
     app.replaceChildren(
         el('div', { class: 'page-title' }, 'MapOn NEO'),
         urlCard(),
+        settingRes.error
+            ? el('div', { class: 'card' }, el('h2', { text: '設問の書き方ガイドのURL' }),
+                el('p', { class: 'muted', text: 'この欄を使うには、Supabase で「追加SQL_3_設問ガイドURL.sql」を実行してください。' }))
+            : guideUrlCard(settingRes.data?.value),
         el('div', { class: 'card' },
             el('h2', { text: `契約者一覧(${clients.length}件)` }),
             el('div', { class: 'row', style: { marginBottom: '14px' } }, search),

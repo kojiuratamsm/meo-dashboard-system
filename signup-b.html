@@ -220,7 +220,16 @@
 
             if (authError) {
                 console.error("Auth登録エラー:", authError);
-                alert("アカウント作成に失敗しました: " + authError.message);
+                // よくある原因を、分かる言葉で表示する
+                let reason = authError.message || '';
+                if (/already registered|already exists/i.test(reason)) {
+                    reason = 'このメールアドレスは、すでに登録されています。ログイン画面からログインしてください。';
+                } else if (/Database error saving new user/i.test(reason)) {
+                    reason = 'このメールアドレスは、すでに店舗として登録されている可能性があります。別のメールアドレスで試すか、担当者にご連絡ください。';
+                } else if (/rate limit/i.test(reason)) {
+                    reason = '短い時間に何度も登録が行われました。しばらく待ってから、もう一度お試しください。';
+                }
+                alert("アカウント作成に失敗しました。\n" + reason);
                 btn.innerHTML = '<span>アカウントを作成して開始</span> <i class="fa-solid fa-arrow-right"></i>';
                 btn.disabled = false;
                 return;
