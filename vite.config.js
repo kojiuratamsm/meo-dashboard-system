@@ -14,6 +14,8 @@ export default defineConfig({
         resetPassword: resolve(__dirname, 'reset-password.html'),
         masterSurveys: resolve(__dirname, 'master-surveys.html'),
         survey: resolve(__dirname, 'survey.html'),
+        neo: resolve(__dirname, 'neo.html'),
+        signupNeo: resolve(__dirname, 'signup-neo.html'),
         signupA: resolve(__dirname, 'signup-a.html'),
         signupB: resolve(__dirname, 'signup-b.html'),
         signupC: resolve(__dirname, 'signup-c.html'),

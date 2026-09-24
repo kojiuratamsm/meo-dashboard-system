@@ -178,7 +178,8 @@
         <a class="nav-item" id="nav-posts-btn" onclick="switchMainView('posts', this)" style="display: flex;">
             <i class="fa-solid fa-pen-to-square"></i> 投稿作成
         </a>
-        <a class="nav-item" onclick="switchMainView('reviews', this)" style="position: relative;">
+        <!-- MapOn NEO は専用の管理画面(neo.html)に移したため、この画面では非表示 -->
+        <a class="nav-item" onclick="switchMainView('reviews', this)" style="position: relative; display: none;">
             <i class="fa-solid fa-star"></i> MapOn NEO
             <span style="position:absolute; right:15px; background:#EA4335; color:white; font-size:10px; padding:2px 6px; border-radius:10px;">HOT</span>
         </a>

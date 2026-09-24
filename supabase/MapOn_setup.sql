@@ -118,7 +118,7 @@ begin
   if meta->>'signup_source' is distinct from 'mapon_signup' then
     return new;  -- 申込フォーム以外で作られたユーザー(ライター等)は対象外
   end if;
-  if v_plan not in ('A', 'B', 'C') then v_plan := null; end if;
+  if v_plan not in ('A', 'B', 'C', 'D') then v_plan := null; end if;  -- D = MapOn NEO
   insert into public.clients (auth_id, company_name, email, plan, status)
   values (new.id, v_company, new.email, v_plan, '稼働中');
   return new;
@@ -193,9 +193,11 @@ grant select, insert, update, delete on public.neo_surveys, public.neo_survey_re
 drop policy if exists neo_surveys_staff_all on public.neo_surveys;
 create policy neo_surveys_staff_all on public.neo_surveys
   for all to authenticated using (public.is_msm_staff()) with check (public.is_msm_staff());
+-- 契約者(店舗オーナー)は、自分の店舗のアンケートを作成・編集・削除できる
 drop policy if exists neo_surveys_owner_select on public.neo_surveys;
-create policy neo_surveys_owner_select on public.neo_surveys
-  for select to authenticated using (deleted_at is null and client_id = public.my_client_id());
+drop policy if exists neo_surveys_owner_all on public.neo_surveys;
+create policy neo_surveys_owner_all on public.neo_surveys
+  for all to authenticated using (client_id = public.my_client_id()) with check (client_id = public.my_client_id());
 
 drop policy if exists neo_survey_responses_staff_all on public.neo_survey_responses;
 create policy neo_survey_responses_staff_all on public.neo_survey_responses
