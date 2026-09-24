@@ -16,15 +16,33 @@ function fmtDate(iso) {
     return `${d.getFullYear()}/${z(d.getMonth() + 1)}/${z(d.getDate())}`;
 }
 
-async function copySignupUrl(button) {
-    const url = `${location.origin}/signup-neo`;
-    try {
-        await navigator.clipboard.writeText(url);
-        button.textContent = 'コピーしました';
-        setTimeout(() => { button.textContent = '申し込みフォームのURLをコピー'; }, 2000);
-    } catch {
-        prompt('このURLをコピーして送ってください', url);
-    }
+// 契約者に送るURL(マスター画面の上部に常に表示する)
+function urlRow(label, path, note) {
+    const url = `${location.origin}${path}`;
+    const input = el('input', { class: 'input grow', value: url, readonly: true });
+    const copyBtn = el('button', { class: 'btn small', type: 'button' }, 'コピー');
+    copyBtn.addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(url);
+            copyBtn.textContent = 'コピーしました';
+            setTimeout(() => { copyBtn.textContent = 'コピー'; }, 2000);
+        } catch {
+            input.select();
+            alert('自動でコピーできませんでした。選択された文字をコピーしてください。');
+        }
+    });
+    return el('div', { class: 'field', style: { marginBottom: '12px' } },
+        el('label', { text: label }),
+        el('div', { class: 'row' }, input, copyBtn,
+            el('a', { href: url, target: '_blank', rel: 'noopener', class: 'btn small sub' }, '開く')),
+        el('p', { class: 'muted', style: { marginTop: '4px', fontSize: '12px' }, text: note }));
+}
+
+function urlCard() {
+    return el('div', { class: 'card' },
+        el('h2', { text: '契約者に送るURL' }),
+        urlRow('申し込みフォーム', '/signup-neo', '運用代行の契約者に送ってください。名前・メールアドレス・パスワードを入力すると、MapOn NEO の管理画面が発行されます。'),
+        urlRow('ログインページ', '/login', '申し込み後は、このページから登録したメールアドレスとパスワードでログインすると、MapOn NEO の管理画面が開きます。'));
 }
 
 async function render() {
@@ -56,7 +74,7 @@ async function render() {
         const list = clients.filter(c => !q || `${c.company_name} ${c.email}`.toLowerCase().includes(q));
         if (!list.length) {
             tbody.replaceChildren(el('tr', {}, el('td', { colspan: '6', class: 'muted', style: { textAlign: 'center', padding: '30px', lineHeight: '1.8' },
-                text: clients.length ? '該当する契約者がいません。' : 'まだ登録した契約者がいません。「申し込みフォームのURLをコピー」から、契約者にフォームを送ってください。' })));
+                text: clients.length ? '該当する契約者がいません。' : 'まだ登録した契約者がいません。上の「申し込みフォーム」のURLを、契約者に送ってください。' })));
             return;
         }
         tbody.replaceChildren(...list.map(c => {
@@ -73,13 +91,11 @@ async function render() {
     };
     search.addEventListener('input', draw);
 
-    const copyBtn = el('button', { class: 'btn dark', type: 'button' }, '申し込みフォームのURLをコピー');
-    copyBtn.addEventListener('click', () => copySignupUrl(copyBtn));
-
     app.replaceChildren(
-        el('div', { class: 'page-title' }, 'MapOn NEO', el('span', { class: 'muted', text: `契約者一覧(${clients.length}件)` }),
-            el('span', { style: { marginLeft: 'auto' } }, copyBtn)),
+        el('div', { class: 'page-title' }, 'MapOn NEO'),
+        urlCard(),
         el('div', { class: 'card' },
+            el('h2', { text: `契約者一覧(${clients.length}件)` }),
             el('div', { class: 'row', style: { marginBottom: '14px' } }, search),
             el('div', { class: 'table-wrap' }, el('table', { class: 'table' },
                 el('thead', {}, el('tr', {}, ...['名前', 'メールアドレス', '登録日', 'アンケート', '回答', ''].map(h => el('th', { text: h })))),
