@@ -55,6 +55,17 @@ export function newQuestion(type = 'single') {
 
 function opts(labels) { return labels.map(label => ({ id: newId('o'), label })); }
 
+// MapOn NEO で新しくアンケートを作ったときの初期内容(業種を問わない共通の形)
+export const DEFAULT_INTRO = '本日はご来店ありがとうございました！\nよろしければ、簡単なアンケートにご協力ください(1分ほどで終わります)';
+export function defaultQuestions() {
+    return [
+        { id: newId('q'), type: 'stars', label: '本日の満足度を教えてください', required: true },
+        { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['商品・サービスの内容', 'スタッフの対応', 'お店の雰囲気', '価格', '特になし']) },
+        { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['特になし', '待ち時間', '料金', 'その他']) },
+        { id: newId('q'), type: 'long_text', label: 'ご感想(ご自由にお書きください)', required: false },
+    ];
+}
+
 // 業種別のひな形(設計書 6-2 のルールに沿い、「気になった点」を必ず含める)
 export const TEMPLATES = {
     restaurant: {

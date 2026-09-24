@@ -8,9 +8,10 @@
 
 import { supabase } from './supabase-config.js';
 import {
-    QUESTION_TYPES, CHOICE_TYPES, TEMPLATES, SURVEY_FORM_CSS,
+    QUESTION_TYPES, CHOICE_TYPES, DEFAULT_INTRO, defaultQuestions, SURVEY_FORM_CSS,
     checkReviewUrl, findPromoWords, newId, newQuestion, surveyPublicUrl, el, renderSurveyForm,
 } from './survey-lib.js';
+import { reviewUrlGuide, GUIDE_CSS } from './neo-guide.js';
 import { RESULTS_CSS, renderResults, makeQrCanvas, downloadQrPng } from './survey-results.js';
 
 let app = null;               // 描画先
@@ -145,11 +146,32 @@ async function renderList() {
 // ------------------------------------------------------------
 // 作成・編集
 // ------------------------------------------------------------
+// 設問の書き方ガイドのURL(マスター画面で設定)。未設定・読み込み失敗のときは空
+async function loadQuestionGuideUrl() {
+    try {
+        const { data, error } = await supabase.from('neo_settings').select('value').eq('key', 'question_guide_url').maybeSingle();
+        if (error) return '';
+        const url = String(data?.value || '').trim();
+        return /^https:\/\/\S+$/.test(url) ? url : '';
+    } catch { return ''; }
+}
+
+function questionHint(guideUrl) {
+    const p = (children) => el('p', { class: 'muted', style: { marginBottom: '6px', lineHeight: '1.8' } }, ...children);
+    return el('div', { style: { marginBottom: '12px' } },
+        p(['選択肢は、体験をそのまま表す短い言葉にしてください。口コミに入れて欲しいキーワードが選択肢にあるとより効果的です。']),
+        guideUrl ? p(['詳しくはこちらをご確認ください。',
+            el('a', { href: guideUrl, target: '_blank', rel: 'noopener', class: 'btn small', style: { marginLeft: '8px' } },
+                el('i', { class: 'fa-solid fa-arrow-up-right-from-square' }), '確認する')]) : null,
+        p(['≡ をドラッグ、または矢印で並べ替えできます。']));
+}
+
 async function renderEditor(id) {
     app.replaceChildren(el('p', { class: 'muted', text: '読み込み中...' }));
 
     let survey;
     let responseCount = 0;
+    const guideUrl = await loadQuestionGuideUrl();
     if (id) {
         const { data, error } = await supabase.from('neo_surveys').select('*').eq('id', id).eq('client_id', client.id).is('deleted_at', null).maybeSingle();
         if (error) throw error;
@@ -159,8 +181,8 @@ async function renderEditor(id) {
         responseCount = count || 0;
     } else {
         survey = {
-            client_id: client.id, title: '来店アンケート', intro_text: TEMPLATES.restaurant.intro,
-            google_review_url: '', questions: TEMPLATES.restaurant.questions(), is_published: false,
+            client_id: client.id, title: '来店アンケート', intro_text: DEFAULT_INTRO,
+            google_review_url: '', questions: defaultQuestions(), is_published: false,
         };
     }
     survey.questions = Array.isArray(survey.questions) ? survey.questions : [];
@@ -173,18 +195,6 @@ async function renderEditor(id) {
     const introInput = el('textarea', { class: 'textarea', maxlength: '500' });
     introInput.value = survey.intro_text || '';
     introInput.addEventListener('input', () => { survey.intro_text = introInput.value; markDirty(); });
-
-    const templateSelect = el('select', { class: 'select', style: { maxWidth: '240px' } },
-        ...Object.entries(TEMPLATES).map(([k, t]) => el('option', { value: k, text: t.name })));
-    const templateRow = id ? null : el('div', { class: 'field' },
-        el('label', { text: 'ひな形(業種)' }),
-        el('div', { class: 'row' }, templateSelect, el('button', { class: 'btn sub small', type: 'button', onclick: () => {
-            if (!confirm('設問をひな形の内容に置き換えますか?')) return;
-            const t = TEMPLATES[templateSelect.value];
-            survey.questions = t.questions(); survey.intro_text = t.intro; introInput.value = t.intro;
-            markDirty(); drawQuestions();
-        } }, 'このひな形にする')),
-        el('p', { class: 'muted', style: { marginTop: '6px' }, text: 'ひな形には「気になった点」の設問が入っています。良い点だけを聞くアンケートにならないよう、残しておくことをおすすめします。' }));
 
     // --- GoogleクチコミURL ---
     const urlInput = el('input', { class: 'input grow', value: survey.google_review_url || '', placeholder: 'https://g.page/r/XXXXXXXX/review', inputmode: 'url' });
@@ -359,21 +369,14 @@ async function renderEditor(id) {
             id ? el('a', { href: `#/responses/${id}`, class: 'btn small dark' }, `回答を見る(${responseCount}件)`) : null),
         responseCount ? el('div', { class: 'warnbox', text: `このアンケートには回答が${responseCount}件あります。設問や選択肢を削除すると、過去の回答の表示・集計に影響します。大きく変える場合は「複製」して新しいアンケートを作ることをおすすめします。` }) : null,
         el('div', { class: 'card' }, el('h2', { text: '基本' }),
-            templateRow,
             el('div', { class: 'field' }, el('label', { text: 'タイトル(管理用。お客様には表示されません)' }), titleInput),
             el('div', { class: 'field' }, el('label', { text: '冒頭のあいさつ(お客様に表示されます)' }), introInput)),
         el('div', { class: 'card' }, el('h2', { text: 'GoogleクチコミURL(公開の条件)' }),
             el('div', { class: 'row' }, urlInput, urlOpenBtn), urlMsg,
             el('p', { class: 'muted', style: { marginTop: '8px' }, text: '入力例:https://g.page/r/CAbCdEfGhIjKlMnOp/review' }),
-            el('details', { class: 'howto' }, el('summary', { text: 'URLの取得手順' }),
-                el('ol', { style: { paddingLeft: '18px', marginTop: '6px' } },
-                    el('li', { text: '店舗のGoogleビジネスプロフィールに、管理者としてログインします(Googleで店舗名を検索すると管理画面が表示されます)。' }),
-                    el('li', { text: '「クチコミを依頼」(「クチコミを増やす」と表示される場合もあります)を開きます。' }),
-                    el('li', { text: '表示されたリンクをコピーして、上の欄に貼り付けます。' }),
-                    el('li', { text: '「リンクを確認」を押し、その店舗のクチコミ画面が開くことを確かめます。' })),
-                el('p', { text: '※Google側の画面の表記は変わることがあります。' }))),
+            reviewUrlGuide()),
         el('div', { class: 'card' }, el('h2', { text: '設問' }),
-            el('p', { class: 'muted', style: { marginBottom: '12px' }, text: '選択肢は「夜ご飯」「焼き鳥盛り合わせ」のように、体験をそのまま表す短い言葉にしてください。「気になった点」のように不満も選べる設問を入れてください。≡ をドラッグ、または矢印で並べ替えできます。' }),
+            questionHint(guideUrl),
             qArea, el('p', { class: 'muted', style: { margin: '10px 0 6px' }, text: '設問を追加:' }), addQ),
         el('div', { class: 'sticky-actions' }, previewBtn, qrBtn, publishBtn, saveBtn),
     ].filter(Boolean));
@@ -438,7 +441,7 @@ async function renderResponsesPage(id) {
 export function startNeoApp({ root, client: targetClient }) {
     app = root;
     client = targetClient;
-    document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS }));
+    document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS }));
     lastHash = location.hash;
     route();
 }
