@@ -1,0 +1,2905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="1Xhym3ebC2kMdSZjNmr583r6jOfxDcMYNl3qfKfwGUM" />
+    <title>MEOダッシュボード - MSM</title>
+    <link rel="icon" href="mapon-logo.png" type="image/png">
+    <!-- 強固なセキュリティロック：未ログイン者は強制的にログインへ戻す -->
+    <script>
+        const currentUser = localStorage.getItem('currentUser');
+        const isMaster = localStorage.getItem('masterAdmin');
+        // 今回は「デモモード」の例外も一時的に許容（テスト確認用）
+        const isDemo = sessionStorage.getItem('demoBypass');
+
+        // クライアントでもマスターでもない不正アクセスなら弾く
+        if (!currentUser && !isMaster && !isDemo) {
+            window.location.replace('login.html');
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #F4F7FE;
+            --card-bg: #FFFFFF;
+            --primary-blue: #4285F4;
+            --primary-green: #34A853;
+            --text-main: #2B3674;
+            --text-muted: #A3AED0;
+            --border-color: #E2E8F0;
+            --shadow: 0px 18px 40px rgba(112, 144, 176, 0.12);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; }
+
+        .sidebar { width: 260px; background-color: var(--card-bg); padding: 30px 20px; display: flex; flex-direction: column; border-right: 1px solid var(--border-color); }
+        .logo-area { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 40px; padding: 10px; }
+        .msm-logo { font-weight: 800; font-size: 36px; color: var(--primary-blue); letter-spacing: 2px; line-height: 1; }
+        .msm-sub { font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 5px; letter-spacing: 1px; }
+
+        .nav-item { display: flex; align-items: center; padding: 15px; margin-bottom: 10px; border-radius: 12px; color: var(--text-muted); text-decoration: none; font-weight: 600; transition: all 0.3s ease; cursor: pointer; }
+        .nav-item i { margin-right: 12px; font-size: 1.2rem; width: 20px; text-align: center; }
+        .nav-item.active { background-color: var(--primary-blue); color: white; box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3); }
+        .nav-item:hover:not(.active) { background-color: var(--bg-color); color: var(--primary-blue); }
+        .logout-btn { margin-top: auto; }
+
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; position: relative; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { font-size: 28px; font-weight: 700; }
+        .header p { color: var(--text-muted); margin-top: 5px; font-size: 14px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: var(--primary-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+
+        .card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: var(--shadow); margin-bottom: 20px; }
+        .card-title { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 20px; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .kpi-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { display: flex; align-items: center; gap: 20px; }
+        .kpi-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .icon-blue { background: #E8F0FE; color: var(--primary-blue); }
+        .icon-green { background: #E6F4EA; color: var(--primary-green); }
+        .icon-yellow { background: #FEF7E0; color: #FBBC04; }
+        .kpi-info h3 { color: var(--text-muted); font-size: 14px; font-weight: 500; margin-bottom: 5px; }
+        .kpi-info .value { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .trend-up { font-size: 12px; color: var(--primary-green); display: flex; align-items: center; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .chart-wrapper { height: 350px; width: 100%; }
+        .month-selector { padding: 8px 12px; border-radius: 8px; border: 2px solid var(--border-color); background-color: white; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text-main); }
+
+        .form-group { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; animation: fadeIn 0.3s ease; }
+        .form-group label { font-size: 14px; font-weight: 600; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
+        .form-control { padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 14px; color: var(--text-main); outline: none; transition: 0.3s; width: 100%; }
+        .form-control:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1); }
+
+        .btn-outline { background: transparent; border: 1px dashed var(--primary-blue); color: var(--primary-blue); padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-outline:hover { background: rgba(66, 133, 244, 0.05); }
+
+        .btn-primary { background: linear-gradient(135deg, var(--primary-blue), #60A5FA); border: none; color: white; padding: 15px 30px; border-radius: 30px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(66, 133, 244, 0.3); width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(66, 133, 244, 0.4); }
+
+        .keyword-tags, .options-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag.deletable { background-color: #E8F0FE; color: var(--primary-blue); padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; animation: fadeIn 0.3s ease; border: 1px solid rgba(66, 133, 244, 0.2); }
+        .tag.deletable:hover { background-color: #D2E3FC; }
+
+        .qr-area { position: relative; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed #E2E8F0; border-radius: 15px; background: #F8FAFC; }
+        .qr-content { display: none; text-align: center; } /* 最初は見えないようにする */
+        .qr-overlay { text-align: center; font-weight: 600; color: var(--text-muted); width: 100%; }
+
+        .qr-area.active { border: 2px solid var(--primary-blue); background: #FFFFFF; box-shadow: 0 10px 30px rgba(66,133,244,0.1); }
+        .qr-area.active .qr-content { display: block; animation: fadeIn 0.5s ease; }
+        .qr-area.active .qr-overlay { display: none; }
+
+        .view-section { display: none; animation: fadeIn 0.4s ease forwards; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .metric-tabs { display: flex; gap: 10px; background-color: #F4F7FE; padding: 5px; border-radius: 12px; width: fit-content; margin-bottom: 20px; }
+        .metric-tab { border: none; background: transparent; padding: 10px 20px; border-radius: 8px; font-weight: 600; color: var(--text-muted); cursor: pointer; }
+        .metric-tab.active-tab { background: var(--card-bg); color: var(--primary-blue); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .data-table th { text-align: left; padding: 15px; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid #F4F7FE; }
+        .data-table td { padding: 15px; border-bottom: 1px solid #F4F7FE; vertical-align: middle; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .status-success { background: #E6F4EA; color: var(--primary-green); }
+        .status-pending { background: #FEECEB; color: #EA4335; }
+
+        .preview-link { display: inline-block; margin-top: 15px; color: var(--primary-blue); text-decoration: none; font-weight: 600; font-size: 14px; }
+        .preview-link:hover { text-decoration: underline; }
+
+        .ai-card { background: linear-gradient(145deg, #ffffff, #f8faff); border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(66, 133, 244, 0.15); margin-bottom: 20px; }
+
+        /* --- レスポンシブ用（スマホ・タブレット向け） --- */
+        .mobile-only-header { display: none; }
+        .mobile-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 9998; backdrop-filter: blur(2px); }
+        .mobile-overlay.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; padding-bottom: 20px; } 
+            
+            /* サイドバーを右側からのスライドメニューに変更 */
+            .sidebar { position: fixed; top: 0; right: -300px; width: 280px; height: 100vh; flex-direction: column; padding: 30px 20px; z-index: 9999; border-left: 1px solid var(--border-color); border-right: none; border-top: none; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); justify-content: flex-start; }
+            .sidebar.active { right: 0; }
+            .sidebar .logo-area, .sidebar .logout-btn { display: flex; } /* ロゴとログアウトを復活 */
+            .nav-item { flex: none; flex-direction: row; justify-content: flex-start; margin-bottom: 10px; padding: 15px; border-radius: 12px; font-size: 14px; }
+            .nav-item i { margin-right: 12px; margin-bottom: 0; font-size: 1.2rem; display: inline-block; }
+            .nav-item span { right: 15px !important; top: 50% !important; transform: translateY(-50%) !important; }
+
+            /* メインコンテンツ上部の調整 */
+            .main-content { padding: 15px; overflow-x: hidden; }
+            .mobile-only-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px 20px; background: white; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+            .header { flex-direction: column; align-items: flex-start; gap: 15px; margin-bottom: 20px; }
+            .header h1 { font-size: 20px; line-height: 1.4; }
+            
+            /* グリッドとカードのレイアウト崩れ補正 */
+            .kpi-grid, .kpi-grid-4, .dashboard-grid { grid-template-columns: 1fr; gap: 15px; }
+            .kpi-card { flex-wrap: nowrap; justify-content: flex-start; text-align: left; padding: 20px; }
+            .kpi-icon { margin-bottom: 0; flex-shrink: 0; }
+            .chart-wrapper { height: 250px; }
+            .ai-card { font-size: 13px; padding: 20px; }
+            
+            /* 競合分析等のフォーム調整 */
+            #view-competitors .card [style*="display:flex; gap:10px;"] { flex-direction: column; }
+            #view-competitors .btn-primary { width: 100% !important; margin-top: 5px; }
+            #competitorsGrid { grid-template-columns: 1fr; }
+            
+            /* サブメニューの縦並び化 */
+            .metric-tabs { flex-direction: column; width: 100%; align-items: stretch; }
+            .metric-tab { width: 100%; text-align: center; padding: 12px; }
+            
+            /* アンケート設定画面のグリッド */
+            #subview-settings [style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+            #subview-settings .qr-area { min-height: 200px; margin-top: 15px; }
+            .question-block-admin .options-container [style*="display:flex; gap:10px;"] { flex-direction: column; }
+            .question-block-admin .form-control { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-overlay" id="mobileOverlay" onclick="toggleMobileMenu()"></div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="logo-area" style="cursor:pointer; display:flex; justify-content:center; padding: 10px 0;" onclick="switchMainView('dashboard', document.querySelector('.nav-item'))">
+            <div class="msm-logo" style="display:flex; align-items:center; justify-content:center;">
+                <img src="mapon-logo.png" style="width: 180px; mix-blend-mode: multiply; pointer-events: none;" alt="MapOn Logo">
+            </div>
+        </div>
+
+        <a class="nav-item active" onclick="switchMainView('dashboard', this)">
+            <i class="fa-solid fa-chart-pie"></i> ダッシュボード
+        </a>
+        <a class="nav-item" id="nav-posts-btn" onclick="switchMainView('posts', this)" style="display: flex;">
+            <i class="fa-solid fa-pen-to-square"></i> 投稿作成
+        </a>
+        <!-- MapOn NEO は専用の管理画面(neo.html)に移したため、この画面では非表示 -->
+        <a class="nav-item" onclick="switchMainView('reviews', this)" style="position: relative; display: none;">
+            <i class="fa-solid fa-star"></i> MapOn NEO
+            <span style="position:absolute; right:15px; background:#EA4335; color:white; font-size:10px; padding:2px 6px; border-radius:10px;">HOT</span>
+        </a>
+        <a class="nav-item" id="nav-competitors-btn" onclick="switchMainView('competitors', this)">
+            <i class="fa-solid fa-chess-knight"></i> 競合分析
+        </a>
+        <a class="nav-item" id="nav-reservations-btn" onclick="switchMainView('reservations', this)">
+            <i class="fa-solid fa-calendar-check"></i> 予約管理
+        </a>
+        <a class="nav-item" id="nav-customers-btn" onclick="switchMainView('customers', this)">
+            <i class="fa-solid fa-address-book"></i> 顧客管理
+        </a>
+        <a class="nav-item" id="nav-settings-btn" onclick="switchMainView('settings', this)">
+            <i class="fa-solid fa-gear"></i> 設定
+        </a>
+        <a href="login.html" class="nav-item logout-btn">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- モバイル専用ヘッダー -->
+        <div class="mobile-only-header">
+            <div class="msm-logo" style="display:flex; align-items:center; margin:0; cursor:pointer;" onclick="switchMainView('dashboard', document.querySelector('.nav-item'))">
+                <img src="mapon-logo.png" style="height: 48px; mix-blend-mode: multiply; pointer-events: none;" alt="MapOn Logo">
+            </div>
+            <button onclick="toggleMobileMenu()" style="background:none; border:none; font-size:26px; color:var(--text-main); cursor:pointer;"><i class="fa-solid fa-bars"></i></button>
+        </div>
+
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="view-section active">
+            <header class="header">
+                <div>
+                    <h1><span class="dynamic-store-name">焼肉 新宿本店</span> 様</h1>
+                    <p>Googleビジネスプロフィール パフォーマンスレポート</p>
+                    <div style="margin-top: 15px;">
+                        <select id="kpiMonthSelector" class="form-control" style="width:auto; padding:8px 15px; border-radius:8px; font-weight:600; cursor:pointer;" onchange="alert('テスト環境のため、データは現在0で固定されています。API連携後、月別データが切り替わります。')">
+                            <option value="this">当月（2026年4月）</option>
+                            <option value="prev1">先月（2026年3月）</option>
+                            <option value="prev2">2ヶ月前（2026年2月）</option>
+                            <option value="prev3">3ヶ月前（2026年1月）</option>
+                            <option value="prev4">4ヶ月前（2025年12月）</option>
+                            <option value="prev5">5ヶ月前（2025年11月）</option>
+                        </select>
+                    </div>
+                </div>
+            </header>
+
+            <div class="kpi-grid-4">
+                <div class="card kpi-card">
+                    <div class="kpi-icon icon-blue"><i class="fa-regular fa-eye"></i></div>
+                    <div class="kpi-info"><h3>合計表示回数</h3><div class="value" id="kpiOverviewTotal">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon icon-green"><i class="fa-solid fa-route"></i></div>
+                    <div class="kpi-info"><h3>ルート検索数</h3><div class="value" id="kpiRouteTotal">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon icon-yellow"><i class="fa-solid fa-globe"></i></div>
+                    <div class="kpi-info"><h3>サイトアクセス</h3><div class="value" id="kpiWebsiteTotal">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-icon" style="background:#FEECEB; color:#EA4335;"><i class="fa-solid fa-phone"></i></div>
+                    <div class="kpi-info"><h3>通話</h3><div class="value" id="kpiCallTotal">0 <span style="font-size:12px; color:#A0AEC0; margin-left:10px;">連携待ち</span></div></div>
+                </div>
+            </div>
+
+            <div id="reservationWidget" class="card" style="margin-bottom:20px; animation: fadeIn 0.3s ease; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+                <h2 style="font-size:16px; margin-bottom:15px; border-left:4px solid var(--primary-blue); padding-left:10px;"><i class="fa-solid fa-bell" style="color:var(--primary-blue);"></i> 本日の予約一覧（リアルタイム）</h2>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+                        <tr style="background:#F8FAFC; border-bottom:1px solid #E2E8F0;">
+                            <th style="padding:10px; color:#4A5568;">予約時間</th>
+                            <th style="padding:10px; color:#4A5568;">お名前（人数）</th>
+                            <th style="padding:10px; color:#4A5568;">予約メニュー / コース</th>
+                            <th style="padding:10px; color:#4A5568;">担当スタッフ</th>
+                        </tr>
+                        <tr style="border-bottom:1px solid #E2E8F0;">
+                            <td style="padding:12px 10px; font-weight:bold; color:var(--primary-blue);">18:00</td>
+                            <td style="padding:12px 10px;">山田 太郎 様 <span style="background:#E2E8F0; padding:2px 6px; border-radius:10px; font-size:11px;">2名</span></td>
+                            <td style="padding:12px 10px;">極上黒毛和牛アニバーサリーコース</td>
+                            <td style="padding:12px 10px;">佐藤（店長）</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #E2E8F0;">
+                            <td style="padding:12px 10px; font-weight:bold; color:var(--primary-blue);">19:30</td>
+                            <td style="padding:12px 10px;">鈴木 花子 様 <span style="background:#E2E8F0; padding:2px 6px; border-radius:10px; font-size:11px;">4名</span></td>
+                            <td style="padding:12px 10px;">席のみ予約</td>
+                            <td style="padding:12px 10px;">高橋</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ブログ一覧ウィジェット (運用代行プランのみ表示) -->
+            <div id="blogWidget" class="card" style="display:none; margin-bottom:20px; animation: fadeIn 0.3s ease; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:2px solid #F4F7FE; padding-bottom:10px;">
+                    <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-pen-nib" style="color:#059669;"></i> 作成済みブログ一覧</h2>
+                    <select id="blogMonthSelector" class="form-control" style="width:auto; padding:6px 12px; font-size:12px; font-weight:bold; border-radius:8px;" onchange="renderBlogList()">
+                        <option value="all">すべての月を表示</option>
+                    </select>
+                </div>
+                <div id="blogListContainer" style="display:flex; flex-direction:column; gap:10px;">
+                    <!-- JSで動的生成 -->
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card chart-card">
+                    <div style="display: flex; justify-content: space-between; align-items:center; margin-bottom:15px; flex-wrap: nowrap;">
+                        <h2 class="card-title" style="margin:0; white-space: nowrap; flex-shrink: 0; padding-right: 10px;">パフォーマンス推移</h2>
+                        <select id="monthSelector" class="month-selector">
+                            <option value="6months">過去半年（デフォルト）</option>
+                            <option value="daily">2026年 3月</option>
+                        </select>
+                    </div>
+                    <div class="metric-tabs" id="chart-tabs">
+                        <button class="metric-tab active-tab" data-metric="overview">概要</button>
+                        <button class="metric-tab" data-metric="route">ルート検索</button>
+                        <button class="metric-tab" data-metric="call">通話</button>
+                        <button class="metric-tab" data-metric="website">サイト</button>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+                <div class="right-column">
+                    <div class="ai-card">
+                        <h2 class="card-title" style="color:var(--primary-blue); margin-bottom:15px;"><i class="fa-solid fa-wand-magic-sparkles"></i> MEO対策チャンネル改善アドバイス</h2>
+                        <div id="demoAiCardContent">
+                            <p style="font-size:14px; line-height:1.6; margin-bottom: 10px;"><b>【データ連携待ち】</b><br>GoogleビジネスプロフィールとのAPI連携が完了次第、こちらにAI分析レポートが表示されます。</p>
+                            <p style="font-size:14px; line-height:1.6;"><b>【今月の改善アクション】</b><br>口コミ数が前月と比較して増加していない傾向にあります。左メニューの<b>「口コミ管理」</b>からアンケートを稼働させましょう。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVIEWS VIEW(アンケート回答:閲覧専用。アンケートの作成・編集はMSMが行う) -->
+        <div id="view-reviews" class="view-section">
+            <header class="header">
+                <div>
+                    <h1>🌟 MapOn NEO アンケート回答</h1>
+                    <p>お店のアンケートに寄せられた回答と集計です。店頭用のQRコードもここからダウンロードできます。</p>
+                </div>
+            </header>
+            <div class="card" id="ownerSurveyApp"><p style="color:var(--text-muted);">読み込み中...</p></div>
+        </div>
+        </div>
+
+        <!-- COMPETITORS VIEW -->
+        <section id="view-competitors" class="view-section">
+            <header class="header">
+                <div>
+                    <h1>⚔️ 競合分析・ベンチマーク</h1>
+                    <p>ライバル店舗のURLを登録して、自店との口コミの差を一目で確認しましょう。</p>
+                </div>
+            </header>
+
+            <div class="card" style="margin-bottom:30px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="font-size:16px; margin:0; color:var(--text-main);"><i class="fa-solid fa-plus-circle"></i> 新しいベンチマーク（競合）を追加</h3>
+                    <button class="btn-outline" style="padding:6px 15px; font-size:12px; border-color:#4285F4; color:#4285F4; background:#E8F0FE; border:none; font-weight:bold; border-radius:20px;" onclick="openHelpModal()"><i class="fa-regular fa-circle-question"></i> URLの取得方法</button>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="competitorUrlInput" class="form-control" placeholder="競合店舗のGoogleマップ共有URLを貼り付けてください (例: https://g.page/...)" style="flex:1;">
+                    <button class="btn-primary" style="padding:10px 25px; border-radius:10px; width:auto; font-size:14px;" onclick="addCompetitor()"><i class="fa-solid fa-magnifying-glass"></i> URLからデータ取得・追加</button>
+                </div>
+            </div>
+
+            <div class="kpi-grid" id="competitorsGrid">
+                <!-- 自店舗 -->
+                <div class="card" style="border: 2px solid var(--primary-blue); background:#F8FAFC;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span style="background:var(--primary-blue); color:white; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">自店舗（目標）</span>
+                    </div>
+                    <h3 style="font-size:18px; color:var(--text-main); margin-bottom:5px;" class="dynamic-store-name">焼肉 新宿本店</h3>
+                    <div style="font-size:32px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:10px;">
+                        4.2 <span style="font-size:18px; color:#FBBC05;">★★★★☆</span>
+                    </div>
+                    <div style="font-size:14px; color:var(--text-muted); margin-top:5px;">
+                        <i class="fa-solid fa-comment-dots"></i> 口コミ数: <b style="color:var(--text-main)">124件</b>
+                    </div>
+                </div>
+
+                <!-- ライバル1 -->
+                <div class="card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span style="background:#EA4335; color:white; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">ライバル 1位</span>
+                        <button style="border:none; background:none; color:#A3AED0; cursor:pointer;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <h3 style="font-size:16px; color:var(--text-main); margin-bottom:5px;">炭火焼肉 キングス 新宿</h3>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:10px;">
+                        4.5 <span style="font-size:14px; color:#FBBC05;">★★★★☆</span>
+                    </div>
+                    <div style="font-size:14px; color:var(--text-muted); margin-top:5px;">
+                        <i class="fa-solid fa-comment-dots"></i> 口コミ数: <b style="color:var(--text-main)">158件</b>
+                    </div>
+                    <div style="margin-top:15px; padding:10px; background:#FEECEB; border-radius:8px; font-size:12px; color:#EA4335; font-weight:bold;">
+                        <i class="fa-solid fa-fire"></i> 追いつくまであと「34件」の口コミが必要！
+                    </div>
+                </div>
+            </div>
+        </section> <!-- 修正: sectionタグへ統一、余分なdiv閉じを管理 -->
+
+        <!-- SETTINGS VIEW -->
+        <div id="view-settings" class="view-section">
+            <header class="header">
+                <div>
+                    <h1>⚙️ 連携と設定</h1>
+                    <p>Googleビジネスプロフィールとの連携や店舗の基本情報を管理します。</p>
+                </div>
+            </header>
+            
+            <div class="card" style="margin-bottom:20px; position:relative;">
+                <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">自分の店舗のGoogle マップ (GBP) URL</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Googleマップ上で表示される自店舗の「共有リンク」を貼り付けてください。ここに入力された情報をもとにAIが投稿等を作成します。</p>
+                <div style="display:flex; gap:10px;">
+                    <div class="form-group" style="flex:1; margin-bottom:0;">
+                        <input type="text" id="myGbpUrlInput" class="form-control" placeholder="例: https://maps.app.goo.gl/xxxxxx">
+                    </div>
+                    <button class="btn-primary" style="width:auto; padding:0 20px;" onclick="registerMyGbpUrl()">登録する</button>
+                    <button class="btn-outline" style="width:auto; padding:0 15px; background:white;" onclick="document.getElementById('myShopUrlHelpModal').style.display='flex'"><i class="fa-regular fa-circle-question"></i> URLの取り方</button>
+                </div>
+                
+                <div id="myShopInfoDisplay" style="display:none; margin-top:20px; padding:15px; border-left:4px solid var(--primary-blue); background:#F8FAFC; border-radius:8px;">
+                    <h4 style="font-size:14px; margin:0 0 10px 0; color:var(--primary-blue);">連携中の店舗情報</h4>
+                    <div style="font-size:13px; line-height:1.6; color:var(--text-main);">
+                        <b>店舗名:</b> <span id="myShopName">未登録</span><br>
+                        <b>住所:</b> <span id="myShopAddress">未登録</span><br>
+                        <span style="font-size:11px; color:var(--primary-green);"><i class="fa-solid fa-check-circle"></i> この情報をもとにAIが自動で投稿などを最適化します</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:20px;">
+                <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">低評価アラート（通知設定）</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">星1・星2の口コミが入った場合、担当者へ即座にメールまたはLINEで通知します。</p>
+                <div class="form-group">
+                    <label>通知先メールアドレス</label>
+                    <input type="text" class="form-control" value="tenchou@yakiniku-shinjuku.com">
+                </div>
+                <button class="btn-primary" style="width:auto; padding:10px 20px; font-size:14px;"><i class="fa-solid fa-save"></i> 設定を保存</button>
+            </div>
+
+            <!-- パスワード変更ブロック追加 -->
+            <div class="card" style="margin-bottom:20px;">
+                <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">ログインパスワードの変更</h3>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">セキュリティのため、定期的なパスワードの変更を推奨します。</p>
+                <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:15px;">
+                    <div class="form-group" style="flex:1; min-width:200px; margin-bottom:0;">
+                        <label>現在のパスワード</label>
+                        <input type="password" class="form-control" placeholder="現在使用中のパスワード">
+                    </div>
+                    <div class="form-group" style="flex:1; min-width:200px; margin-bottom:0;">
+                        <label>新しいパスワード</label>
+                        <input type="password" id="newPasswordInput" class="form-control" placeholder="お好きなパスワード">
+                    </div>
+                </div>
+                <button class="btn-primary" style="width:auto; padding:10px 20px; font-size:14px; background:linear-gradient(135deg, #A0AEC0, #718096);" onclick="changePassword()"><i class="fa-solid fa-lock"></i> パスワードを変更する</button>
+            </div>
+        </div>
+
+        <!-- AI POSTS VIEW (新規追加) -->
+        <section id="view-posts" class="view-section">
+            <header class="header">
+                <h1>AI自動投稿・予約投稿</h1>
+            </header>
+            
+            <div class="dashboard-grid">
+                <div class="card" style="grid-column: span 2; margin-bottom:20px; animation: fadeIn 0.4s ease;">
+                    <h2>新規投稿を作成</h2>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">AIがGoogleポリシーに100%準拠した自然な文章（約1400文字）を生成します。</p>
+                    
+                    <div class="form-group">
+                        <label>対策したいキーワード <span style="font-size:11px; font-weight:normal; color:#A0AEC0;">(入力してEnter)</span></label>
+                        <div class="keyword-tags" id="postKeywordsContainer" style="margin-bottom: 10px;"></div>
+                        <input type="text" class="form-control" id="postKeywordInput" placeholder="例: 渋谷 焼肉 個室 記念日" onkeypress="if(event.key==='Enter') addPostKeyword()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>使用したい絵文字 <span style="font-size:11px; font-weight:normal; color:#A0AEC0;">(入力してEnter)</span></label>
+                        <div class="keyword-tags" id="postEmojisContainer" style="margin-bottom: 10px;"></div>
+                        <input type="text" class="form-control" id="postEmojiInput" placeholder="例: 🥩 ✨ 🥂 😎" onkeypress="if(event.key==='Enter') addPostEmoji()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>HP（任意）</label>
+                        <input type="text" class="form-control" id="postHpUrlInput" placeholder="https://...">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>外部サイト（ホットペッパーや食べログなど）</label>
+                        <input type="text" class="form-control" id="postExternalUrlInput" placeholder="https://...">
+                        <small style="color:var(--text-muted); display:block; margin-top:5px;">※入力されたURLの事実情報のみをAIが抽出し、正確に文章化します。</small>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top:20px;">
+                        <label>写真または動画を追加 <span style="font-size:11px; font-weight:normal; color:#A0AEC0;">(ドラッグ&ドロップまたはクリック)</span></label>
+                        <div style="border:2px dashed #CBD5E1; padding:30px; text-align:center; border-radius:8px; background:#F8FAFC; color:#64748B; cursor:pointer; transition:all 0.2s ease;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='#F8FAFC'" onclick="alert('デバイスのフォルダが開き、画像や動画を選択できます。')">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size:32px; margin-bottom:12px; color:var(--primary-blue);"></i><br>
+                            <span style="font-size:14px; font-weight:600;">ここをクリック、または画像・動画をドラッグ＆ドロップ</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ボタンの追加 <span style="font-size:11px; font-weight:normal; color:#A0AEC0;">(任意)</span></label>
+                        <select class="form-control" id="postActionButtonSelect" onchange="togglePostActionLink()">
+                            <option value="none">なし</option>
+                            <option value="reserve">予約</option>
+                            <option value="order">オンライン注文</option>
+                            <option value="buy">購入</option>
+                            <option value="details">詳細</option>
+                            <option value="register">登録</option>
+                            <option value="call">今すぐ電話</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="postActionLinkWrapper" style="display:none; animation:fadeIn 0.2s ease;">
+                        <label>ボタンのリンクURL <span style="font-size:11px; font-weight:normal; color:#A0AEC0;">(ユーザーがボタンを押した際の遷移先)</span></label>
+                        <input type="text" class="form-control" placeholder="https://...">
+                    </div>
+                    
+                    <script>
+                        function togglePostActionLink() {
+                            const val = document.getElementById('postActionButtonSelect').value;
+                            const wrap = document.getElementById('postActionLinkWrapper');
+                            // 「なし」または「今すぐ電話(GBPの電話番号が使われる)」の場合はリンク入力を隠す
+                            if(val === 'none' || val === 'call') {
+                                wrap.style.display = 'none';
+                            } else {
+                                wrap.style.display = 'block';
+                            }
+                        }
+                    </script>
+                    
+                    <button class="btn-primary" id="aiGenerateBtn" style="margin-bottom:20px; background:linear-gradient(135deg, #a855f7, #6366f1); border:none;" onclick="generateAIPost()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> AIで1400文字の投稿文を作成
+                    </button>
+                    
+                    <div class="form-group" style="position:relative;">
+                        <label style="display:flex; justify-content:space-between; align-items:flex-end;">
+                            <span>生成された投稿文（手動での微調整も可能です）</span>
+                            <button onclick="copyGeneratedPost()" style="background:none; border:1px solid #CBD5E1; color:#4A5568; font-size:12px; padding:4px 12px; border-radius:12px; cursor:pointer; font-weight:600; transition:all 0.2s;"><i class="fa-regular fa-copy"></i> コピー</button>
+                        </label>
+                        <p style="font-size:11px; color:#E53E3E; margin:5px 0 10px 0; font-weight:bold;"><i class="fa-solid fa-triangle-exclamation"></i> ※あくまでAIが執筆した文章です。文章に誤りや誇張表現がないか確認し、修正を行ってから投稿して下さい。</p>
+                        <textarea class="form-control" id="postTextarea" rows="12" placeholder="ここにAIが生成した文章が表示されます..."></textarea>
+                    </div>
+                    
+                    <div style="padding:20px; background:#F8FAFC; border:1px solid var(--border-color); border-radius:12px; margin-bottom:20px;">
+                        <h3 style="font-size:14px; margin-bottom:10px;"><i class="fa-solid fa-clock"></i> 投稿日時の設定（2ヶ月先まで作成可能）</h3>
+                        <input type="datetime-local" id="postTimeInput" class="form-control" style="max-width:300px;">
+                    </div>
+                    
+                    <div style="display:flex; gap:15px; margin-top:10px;">
+                        <button class="btn-primary" style="flex:1;" onclick="schedulePost()"><i class="fa-solid fa-calendar-plus"></i> 時間になったら自動投稿</button>
+                        <button class="btn-outline" style="flex:1; border-color:var(--primary-blue); color:var(--primary-blue);" onclick="immediatePost()"><i class="fa-solid fa-paper-plane"></i> 今すぐ投稿する</button>
+                    </div>
+                </div>
+
+                <div class="card" style="animation: fadeIn 0.5s ease; max-height:850px; overflow-y:auto; background:#F8FAFC;">
+                    <h2 style="position:sticky; top:0; background:#F8FAFC; padding-bottom:10px; z-index:1; border-bottom:1px solid #E2E8F0; margin-top:0;"><i class="fa-solid fa-list-check" style="color:var(--primary-blue);"></i> 予約投稿一覧</h2>
+                    <p style="font-size:12px; color:#A0AEC0; margin-bottom:15px;">※予約時間が来ると自動で投稿され、このリストから消えます。</p>
+                    <div id="scheduledPostsList">
+                        <!-- Javascriptで追加されます -->
+                        <div style="color:#A0AEC0; font-size:13px; text-align:center; padding:30px 0;">まだ予約されている投稿はありません。</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RESERVATIONS VIEW (新規追加) -->
+        <section id="view-reservations" class="view-section">
+            <header class="header">
+                <h1>予約管理カレンダー・LINE連携</h1>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- カレンダーエリア -->
+                <div class="card" style="grid-column: span 2; animation: fadeIn 0.4s ease;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h2 style="margin:0;"><span id="cal-month-title">2026年 4月</span> の予約カレンダー</h2>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; color:#4A5568; border-color:#CBD5E1;" onclick="document.getElementById('calendarEditModal').style.display='flex'">シフト編集</button>
+                            <button class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; color:#4A5568; border-color:#CBD5E1;" onclick="document.getElementById('manualReservationModal').style.display='flex'">手入力設定</button>
+                            <button class="btn-outline" style="padding:6px 12px; font-size:12px; font-weight:600; color:#4A5568; border-color:#CBD5E1;" onclick="document.getElementById('holidayModal').style.display='flex'">休業日設定</button>
+                            <div style="display:flex; align-items:center; gap:0; margin-left:10px; border:1px solid #CBD5E1; border-radius:6px; overflow:hidden;">
+                                <button class="btn-outline" style="padding:6px 12px; font-size:12px; border:none; border-right:1px solid #CBD5E1; border-radius:0;">前月</button>
+                                <button class="btn-outline" style="padding:6px 12px; font-size:12px; border:none; border-radius:0;">次月</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="border:1px solid #E2E8F0; border-radius:8px; overflow:hidden;">
+                        <!-- ヘッダー -->
+                        <div style="display:grid; grid-template-columns: repeat(7, 1fr); background:#F8FAFC; border-bottom:1px solid #E2E8F0; text-align:center; font-size:12px; font-weight:bold; color:#64748B;">
+                            <div style="padding:10px; color:#EA4335;">日</div><div style="padding:10px;">月</div><div style="padding:10px;">火</div><div style="padding:10px;">水</div><div style="padding:10px;">木</div><div style="padding:10px;">金</div><div style="padding:10px; color:#4285F4;">土</div>
+                        </div>
+                        <!-- 日付マス -->
+                        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:1px; background:#E2E8F0;">
+                            <!-- 1週目 -->
+                            <div style="background:white; min-height:80px;"></div><div style="background:white; min-height:80px;"></div><div style="background:white; min-height:80px;"></div>
+                            <div style="background:white; min-height:80px; padding:5px;">
+                                <div style="font-size:11px; text-align:right; color:#A0AEC0; margin-bottom:5px;">1</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="openReservationDetail('2026年 4月1日 (水)', 2)">予約 2件</div>
+                            </div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">2</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;">
+                                <div style="font-size:11px; text-align:right; color:#A0AEC0; margin-bottom:5px;">3</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="openReservationDetail('2026年 4月3日 (金)', 1)">予約 1件</div>
+                            </div>
+                            <div style="background:#F4F8FE; min-height:80px; padding:5px;">
+                                <div style="font-size:11px; text-align:right; color:#4285F4; margin-bottom:5px;">4</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="openReservationDetail('2026年 4月4日 (土)', 5)">予約 5件</div>
+                                <div style="background:#FEF3C7; color:#B45309; font-size:10px; padding:2px 4px; border-radius:4px; font-weight:bold; cursor:pointer;">残席わずか</div>
+                            </div>
+                            
+                            <!-- 2週目 -->
+                            <div style="background:#FFF5F5; min-height:80px; padding:5px;">
+                                <div style="font-size:11px; text-align:right; color:#EA4335; margin-bottom:5px;">5</div>
+                                <div style="background:#E6F4EA; color:#059669; font-size:10px; padding:2px 4px; border-radius:4px; margin-bottom:2px; font-weight:bold; cursor:pointer;" onclick="openReservationDetail('2026年 4月5日 (日)', 8)">予約 8件</div>
+                            </div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">6</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">7</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">8</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">9</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">10</div></div>
+                            <div style="background:#F4F8FE; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#4285F4;">11</div></div>
+
+                            <!-- 3週目 -->
+                            <div style="background:#FFF5F5; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#EA4335;">12</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">13</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">14</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">15</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">16</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">17</div></div>
+                            <div style="background:#F4F8FE; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#4285F4;">18</div></div>
+
+                            <!-- 4週目 -->
+                            <div style="background:#FFF5F5; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#EA4335;">19</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">20</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">21</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">22</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">23</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">24</div></div>
+                            <div style="background:#F4F8FE; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#4285F4;">25</div></div>
+
+                            <!-- 5週目 -->
+                            <div style="background:#FFF5F5; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#EA4335;">26</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">27</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">28</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">29</div></div>
+                            <div style="background:white; min-height:80px; padding:5px;"><div style="font-size:11px; text-align:right; color:#A0AEC0;">30</div></div>
+                            <div style="background:white; min-height:80px;"></div><div style="background:white; min-height:80px;"></div>
+                        </div>
+                        <div style="padding:10px; background:white; font-size:11px; color:#A0AEC0; text-align:center;">※カレンダーの「予約◯件」をタップすると、その日の予約詳細POPが開きます。</div>
+                    </div>
+                </div>
+
+                <!-- 公式LINE連携エリア -->
+                <div class="card" style="animation: fadeIn 0.5s ease;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h2 style="margin:0;">公式LINEリマインダー連携</h2>
+                        <button class="btn-primary" style="font-size:12px; padding:6px 15px; width:auto; background:#00B900;" onclick="openLineSettingsModal()"><i class="fa-brands fa-line"></i> 公式LINE設定</button>
+                    </div>
+                    
+                    <div style="background:#E8F0FE; padding:10px 15px; border-radius:8px; display:inline-block; margin-bottom:20px;">
+                        <div style="font-size:11px; font-weight:bold; color:var(--primary-blue); margin-bottom:5px;">文章内で使える魔法の「置き換え文字」</div>
+                        <div style="display:flex; gap:10px; font-size:12px; color:#2B3674; flex-wrap:wrap;">
+                            <span style="background:white; padding:3px 8px; border-radius:4px; border:1px solid #CBD5E1;">{お客様名}</span>
+                            <span style="background:white; padding:3px 8px; border-radius:4px; border:1px solid #CBD5E1;">{予約日時}</span>
+                            <span style="background:white; padding:3px 8px; border-radius:4px; border:1px solid #CBD5E1;">{店舗名}</span>
+                            <span style="background:white; padding:3px 8px; border-radius:4px; border:1px solid #CBD5E1;">{予約人数}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="border-left:3px solid #34A853; padding-left:15px; margin-bottom:20px;">
+                        <div style="font-size:13px; font-weight:bold; margin-bottom:5px; color:var(--text-main);">📨 予約完了メール</div>
+                        <div style="font-size:11px; color:#64748B; margin-bottom:8px; display:flex; align-items:center;">
+                            <b>発火条件：</b> 予約が確定し、お客様が来店用QRコードを読み込んだ時
+                        </div>
+                        <textarea class="form-control" rows="2" style="font-size:12px; margin-bottom:5px;">{お客様名} 様、{店舗名}のご予約ありがとうございます！\n{予約日時}（{予約人数}名様）でのご来店を、スタッフ一同心よりお待ちしております。</textarea>
+                    </div>
+                    
+                    <div style="border-left:3px solid #FBBC05; padding-left:15px; margin-bottom:20px;">
+                        <div style="font-size:13px; font-weight:bold; margin-bottom:5px; color:var(--text-main);">⏰ 前日リマインド</div>
+                        <div style="font-size:11px; color:#64748B; margin-bottom:8px; display:flex; align-items:center; gap:5px;">
+                            <b>発火条件：</b> 予約日時の 
+                            <select style="border:1px solid #E2E8F0; border-radius:4px; padding:2px;"><option>1</option><option>2</option><option>3</option></select> 日前の 
+                            <select style="border:1px solid #E2E8F0; border-radius:4px; padding:2px;" id="reminderHourSelect"></select> :
+                            <select style="border:1px solid #E2E8F0; border-radius:4px; padding:2px;" id="reminderMinuteSelect"></select> に送る
+                        </div>
+                        <textarea class="form-control" rows="2" style="font-size:12px; margin-bottom:5px;">【お知らせ】{お客様名} 様、明日のご予約日（{予約日時}）が近づいてまいりました。\nお気をつけてお越しくださいませ！</textarea>
+                    </div>
+
+                    <div style="border-left:3px solid #EA4335; padding-left:15px; margin-bottom:20px;">
+                        <div style="font-size:13px; font-weight:bold; margin-bottom:5px; color:var(--text-main);">🔥 当日リマインド</div>
+                        <div style="font-size:11px; color:#64748B; margin-bottom:8px; display:flex; align-items:center; gap:5px;">
+                            <b>発火条件：</b> 予約日時の 
+                            <select style="border:1px solid #E2E8F0; border-radius:4px; padding:2px;" id="sameDayHourSelect"></select> 時間前に送る
+                        </div>
+                        <textarea class="form-control" rows="2" style="font-size:12px; margin-bottom:5px;">{お客様名} 様、本日{予約日時}よりお待ちしております！\n道に迷われた際はお気軽に店舗までお電話ください。</textarea>
+                    </div>
+                    
+                    <script>
+                        // 時間のセレクトボックスを生成
+                        let hOpts = '';
+                        for(let i=1; i<=24; i++) hOpts += '<option>'+String(i).padStart(2,'0')+'</option>';
+                        document.getElementById('reminderHourSelect').innerHTML = hOpts;
+                        
+                        let mOpts = '';
+                        for(let i=1; i<=59; i++) mOpts += '<option>'+String(i).padStart(2,'0')+'</option>';
+                        document.getElementById('reminderMinuteSelect').innerHTML = mOpts;
+                        
+                        let sameH = '';
+                        for(let i=1; i<=24; i++) sameH += '<option'+(i===2?' selected':'')+'>'+i+'</option>';
+                        document.getElementById('sameDayHourSelect').innerHTML = sameH;
+                    </script>
+                    
+                    <button class="btn-primary" style="margin-top:5px; width:100%;">LINE配信設定を保存する</button>
+                </div>
+
+                <!-- マスター設定エリア -->
+                <div class="card" style="animation: fadeIn 0.6s ease;">
+                    <h2>予約マスター設定</h2>
+                    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">お客様が予約・選択する項目の詳細設定</p>
+                    
+                    <ul style="list-style:none; padding:0; margin:0; font-size:14px; line-height:3;">
+                        <li style="border-bottom:1px solid #eee; cursor:pointer; color:var(--text-main);" onclick="switchMainView('staff-form')"><i class="fa-solid fa-users" style="width:25px; color:var(--primary-blue);"></i> スタッフ登録 <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
+                        <li style="border-bottom:1px solid #eee; cursor:pointer; color:var(--text-main);" onclick="switchMainView('menu-form')"><i class="fa-solid fa-utensils" style="width:25px; color:var(--primary-blue);"></i> メニュー登録 <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
+                        <li style="cursor:pointer; color:var(--text-main);" onclick="switchMainView('reservation-form')"><i class="fa-solid fa-link" style="width:25px; color:var(--primary-blue);"></i> 予約フォーム設定 <span style="float:right; color:#A0AEC0;">管理 ＞</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- STAFF FORM VIEW -->
+        <section id="view-staff-form" class="view-section">
+            <header class="header">
+                <div>
+                    <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
+                    <h1>スタッフ登録 (最大100名)</h1>
+                </div>
+            </header>
+            <div class="card" style="animation: fadeIn 0.3s ease;">
+                <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;"><i class="fa-solid fa-circle-info"></i> スタッフの顔写真、名前、長所を登録します（予約フォームの指名に反映されます）。</p>
+                <div id="staffListContainer" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:15px; margin-bottom:20px;">
+                    <!-- サンプルスタッフ -->
+                    <div class="card" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px;">
+                        <div style="display:flex; justify-content:flex-end;"><button class="btn-outline" style="border:none; color:#EA4335; padding:2px;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-trash"></i></button></div>
+                        <div style="text-align:center; margin-bottom:10px;">
+                            <div style="width:70px; height:70px; border-radius:50%; background:#E2E8F0; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; color:#A0AEC0;"><i class="fa-solid fa-image"></i></div>
+                            <button class="btn-outline" style="font-size:10px; padding:2px 8px;" onclick="let f=document.createElement('input');f.type='file';f.accept='image/*';f.click();">写真を選択</button>
+                        </div>
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label style="font-size:11px;">名前</label>
+                            <input type="text" class="form-control" style="font-size:12px; padding:6px;" value="山田 太郎">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11px;">長所</label>
+                            <input type="text" class="form-control" style="font-size:12px; padding:6px;" value="丁寧な接客、ワインの知識">
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align:center;">
+                    <button class="btn-outline" style="width:100%; max-width:300px; padding:10px; border-style:dashed;" onclick="addStaffCard()"><i class="fa-solid fa-plus"></i> スタッフを追加</button>
+                </div>
+                <div style="margin-top:30px; text-align:right;">
+                    <button class="btn-primary" onclick="saveStaffList()">保存する</button>
+                </div>
+            </div>
+            <script>
+                function addStaffCard() {
+                    const c = document.getElementById('staffListContainer');
+                    if (c.children.length >= 100) { alert('スタッフは最大100名まで登録可能です。'); return; }
+                    
+                    // 「登録されていません」の文字があれば消す
+                    if(c.querySelector('p')) { c.innerHTML = ''; }
+                    
+                    // 新規カードを描画
+                    renderStaffCard();
+                }
+            </script>
+        </section>
+
+        <!-- MENU FORM VIEW -->
+        <section id="view-menu-form" class="view-section">
+            <header class="header">
+                <div>
+                    <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
+                    <h1>メニュー登録 (最大100種)</h1>
+                </div>
+            </header>
+            <div class="card" style="animation: fadeIn 0.3s ease;">
+                <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;"><i class="fa-solid fa-circle-info"></i> 提供するメニューを設定します。担当可能なスタッフを選ぶことで、予約時の連動が可能になります。</p>
+                <div id="menuListContainer" style="display:grid; grid-template-columns: 1fr; gap:15px; margin-bottom:20px;">
+                </div>
+                <div style="text-align:center;">
+                    <button class="btn-outline" style="width:100%; padding:10px; border-style:dashed;" onclick="addMenuCard()"><i class="fa-solid fa-plus"></i> メニューを追加</button>
+                </div>
+                <div style="margin-top:30px; text-align:right;">
+                    <button class="btn-primary" onclick="saveMenuList()">保存する</button>
+                </div>
+            </div>
+            <script>
+                function addMenuCard() {
+                    const c = document.getElementById('menuListContainer');
+                    if (c.children.length >= 100) { alert('メニューは最大100種まで登録可能です。'); return; }
+                    
+                    if(c.querySelector('p')) { c.innerHTML = ''; }
+                    
+                    renderMenuCard(); 
+                }
+            </script>
+        </section>
+        
+        <!-- RESERVATION FORM VIEW -->
+        <section id="view-reservation-form" class="view-section">
+            <header class="header">
+                <div>
+                    <button class="btn-outline" style="padding:4px 12px; font-size:12px; margin-bottom:10px; border:none; background:#E2E8F0;" onclick="switchMainView('reservations')">＜ 予約管理へ戻る</button>
+                    <h1>予約フォーム設定・連携</h1>
+                </div>
+            </header>
+            <div class="card" style="animation: fadeIn 0.3s ease;">
+                <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;"><i class="fa-solid fa-circle-info"></i> 保存済みのマスターデータ（メニュー・スタッフ）に基づき、予約カレンダーの空き枠と連動したオンラインフォームが生成されています。</p>
+                
+                <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:300px; border:1px solid #E2E8F0; padding:15px; border-radius:10px; background:#F8FAFC;">
+                        <h3 style="font-size:14px; margin-bottom:10px; color:var(--text-main);">連携中データ（自動反映）</h3>
+                        <ul style="font-size:13px; color:#4A5568; line-height:2;">
+                            <li>✅ メニュー登録：<b style="color:var(--primary-blue)">1件</b>（プレミアム焼肉コース 等）</li>
+                            <li>✅ スタッフ登録：<b style="color:var(--primary-blue)">1件</b>（山田 太郎 等）</li>
+                            <li>✅ カレンダー空き枠：<b style="color:#059669">同期有効</b>（営業日・シフト連動）</li>
+                        </ul>
+                        <div style="margin-top:20px;">
+                            <label style="font-size:12px; font-weight:bold;">お客様用予約フォームURL</label>
+                            <div style="display:flex; gap:10px; margin-top:5px;">
+                                <input type="text" id="reservationURL" class="form-control" value="" readonly style="font-size:12px; background:white;">
+                                <button class="btn-primary" id="copyBtn" style="font-size:12px; white-space:nowrap;" onclick="copyReservationURL()">コピー</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="flex:1; min-width:300px;">
+                        <div style="border:12px solid #2D3748; border-radius:25px; height:450px; overflow:hidden; position:relative; background:white; display:flex; align-items:center; justify-content:center;">
+                            <div style="position: absolute; top:0; left:50%; transform:translateX(-50%); width:40%; height:15px; background:#2D3748; border-bottom-left-radius:10px; border-bottom-right-radius:10px; z-index:10;"></div>
+                            
+                            <!-- ここに実際の予約フォームをプレビュー表示 -->
+                            <iframe id="reservationPreviewFrame" src="" style="width:100%; height:100%; border:none; border-radius:10px; background:#F8FAFC;"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CUSTOMERS VIEW -->
+        <section id="view-customers" class="view-section">
+            <header class="header">
+                <div>
+                    <h1>顧客管理</h1>
+                    <p>一度来店・予約されたお客様の情報を一覧で管理できます。</p>
+                </div>
+            </header>
+            
+            <div class="card" style="animation: fadeIn 0.4s ease;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="text" class="form-control" placeholder="顧客名・電話番号で検索..." style="width:250px;">
+                        <button class="btn-outline" style="white-space:nowrap; border-style:solid;"><i class="fa-solid fa-magnifying-glass"></i> 検索</button>
+                    </div>
+                    <button class="btn-primary" style="width:auto; padding:8px 20px; font-size:13px; white-space:nowrap; box-shadow:none;" onclick="openAddCustomerModal()"><i class="fa-solid fa-user-plus"></i> 新規手動登録</button>
+                </div>
+                
+                <div class="data-table-wrapper" style="overflow-x:auto;">
+                    <table class="data-table" style="width:100%; text-align:left; font-size:13px;">
+                        <thead>
+                            <tr>
+                                <th>顧客名</th>
+                                <th>電話番号</th>
+                                <th>来店数</th>
+                                <th>最終(前回)予約メニュー</th>
+                                <th style="width:30%;">メモ</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight:bold; color:var(--primary-blue);">佐藤 健一</td>
+                                <td>090-1234-5678</td>
+                                <td><span style="background:#E8F0FE; color:#1A73E8; padding:2px 8px; border-radius:10px; font-weight:bold;">3回</span></td>
+                                <td>プレミアム焼肉コース</td>
+                                <td><input type="text" class="form-control" value="窓際の席を希望されることが多い。アレルギーなし。" style="font-size:11px; padding:4px;" onchange="alert('メモを保存しました。')"></td>
+                                <td><button class="btn-outline" style="font-size:11px; padding:2px 8px;">詳細表示</button></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight:bold; color:var(--primary-blue);">鈴木 花子</td>
+                                <td>080-9876-5432</td>
+                                <td><span style="background:#FEECEB; color:#EA4335; padding:2px 8px; border-radius:10px; font-weight:bold;">1回</span></td>
+                                <td>スタンダード飲み放題</td>
+                                <td><input type="text" class="form-control" value="会社の宴会利用。" style="font-size:11px; padding:4px;" onchange="alert('メモを保存しました。')"></td>
+                                <td><button class="btn-outline" style="font-size:11px; padding:2px 8px;">詳細表示</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- HELP MODAL (共有URLの取得方法: 競合分析用) -->
+    <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
+        <div class="card" style="max-width: 700px; width:90%; position:relative; padding: 0; overflow:hidden;">
+            <div style="background:linear-gradient(135deg, #1A202C, #2D3748); padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">💡 【重要】競合URLの正しい取り方</h2>
+                <button style="background:none; border:none; font-size:20px; color:#A0AEC0; cursor:pointer;" onclick="closeHelpModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div style="padding: 20px;">
+                <p style="text-align:center; font-size:14px; font-weight:bold; color:var(--text-main); margin-bottom:20px;">
+                    競合店の情報はGoogleマップアプリから直接取得します。<br>ブラウザ経由はシステムエラーになるためお控えください。
+                </p>
+
+                    <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:20px;">
+                        <!-- スマホ版 -->
+                        <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
+                            <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-mobile-screen-button" style="font-size:16px;"></i> スマホから取得する場合
+                            </div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map-location-dot" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>アプリを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        店舗名を<br>検索して開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">Safariやブラウザ</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">Google検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報の共有 <span style="color:#E53E3E;">(エラー)</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PC版 -->
+                        <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
+                            <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-desktop" style="font-size:16px;"></i> パソコンから取得する場合
+                            </div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>サイトを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        店舗名を<br>検索して開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">通常のGoogle検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報を開く</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">共有リンク <span style="color:#E53E3E;">(エラー)</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            
+            <div style="text-align:center; margin:0 20px 20px 20px;">
+                <button class="btn-primary" style="width:100%; box-shadow:none; padding:12px; font-size:15px; font-weight:bold; background:#2B3674;" onclick="closeHelpModal()">理解したので競合URLを入力する</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MY SHOP URL HELP MODAL -->
+    <div id="myShopUrlHelpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
+        <div class="card" style="max-width: 700px; width:90%; position:relative; padding: 0; overflow:hidden;">
+            <div style="background:var(--primary-blue); padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">自店舗のGoogleマップURLの取り方</h2>
+                <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('myShopUrlHelpModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div style="padding: 20px;">
+                <p style="text-align:center; font-size:14px; font-weight:bold; color:var(--text-main); margin-bottom:20px;">
+                    店舗情報はGoogleマップアプリから直接取得します。<br>ブラウザ経由は100%エラーになるためお控えください。
+                </p>
+
+                    <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:20px;">
+                        <!-- スマホ版 -->
+                        <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
+                            <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-mobile-screen-button" style="font-size:16px;"></i> スマホから取得する場合
+                            </div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map-location-dot" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>アプリを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        自分の店舗の<br>情報を開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">Safariやブラウザ</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">Google検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報の共有 <span style="color:#E53E3E;">(エラー)</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PC版 -->
+                        <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
+                            <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-desktop" style="font-size:16px;"></i> パソコンから取得する場合
+                            </div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>サイトを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        店舗名を<br>検索して開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">通常のGoogle検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報を開く</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">共有リンク <span style="color:#E53E3E;">(エラー)</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+    <div id="lineSettingsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
+        <div class="card" style="max-width: 650px; width:90%; position:relative; padding: 0; overflow:hidden;">
+            <div style="background:linear-gradient(135deg, #00B900, #008F00); padding:25px; color:white; text-align:center; position:relative;">
+                <button style="position:absolute; top:20px; right:20px; background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="closeLineSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
+                <h2 style="margin:0; font-size:20px; font-weight:700;"><i class="fa-brands fa-line"></i> 公式LINE連携設定</h2>
+                <p style="margin:8px 0 0 0; font-size:13px; color:#E8F0FE;">Channel ID と Channel Secret を入力して連携を完了させてください。</p>
+            </div>
+            
+            <div style="padding: 30px; max-height: 70vh; overflow-y: auto;">
+                <div style="background:#F8FAFC; border:1px solid #E2E8F0; padding:15px; border-radius:12px; margin-bottom:25px;">
+                    <h3 style="font-size:14px; margin-bottom:10px; color:#2B3674;"><i class="fa-solid fa-circle-question" style="color:var(--primary-blue);"></i> 各情報の取得手順（LINE Developers）</h3>
+                    <div style="display:flex; gap:10px; flex-direction:column; font-size:12px; color:#4A5568;">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <div style="background:#00B900; color:white; width:22px; height:22px; border-radius:50%; display:flex; justify-content:center; align-items:center; font-weight:bold; flex-shrink:0;">1</div>
+                            <div>LINE Developersコンソールにログインし、作成したプロバイダーを選択します。</div>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <div style="background:#00B900; color:white; width:22px; height:22px; border-radius:50%; display:flex; justify-content:center; align-items:center; font-weight:bold; flex-shrink:0;">2</div>
+                            <div>「Messaging API」チャネルを作成または選択し、「チャネル基本設定」タブを開きます。</div>
+                        </div>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <div style="background:#00B900; color:white; width:22px; height:22px; border-radius:50%; display:flex; justify-content:center; align-items:center; font-weight:bold; flex-shrink:0;">3</div>
+                            <div>画面下部にある <b>Channel ID</b> と <b>Channel Secret</b> をコピーして下記に入力します。</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Channel ID <span style="color:red;">*</span></label>
+                    <input type="text" class="form-control" placeholder="例: 1234567890">
+                </div>
+                <div class="form-group" style="margin-bottom:25px;">
+                    <label>Channel Secret <span style="color:red;">*</span></label>
+                    <input type="text" class="form-control" placeholder="例: abcdef1234567890abcdef1234567890">
+                </div>
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label>Channel Access Token <span style="color:red;">*</span> <span style="font-size:10px; color:#A0AEC0;">(メッセージ送受信に必須)</span></label>
+                    <textarea class="form-control" rows="2" placeholder="例: WkH3Xy..."></textarea>
+                </div>
+                
+                <div style="background:#F0FDF4; border:1px dashed #34A853; padding:15px; border-radius:12px; margin-bottom:25px;">
+                    <div style="font-size:13px; font-weight:bold; color:#166534; margin-bottom:10px;">Webhookエンドポイント（開発基盤用）</div>
+                    <div style="font-size:11px; color:#4A5568; margin-bottom:8px;">自動LINE配信、リマインド送信、公式LINEアプリでの個別返信を行うためのWebhook URLです。LINE DevelopersのWebhook URLに設定してください。</div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" class="form-control" value="https://example.com/api/line/webhook" readonly style="background:white; color:#4A5568;">
+                        <button class="btn-outline" style="border:1px solid #34A853; color:#166534; flex-shrink:0;">コピー</button>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:25px;">
+                    <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" checked>
+                        <span>公式LINEアプリからお客様へ個別返信できるようにする</span>
+                    </label>
+                    <div style="font-size:11px; color:#A0AEC0; margin-left:22px;">※連携後、システムから送信した自動メッセージに対し、お客様が返信した場合にLINE公式アプリで直接対応可能になります。</div>
+                </div>
+                <div style="text-align:center;">
+                    <button class="btn-primary" style="width:100%; box-shadow:none; padding:12px; font-size:15px; font-weight:bold; background:#00B900;" onclick="alert('指定の公式LINEアカウントとのAPI連携を確立しました！'); closeLineSettingsModal()">この設定でLINEと連携する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CALENDAR EDIT MODAL (シフト編集) -->
+    <div id="calendarEditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="max-width: 500px; width:90%; position:relative; padding:0; overflow:hidden;">
+            <div style="background:#4A5568; padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">シフト編集 (6ヶ月先まで)</h2>
+                <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('calendarEditModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding:20px;">
+                <div class="form-group">
+                    <label>日付選択</label>
+                    <input type="date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>シフト時間</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input type="time" class="form-control" value="10:00"> ～ <input type="time" class="form-control" value="22:00">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:20px;">
+                    <label>担当スタッフ</label>
+                    <div style="display:flex; gap:10px;">
+                        <select class="form-control">
+                            <option>山田 太郎</option>
+                            <option>佐藤 花子</option>
+                        </select>
+                        <button class="btn-outline" style="white-space:nowrap;"><i class="fa-solid fa-plus"></i> 追加</button>
+                    </div>
+                    <div style="margin-top:10px; font-size:12px; color:#4A5568;">
+                        <div>✓ 山田 太郎 (10:00 - 22:00) <button class="btn-outline" style="padding:2px 5px; font-size:10px; border:none; color:red;"><i class="fa-solid fa-trash"></i></button></div>
+                    </div>
+                </div>
+                <button class="btn-primary" style="width:100%; background:#4285F4;" onclick="alert('シフトを設定しました。'); document.getElementById('calendarEditModal').style.display='none'">シフトを保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOLIDAY MODAL (休業日設定) -->
+    <div id="holidayModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="max-width: 500px; width:90%; position:relative; padding:0; overflow:hidden;">
+            <div style="background:#EA4335; padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">休業日設定</h2>
+                <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('holidayModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding:20px;">
+                <div class="form-group">
+                    <label>休業日 日付選択</label>
+                    <input type="date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>メモ・理由 (任意)</label>
+                    <input type="text" class="form-control" placeholder="例: お盆休み、臨時休業">
+                </div>
+                <button class="btn-primary" style="width:100%; background:#EA4335;" onclick="alert('休業日を設定しました。'); document.getElementById('holidayModal').style.display='none'">休業日として登録</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MANUAL RESERVATION MODAL (手入力追加) -->
+    <div id="manualReservationModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="max-width: 500px; width:90%; position:relative; padding:0; overflow:hidden;">
+            <div style="background:var(--primary-blue); padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">予約の手動追加</h2>
+                <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('manualReservationModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding:20px;">
+                <div class="form-group">
+                    <label>顧客名</label>
+                    <input type="text" class="form-control" placeholder="お名前を入力">
+                </div>
+                <div class="form-group">
+                    <label>電話番号</label>
+                    <input type="tel" class="form-control" placeholder="090-1234-5678">
+                </div>
+                <div class="form-group">
+                    <label>時間</label>
+                    <input type="datetime-local" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>担当スタッフ</label>
+                    <input type="text" class="form-control" placeholder="例: やまもと (未定の場合は空欄)">
+                </div>
+                <div class="form-group">
+                    <label>メニュー</label>
+                    <select class="form-control">
+                        <option>プレミアム焼肉コース</option>
+                        <option>スタンダード飲み放題</option>
+                        <option style="background:#f0f0f0; font-weight:bold;">なし (席のみ・未定)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>メモ</label>
+                    <textarea class="form-control" rows="2" placeholder="注意事項や要望など"></textarea>
+                </div>
+                <button class="btn-primary" style="width:100%;" onclick="alert('手動で予約を追加しました。'); document.getElementById('manualReservationModal').style.display='none'">予約を登録</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD CUSTOMER MODAL (顧客の新規手動登録) -->
+    <div id="addCustomerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div class="card" style="max-width: 500px; width:90%; position:relative; padding:0; overflow:hidden;">
+            <div style="background:var(--primary-blue); padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:16px;">顧客の新規手動登録</h2>
+                <button style="background:none; border:none; font-size:20px; color:white; cursor:pointer;" onclick="document.getElementById('addCustomerModal').style.display='none'"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding:20px;">
+                <div class="form-group">
+                    <label>顧客名</label>
+                    <input type="text" class="form-control" placeholder="お名前を入力">
+                </div>
+                <div class="form-group">
+                    <label>電話番号</label>
+                    <input type="tel" class="form-control" placeholder="090-1234-5678">
+                </div>
+                <div class="form-group">
+                    <label>メモ</label>
+                    <textarea class="form-control" rows="3" placeholder="顧客の特徴や注意事項など"></textarea>
+                </div>
+                <button class="btn-primary" style="width:100%;" onclick="alert('顧客を新規登録しました。'); document.getElementById('addCustomerModal').style.display='none'">登録する</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openAddCustomerModal() {
+            document.getElementById('addCustomerModal').style.display = 'flex';
+        }
+    </script>
+
+    <!-- RESERVATION DETAIL MODAL -->
+    <div id="reservationDetailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;">
+        <div class="card" style="max-width: 650px; width:90%; position:relative; padding: 0; overflow:hidden;">
+            <div style="background:linear-gradient(135deg, var(--primary-blue), #2B3674); padding:20px 25px; color:white; display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="margin:0; font-size:18px; font-weight:700;"><i class="fa-solid fa-calendar-check"></i> <span id="rsvModalDate">2026年 4月4日 (土)</span> の予約一覧</h2>
+                <button style="background:none; border:none; font-size:22px; color:white; cursor:pointer;" onclick="closeReservationDetail()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:left;">
+                    <tr style="background:#F8FAFC; border-bottom:1px solid #E2E8F0;">
+                        <th style="padding:10px; color:#4A5568;">時間</th>
+                        <th style="padding:10px; color:#4A5568;">ご予約者（人数）</th>
+                        <th style="padding:10px; color:#4A5568;">メニュー/担当</th>
+                        <th style="padding:10px; color:#4A5568; text-align:center;">LINE配信状況</th>
+                    </tr>
+                    <tr style="border-bottom:1px solid #E2E8F0;">
+                        <td style="padding:15px 10px; font-weight:bold; color:var(--text-main);">17:00</td>
+                        <td style="padding:15px 10px;">山口 健太 様 <span style="background:#E2E8F0; padding:2px 6px; border-radius:10px; font-size:11px;">2名</span></td>
+                        <td style="padding:15px 10px;">席のみ予約<br><span style="color:#A0AEC0; font-size:11px;">担当: 佐藤</span></td>
+                        <td style="padding:15px 10px; text-align:center;"><span style="background:#E6F4EA; color:#059669; padding:4px 8px; border-radius:12px; font-size:11px; font-weight:bold;">前日リマインド済</span></td>
+                    </tr>
+                    <tr id="rsvModalExtraRow" style="border-bottom:1px solid #E2E8F0;">
+                        <td style="padding:15px 10px; font-weight:bold; color:var(--text-main);">18:30</td>
+                        <td style="padding:15px 10px;">高田 彩 様 <span style="background:#E2E8F0; padding:2px 6px; border-radius:10px; font-size:11px;">4名</span></td>
+                        <td style="padding:15px 10px;">スタンダードコース<br><span style="color:#A0AEC0; font-size:11px;">担当: 高橋</span></td>
+                        <td style="padding:15px 10px; text-align:center;"><span style="background:#E2E8F0; color:#4A5568; padding:4px 8px; border-radius:12px; font-size:11px; font-weight:bold;">未配信（当日配信待機中）</span></td>
+                    </tr>
+                    <tr style="border-bottom:1px solid #E2E8F0;">
+                        <td style="padding:15px 10px; font-weight:bold; color:var(--text-main);">19:00</td>
+                        <td style="padding:15px 10px;">中村 翔 様 <span style="background:#E2E8F0; padding:2px 6px; border-radius:10px; font-size:11px;">6名</span></td>
+                        <td style="padding:15px 10px;">VIPアニバーサリー<br><span style="color:#A0AEC0; font-size:11px;">担当: 店長</span></td>
+                        <td style="padding:15px 10px; text-align:center;"><span style="background:#E6F4EA; color:#059669; padding:4px 8px; border-radius:12px; font-size:11px; font-weight:bold;">前日リマインド済</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MANDATORY ONBOARDING MODAL -->
+    <div id="initialSetupModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(248, 250, 252, 0.95); backdrop-filter:blur(5px); z-index:10000; justify-content:center; align-items:center; overflow-y:auto; padding:20px;">
+        <div class="card" style="max-width: 750px; width:100%; padding:0; overflow:hidden; position:relative; margin:auto; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+            <div style="background:var(--primary-blue); padding:20px; color:white; text-align:center;">
+                <h2 style="margin:0; font-size:20px; font-weight:bold;">✨ 初回セットアップ：店舗との連携</h2>
+                <p style="margin:8px 0 0 0; font-size:13px; color:#E2E8F0;">全ての機能をご利用いただくために、ご自身の店舗とMEOダッシュボードを連携させてください。</p>
+            </div>
+            
+            <div style="padding:30px;">
+                <div style="margin-bottom:25px;">
+                    <h3 style="font-size:15px; margin-bottom:15px; text-align:center; color:var(--text-main); font-weight:800; border-bottom:2px solid #E2E8F0; padding-bottom:10px;">
+                        STEP 1: 正しいGBPのURL形式を取得してください
+                    </h3>
+
+                    <!-- スマホ向け -->
+                    <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:15px;">
+                        <!-- スマホ版 -->
+                        <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
+                            <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-mobile-screen-button" style="font-size:16px;"></i> スマホから取得する場合
+                            </div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map-location-dot" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>アプリを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        自分の店舗の<br>情報を開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">Safariやブラウザ</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">Google検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報の共有 <span style="color:#E53E3E;">(エラー)</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PC版 -->
+                        <div style="border:1px solid #E6F4EA; border-radius:8px; overflow:hidden;">
+                            <div style="background:#E6F4EA; color:#059669; padding:8px 15px; font-weight:bold; font-size:13px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-desktop" style="font-size:16px;"></i> パソコンから取得する場合
+                            </div>
+                            <!-- OKフロー -->
+                            <div style="background:white; border-bottom:1px dashed #E2E8F0; padding:12px; display:flex; align-items:center;">
+                                <div style="background:#34A853; color:white; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; margin-right:12px;">正解⭕️</div>
+                                <div style="display:flex; align-items:center; flex:1; justify-content:space-between; font-size:11px; font-weight:bold; color:#4A5568;">
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F0FDF4; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-map" style="font-size:20px; color:#34A853;"></i>
+                                        </div>
+                                        Googleマップ<br>サイトを開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px; color:#64748B;"></i>
+                                        </div>
+                                        店舗名を<br>検索して開く
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right" style="color:#CBD5E1;"></i>
+                                    <div style="text-align:center; flex:1;">
+                                        <div style="width:36px; height:36px; margin:0 auto 4px auto; background:#F8FAFC; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                            <i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px; color:#4285F4;"></i>
+                                        </div>
+                                        「共有」から<br>リンクをコピー
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- NGフロー -->
+                            <div style="background:#F8FAFC; padding:8px 12px; display:flex; align-items:center;">
+                                <div style="background:#A0AEC0; color:white; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-right:12px;">NG❌</div>
+                                <div style="font-size:10px; font-weight:bold; color:#64748B; flex:1; display:flex; align-items:center; justify-content:space-between;">
+                                    <div style="text-align:center;">通常のGoogle検索</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">店舗情報を開く</div> <i class="fa-solid fa-chevron-right" style="color:#E2E8F0; font-size:8px;"></i>
+                                    <div style="text-align:center;">共有リンク <span style="color:#E53E3E;">(エラー)</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="font-size:15px; font-weight:bold;">STEP 2: 取得した店舗の「GoogleマップURL」を貼り付け <span style="color:#E53E3E;">*</span></label>
+                    <input type="text" class="form-control" id="onboardUrlInput" placeholder="例: https://maps.app.goo.gl/xxxxxx" oninput="checkOnboardForm()" style="padding:15px; font-size:15px;">
+                </div>
+                
+                <div style="background:#FFFBEB; border:1px solid #F6E05E; padding:20px; border-radius:8px; margin-bottom:25px;">
+                    <div style="font-weight:bold; font-size:14px; color:#B7791F; margin-bottom:15px;"><i class="fa-solid fa-triangle-exclamation"></i> 以下の項目にチェックを入れてください</div>
+                    <label style="display:flex; align-items:flex-start; gap:10px; font-size:14px; margin-bottom:15px; cursor:pointer;">
+                        <input type="checkbox" id="checkNotShare" onchange="checkOnboardForm()" style="width:18px; height:18px; margin-top:2px;">
+                        <span>ブラウザから取得した <b>share.google.com</b> のリンクになっていませんか？</span>
+                    </label>
+                    <label style="display:flex; align-items:flex-start; gap:10px; font-size:14px; cursor:pointer;">
+                        <input type="checkbox" id="checkUrlMatch" onchange="checkOnboardForm()" style="width:18px; height:18px; margin-top:2px;">
+                        <span>リンクはご自身の店舗の正しいURLに間違いありませんか？</span>
+                    </label>
+                </div>
+                
+                <button class="btn-primary" id="onboardSubmitBtn" style="width:100%; padding:15px; font-size:16px; font-weight:bold; background:#A0AEC0; box-shadow:none; cursor:not-allowed;" disabled onclick="finishOnboarding()">
+                    <i class="fa-brands fa-google"></i> Googleでログインして連携を完了する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- モバイルメニュー操作 ---
+        function toggleMobileMenu() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.getElementById('mobileOverlay').classList.toggle('active');
+        }
+
+        function switchMainView(viewId, element) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(element) {
+                element.classList.add('active');
+            } else {
+                let targetId = viewId;
+                // マスター設定（スタッフ・メニュー等）は「予約管理」を光らせる
+                if(viewId.includes('form')) targetId = 'reservations'; 
+                
+                document.querySelectorAll('.nav-item').forEach(link => {
+                    const onclickStr = link.getAttribute('onclick');
+                    if (onclickStr && onclickStr.includes(`'${targetId}'`)) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            const targetView = document.getElementById('view-' + viewId);
+            if(targetView) {
+                targetView.classList.add('active');
+                targetView.style.opacity = 0;
+                setTimeout(() => targetView.style.opacity = 1, 50);
+            }
+            
+            if(document.querySelector('.sidebar').classList.contains('active')){
+                toggleMobileMenu();
+            }
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        // --- カレンダーの予約POP ---
+        function openReservationDetail(dateStr, count) {
+            document.getElementById('rsvModalDate').innerText = dateStr;
+            // デモ用に件数によって行の表示/非表示を切り替える遊び心
+            if(count === 1) {
+                document.getElementById('rsvModalExtraRow').style.display = 'none';
+            } else {
+                document.getElementById('rsvModalExtraRow').style.display = 'table-row';
+            }
+            document.getElementById('reservationDetailModal').style.display = 'flex';
+        }
+        function closeReservationDetail() {
+            document.getElementById('reservationDetailModal').style.display = 'none';
+        }
+
+        function switchReviewSubView(tabId) {
+            document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active-tab'));
+            document.getElementById('tab-btn-' + tabId).classList.add('active-tab');
+            document.getElementById('subview-settings').style.display = 'none';
+            document.getElementById('subview-data').style.display = 'none';
+            
+            if (tabId === 'data') {
+                renderAnswersTable();
+            }
+            
+            const target = document.getElementById('subview-' + tabId);
+            target.style.opacity = 0; target.style.display = 'block';
+            setTimeout(() => target.style.opacity = 1, 50);
+        }
+
+        // --- 回答データをLocalStorageからリアルタイム描画 ---
+        function renderAnswersTable() {
+            const dataContainer = document.querySelector('#subview-data .data-table');
+            let answers = JSON.parse(localStorage.getItem('msmSurveyAnswers') || '[]');
+            
+            if (answers.length === 0) {
+                dataContainer.innerHTML = '<tbody><tr><td colspan="10" style="text-align:center; padding:30px; color:#A3AED0;"><i class="fa-solid fa-clipboard" style="font-size:24px; margin-bottom:10px; display:block;"></i>まだ回答データはありません。</td></tr></tbody>';
+                const filter = document.getElementById('dataSurveyFilter');
+                if(filter) filter.innerHTML = '<option value="">データなし</option>';
+                return;
+            }
+
+            // プルダウンのリスト生成 (重複排除)
+            const filterSelect = document.getElementById('dataSurveyFilter');
+            const uniqueTitles = [...new Set(answers.map(a => a.surveyTitle || '無題のアンケート'))];
+            
+            let currentSelection = filterSelect.value;
+            if(!currentSelection || currentSelection === "") {
+                currentSelection = answers[0].surveyTitle || '無題のアンケート';
+            }
+
+            filterSelect.innerHTML = '';
+            uniqueTitles.forEach(t => {
+                const selected = (t === currentSelection) ? 'selected' : '';
+                filterSelect.insertAdjacentHTML('beforeend', `<option value="${t}" ${selected}>回答実績: ${t}</option>`);
+            });
+            currentSelection = filterSelect.value;
+
+            // 選択されたアンケートの回答のみに絞り込む
+            const filteredAnswers = answers.filter(a => (a.surveyTitle || '無題のアンケート') === currentSelection);
+
+            if(filteredAnswers.length === 0) {
+                 dataContainer.innerHTML = '<tbody><tr><td colspan="10" style="text-align:center; padding:30px; color:#A3AED0;">このアンケートにはまだ回答がありません。</td></tr></tbody>';
+                 return;
+            }
+
+            // ヘッダーの生成 (フィルター後の最初の回答が持つ設定スナップショットをベースにする)
+            let baseConfig = filteredAnswers[0].configSnapshot || JSON.parse(localStorage.getItem('msmSurveyConfig') || '{"questions":[]}');
+
+            let headersHTML = `<thead><tr><th style="min-width:140px;">回答日時</th>`;
+            baseConfig.questions.forEach(q => {
+                headersHTML += `<th style="min-width:120px;">${q.title}</th>`;
+            });
+            headersHTML += `<th style="min-width:150px;">Google投稿状況</th></tr></thead>`;
+            
+            // 行生成
+            let tbodyHTML = '<tbody>';
+            filteredAnswers.forEach(ans => {
+                tbodyHTML += `<tr><td>${ans.date}</td>`;
+                baseConfig.questions.forEach(q => {
+                    let text = ans.answers[q.id] || ans.answers[q.title] || '-';
+                    
+                    // 星評価の表示 (数値・または「星」という文字が含まれる場合)
+                    if (q.type === 'stars' || (text && text.toString().includes('星'))) {
+                        const num = parseInt(text);
+                        if (!isNaN(num)) {
+                            text = `<span style="color:#FBBC05; font-size:16px;">` + '★'.repeat(num).padEnd(5, '☆') + `</span>`;
+                        }
+                    }
+                    tbodyHTML += `<td>${text}</td>`;
+                });
+                if (ans.status === '連携・投稿済み') {
+                    tbodyHTML += `<td><span class="status-badge status-success">連携・投稿済み</span></td></tr>`;
+                } else {
+                    tbodyHTML += `<td><span class="status-badge status-pending">未投稿（離脱）</span></td></tr>`;
+                }
+            });
+            tbodyHTML += '</tbody>';
+            
+            dataContainer.innerHTML = headersHTML + tbodyHTML;
+        }
+
+        // --- アンケートのフォーマット変更（警告） ---
+        function handleTypeChange(select) {
+            const val = select.value;
+            const container = select.closest('.question-block-admin').querySelector('.options-container');
+            if (val === 'text') {
+                const ok = confirm("【記述式に関する推奨アラート】\n\n記述式はお客様の入力負担が大きく、アンケートの途中で離脱される（回答率が大きく低下する）原因となります。\nユーザーに負担をかけないよう、システムでは「選択式」を推奨しております。\n\nそれでも記述式に変更してよろしいでしょうか？");
+                if (!ok) {
+                    select.value = 'radio';
+                    container.style.display = 'block';
+                    return;
+                }
+                container.style.display = 'none';
+            } else if (val === 'radio' || val === 'checkbox') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        // --- 選択肢（タグ）の追加・削除用 ---
+        function addOption(btnElement) {
+            const container = btnElement.closest('.options-container');
+            const input = container.querySelector('.new-option-input');
+            const val = input.value.trim();
+            if(!val) return;
+            
+            const tagsBox = container.querySelector('.options-tags');
+            // 重複チェック
+            const existings = Array.from(tagsBox.querySelectorAll('.tag')).map(t => t.innerText.trim());
+            if(existings.includes(val)) {
+                alert("既に同じ選択肢が追加されています。内容を変更してください。");
+                return;
+            }
+            
+            const html = `<span class="tag deletable" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
+            tagsBox.insertAdjacentHTML('beforeend', html);
+            
+            // 入力欄を確実にクリア
+            setTimeout(() => {
+                input.value = '';
+                input.focus();
+            }, 10);
+        }
+
+        // --- 質問の並び替え機能 ---
+        function reorderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            const blocks = container.querySelectorAll('.question-block-admin');
+            blocks.forEach((block, index) => {
+                const label = block.querySelector('.q-label');
+                if (label) label.innerText = `質問${index + 1}`;
+            });
+            // プレビューの更新を促す
+            if(typeof autoSyncPreview === 'function') autoSyncPreview();
+        }
+
+        function moveQuestion(btn, direction) {
+            const block = btn.closest('.question-block-admin');
+            if (!block) return;
+
+            if (direction === -1) {
+                // 上へ
+                const prev = block.previousElementSibling;
+                if (prev) {
+                    block.parentNode.insertBefore(block, prev);
+                }
+            } else {
+                // 下へ
+                const next = block.nextElementSibling;
+                if (next) {
+                    block.parentNode.insertBefore(next, block);
+                }
+            }
+            reorderQuestions();
+        }
+
+        // --- 質問ブロック自体の追加 ---
+        function addQuestion() {
+            const container = document.getElementById('questionsContainer');
+            const html = `
+            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px; animation:fadeIn 0.3s;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="q-label" style="font-weight:bold; color:var(--primary-blue);">質問</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-outline" style="padding:2px 6px; font-size:12px; border-color:#CBD5E1; color:#64748B;" onclick="moveQuestion(this, -1)" title="上へ移動"><i class="fa-solid fa-chevron-up"></i></button>
+                            <button class="btn-outline" style="padding:2px 6px; font-size:12px; border-color:#CBD5E1; color:#64748B;" onclick="moveQuestion(this, 1)" title="下へ移動"><i class="fa-solid fa-chevron-down"></i></button>
+                        </div>
+                    </div>
+                    <button class="btn-outline" style="padding:2px 6px; font-size:10px; border:none; color:#EA4335;" onclick="this.closest('.question-block-admin').remove(); reorderQuestions();"><i class="fa-solid fa-trash"></i> 削除</button>
+                </div>
+                <div class="form-group">
+                    <label>質問タイトル</label>
+                    <input type="text" class="form-control question-title" placeholder="（例）本日はどういったシーンでのご利用ですか？">
+                </div>
+                <div class="form-group">
+                    <label>回答フォーマット</label>
+                    <select class="form-control question-type" onchange="handleTypeChange(this)">
+                        <option value="stars">5段階評価（星）</option>
+                        <option value="radio" selected>選択式（単一回答）</option>
+                        <option value="checkbox">選択式（複数回答）</option>
+                        <option value="text">記述式</option>
+                    </select>
+                </div>
+                <div class="form-group options-container" style="display:block;">
+                    <label>選択肢を追加</label>
+                    <div class="options-tags" style="margin-bottom:10px;">
+                        <span class="tag deletable" onclick="this.remove()">とても良い <i class="fa-solid fa-xmark"></i></span>
+                        <span class="tag deletable" onclick="this.remove()">普通 <i class="fa-solid fa-xmark"></i></span>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" class="form-control new-option-input" placeholder="新しい選択肢を入力..." onkeydown="if(event.key==='Enter') addOption(this)">
+                        <button class="btn-outline" style="border: 1px solid var(--border-color); color:var(--text-main);" onclick="addOption(this)">追加</button>
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            reorderQuestions();
+        }
+
+        // --- キーワードの追加 ---
+        function addKeyword() {
+            const input = document.getElementById('newKeywordInput');
+            const val = input.value.trim();
+            if(!val) return;
+            const container = document.getElementById('keywordsContainer');
+            // 重複チェック
+            const existings = Array.from(container.querySelectorAll('.tag')).map(t => t.innerText.trim());
+            if(existings.includes(val)) {
+                alert("既に同じMEOキーワードが追加されています。別の言葉を選んでください。");
+                return;
+            }
+            const html = `<span class="tag deletable" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
+            container.insertAdjacentHTML('beforeend', html);
+            input.value = ''; 
+        }
+
+        // --- QR発行＆連携用データ保存 ---
+        function collectSurveyConfig() {
+            const blocks = document.querySelectorAll('.question-block-admin');
+            const surveyQuestions = [];
+            
+            blocks.forEach((b, idx) => {
+                const qType = b.querySelector('.question-type').value;
+                const optsBox = b.querySelector('.options-container');
+                let optionsString = '';
+                if ((qType === 'radio' || qType === 'checkbox') && optsBox) {
+                    const tags = optsBox.querySelectorAll('.options-tags .tag');
+                    optionsString = Array.from(tags).map(t => t.innerText.trim()).join(',');
+                }
+                surveyQuestions.push({
+                    id: idx + 1,
+                    title: b.querySelector('.question-title').value,
+                    type: qType,
+                    options: optionsString
+                });
+            });
+
+            const keywords = Array.from(document.querySelectorAll('#keywordsContainer .tag')).map(t => t.innerText.trim());
+            const adminTitle = document.getElementById('adminSurveyTitle').value.trim() || '名称未設定のアンケート';
+            const introText = document.getElementById('adminSurveyIntroText').value.trim();
+            
+            return { title: adminTitle, intro: introText, questions: surveyQuestions, keywords: keywords };
+        }
+
+        function saveSurveyAsDraft() {
+            const configObj = collectSurveyConfig();
+            
+            let draftHistory = JSON.parse(localStorage.getItem('msmSurveyDraftHistory') || '[]');
+            const now = new Date();
+            const dateStr = now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+            
+            // 同一タイトルがあれば上書き
+            const existingIdx = draftHistory.findIndex(h => h.config.title === configObj.title);
+            if(existingIdx >= 0) {
+                draftHistory[existingIdx].config = configObj;
+                draftHistory[existingIdx].date = dateStr;
+                const updated = draftHistory.splice(existingIdx, 1)[0];
+                draftHistory.unshift(updated);
+            } else {
+                draftHistory.unshift({ date: dateStr, config: configObj });
+            }
+            localStorage.setItem('msmSurveyDraftHistory', JSON.stringify(draftHistory));
+            
+            updateHistoryDropdowns();
+            alert("下書きとして保存しました！\n（発行はされていないため、お客様には見えません。後で呼び出せます）");
+        }
+
+        function generateQR() {
+            const configObj = collectSurveyConfig();
+
+            // 本番設定として保存 (survey-mockup が同期する先)
+            localStorage.setItem('msmSurveyConfig', JSON.stringify(configObj));
+
+            // 本番発行履歴へ追加
+            let pubHistory = JSON.parse(localStorage.getItem('msmSurveyPublishHistory') || '[]');
+            const now = new Date();
+            const dateStr = now.getFullYear()+'/'+(now.getMonth()+1)+'/'+now.getDate()+' '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+            
+            // 同一タイトルがあれば上書き
+            const existingIdx = pubHistory.findIndex(h => h.config.title === configObj.title);
+            if(existingIdx >= 0) {
+                pubHistory[existingIdx].config = configObj;
+                pubHistory[existingIdx].date = dateStr;
+                const updated = pubHistory.splice(existingIdx, 1)[0];
+                pubHistory.unshift(updated);
+            } else {
+                pubHistory.unshift({ date: dateStr, config: configObj });
+            }
+            localStorage.setItem('msmSurveyPublishHistory', JSON.stringify(pubHistory));
+            
+            updateHistoryDropdowns();
+
+            // UI演出
+            const btn = document.querySelector('.btn-primary:nth-child(2)');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 発行処理中...';
+            setTimeout(() => {
+                document.getElementById('qrOverlay').style.display = 'none';
+                document.getElementById('qrContent').style.display = 'block';
+                
+                const publishUrl = window.location.origin + '/survey-mockup';
+                document.getElementById('surveyUrlText').innerText = publishUrl;
+                document.getElementById('qrImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(publishUrl)}`;
+
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> 発行・更新されました！';
+                btn.style.background = 'var(--primary-green)';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 3000);
+            }, 800);
+        }
+
+        // --- URLコピー機能 ---
+        function copySurveyUrl() {
+            const urlText = document.getElementById('surveyUrlText').innerText;
+            navigator.clipboard.writeText(urlText).then(() => {
+                alert('アンケートURLをコピーしました！\n' + urlText);
+            }).catch(err => {
+                console.error('コピー失敗:', err);
+            });
+        }
+
+        // --- プレビューの自動同期機能 ---
+        let syncTimer;
+        function autoSyncPreview() {
+            clearTimeout(syncTimer);
+            syncTimer = setTimeout(() => {
+                // 発行中（QR画面）の場合はリロードしない
+                if(document.getElementById('qrArea').classList.contains('active')) return;
+                
+                const configObj = collectSurveyConfig();
+                localStorage.setItem('msmSurveyConfig', JSON.stringify(configObj));
+                
+                const frame = document.getElementById('surveyIframe');
+                if(frame && frame.contentWindow) {
+                    frame.contentWindow.location.reload();
+                }
+            }, 800);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const builderArea = document.getElementById('subview-settings');
+            if(builderArea) {
+                builderArea.addEventListener('keyup', autoSyncPreview);
+                builderArea.addEventListener('change', autoSyncPreview);
+                builderArea.addEventListener('click', autoSyncPreview); // タグ追加などに対応
+            }
+        });
+
+        // --- 新規アンケート作成機能 ---
+        function createNewSurvey() {
+            if(!confirm('現在編集中の内容をクリアして、新しいアンケートを作成しますか？（保存していない内容は失われます）')) return;
+            
+            document.getElementById('adminSurveyTitle').value = '';
+            document.getElementById('adminSurveyIntroText').value = '本日はご来店ありがとうございました！\nよろしければ簡単なアンケートにご協力ください。';
+            document.getElementById('questionsContainer').innerHTML = '';
+            document.getElementById('keywordsContainer').innerHTML = '';
+            
+            // 最低1つの質問をセット
+            addQuestion();
+            
+            // 履歴の選択も解除
+            document.getElementById('publishHistorySelect').value = '';
+            document.getElementById('draftHistorySelect').value = '';
+
+            // QR画面がアクティブなら元に戻す
+            document.getElementById('qrArea').classList.remove('active');
+            
+            autoSyncPreview();
+        }
+
+        // --- グラフ用ロジック ---
+        let myChart;
+        const chartCanvas = document.getElementById('performanceChart');
+        if (chartCanvas) {
+            const chartCtx = chartCanvas.getContext('2d');
+            let currentPeriod = '6months';
+            let currentMetric = 'overview';
+            
+            let dataConfig = {
+                '6months': { labels: ['11月', '12月', '1月', '2月', '3月', '4月'], overview: [0, 0, 0, 0, 0, 0], route: [0, 0, 0, 0, 0, 0], call: [0, 0, 0, 0, 0, 0], website: [0, 0, 0, 0, 0, 0] },
+                'daily': { labels: Array.from({length: 31}, (_, i) => `${i + 1}日`), overview: Array.from({length: 31}, () => 0), route: Array.from({length: 31}, () => 0), call: Array.from({length: 31}, () => 0), website: Array.from({length: 31}, () => 0) }
+            };
+
+            try {
+                let userObj = JSON.parse(localStorage.getItem('currentUser'));
+                if (userObj && userObj.email === 'test@gmail.com') {
+                    // Inject realistic mock values for test user (半年間の推移)
+                    dataConfig['6months'].overview = [15200, 16800, 18450, 17200, 19500, 21320];
+                    dataConfig['6months'].route = [280, 310, 350, 330, 390, 420];
+                    dataConfig['6months'].website = [850, 920, 1050, 980, 1120, 1260];
+                    dataConfig['6months'].call = [120, 135, 145, 140, 160, 185];
+
+                    // Inject values into KPI UI
+                    setTimeout(() => {
+                        document.getElementById('kpiOverviewTotal').innerHTML = `21,320 <span style="font-size:12px; color:var(--primary-green); margin-left:10px;"><i class="fa-solid fa-arrow-trend-up"></i> +9.3%</span>`;
+                        document.getElementById('kpiRouteTotal').innerHTML = `420 <span style="font-size:12px; color:var(--primary-green); margin-left:10px;"><i class="fa-solid fa-arrow-trend-up"></i> +7.6%</span>`;
+                        document.getElementById('kpiWebsiteTotal').innerHTML = `1,260 <span style="font-size:12px; color:var(--primary-green); margin-left:10px;"><i class="fa-solid fa-arrow-trend-up"></i> +12.5%</span>`;
+                        document.getElementById('kpiCallTotal').innerHTML = `185 <span style="font-size:12px; color:var(--primary-green); margin-left:10px;"><i class="fa-solid fa-arrow-trend-up"></i> +15.6%</span>`;
+                        
+                        document.getElementById('demoAiCardContent').innerHTML = `
+                            <p style="font-size:14px; line-height:1.6; margin-bottom: 15px;"><b>【AI実績分析】</b><br>
+                            先月と比較して、全体的な表示回数が<span style="color:#34A853; font-weight:bold;">9.3%増加</span>しています。<br>
+                            特に「ルート検索数」の着実な伸びが確認され、Googleマップ検索から実来店への導線が非常にスムーズに機能しています。</p>
+                            <p style="font-size:14px; line-height:1.6;"><b>【今月の最優先アクション】</b><br>
+                            サイトアクセス数が1,200件を突破しました！さらなる予約率向上のため、左メニューの<b>「投稿作成」</b>から最新のキャンペーン情報などを週1回を目安に配信することを推奨します。</p>
+                        `;
+
+                        // 動的タイトルも更新
+                        document.querySelector('.dynamic-store-name').innerText = userObj.company_name || 'テスト店舗';
+                    }, 100);
+                }
+            } catch (e) {}
+
+            const metricConfig = {
+                'overview': { color: '#4285F4', bg: 'rgba(66, 133, 244, 0.1)' },
+                'route': { color: '#34A853', bg: 'rgba(52, 168, 83, 0.1)' },
+                'call': { color: '#EA4335', bg: 'rgba(234, 67, 53, 0.1)' },
+                'website': { color: '#FBBC05', bg: 'rgba(251, 188, 5, 0.1)' }
+            };
+
+            const renderChart = () => {
+                if (myChart) myChart.destroy();
+                const d = dataConfig[currentPeriod];
+                const m = metricConfig[currentMetric];
+                myChart = new Chart(chartCtx, {
+                    type: 'line',
+                    data: { labels: d.labels, datasets: [{ data: d[currentMetric], borderColor: m.color, backgroundColor: m.bg, fill: true, tension: 0.3, pointBackgroundColor: '#FFF', borderWidth: 3 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { borderDash: [5, 5] }, border: { display: false } } } }
+                });
+            }
+
+            renderChart();
+
+            document.getElementById('monthSelector').addEventListener('change', e => { currentPeriod = e.target.value; renderChart(); });
+            document.querySelectorAll('#chart-tabs .metric-tab').forEach(t => {
+                t.addEventListener('click', function() {
+                    document.querySelectorAll('#chart-tabs .metric-tab').forEach(bt => bt.classList.remove('active-tab'));
+                    this.classList.add('active-tab');
+                    currentMetric = this.dataset.metric; renderChart();
+                });
+            });
+        }
+        // --- 履歴読み込みとUI反映 ---
+        function updateHistoryDropdowns() {
+            const draftHistory = JSON.parse(localStorage.getItem('msmSurveyDraftHistory') || '[]');
+            const pubHistory = JSON.parse(localStorage.getItem('msmSurveyPublishHistory') || '[]');
+            
+            const selDraft = document.getElementById('draftHistorySelect');
+            if(selDraft) {
+                selDraft.innerHTML = '<option value="">下書きデータを選択...</option>';
+                draftHistory.forEach((h, idx) => {
+                    selDraft.insertAdjacentHTML('beforeend', `<option value="${idx}">${h.date} - ${h.config.title}</option>`);
+                });
+            }
+            
+            const selPub = document.getElementById('publishHistorySelect');
+            if(selPub) {
+                selPub.innerHTML = '<option value="">本番発行データを選択...</option>';
+                pubHistory.forEach((h, idx) => {
+                    selPub.insertAdjacentHTML('beforeend', `<option value="${idx}">${h.date} - ${h.config.title}</option>`);
+                });
+            }
+        }
+
+        function loadSurveyHistory(type) {
+            let dataList, selId;
+            if(type === 'draft') {
+                dataList = JSON.parse(localStorage.getItem('msmSurveyDraftHistory') || '[]');
+                selId = 'draftHistorySelect';
+            } else {
+                dataList = JSON.parse(localStorage.getItem('msmSurveyPublishHistory') || '[]');
+                selId = 'publishHistorySelect';
+            }
+            
+            const sel = document.getElementById(selId);
+            if(!sel || sel.value === '') { alert("復元する履歴を選択してください。"); return; }
+            
+            const data = dataList[sel.value];
+            if(!data) return;
+
+            // タイトルの復元
+            document.getElementById('adminSurveyTitle').value = data.config.title || '';
+
+            // 質問の再描画
+            const qBox = document.getElementById('questionsContainer');
+            qBox.innerHTML = '';
+            
+            data.config.questions.forEach((q, idx) => {
+                let optionsHtml = '';
+                if(q.type === 'radio' && q.options) {
+                    const tags = q.options.split(',');
+                    tags.forEach(t => {
+                        if(t.trim()) { optionsHtml += `<span class="tag deletable" onclick="this.remove()">${t} <i class="fa-solid fa-xmark"></i></span>`; }
+                    });
+                }
+                
+                const showOpts = q.type === 'radio' ? 'block' : 'none';
+                
+                const html = `
+                <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px; animation:fadeIn 0.3s;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span style="font-weight:bold; color:var(--primary-blue);">質問${q.id}</span>
+                        <button class="btn-outline" style="padding:2px 6px; font-size:10px; border:none; color:#EA4335;" onclick="this.closest('.question-block-admin').remove()"><i class="fa-solid fa-trash"></i> 削除</button>
+                    </div>
+                    <div class="form-group">
+                        <label>質問タイトル</label>
+                        <input type="text" class="form-control question-title" value="${q.title}">
+                    </div>
+                    <div class="form-group">
+                        <label>回答フォーマット</label>
+                        <select class="form-control question-type" onchange="handleTypeChange(this)">
+                            <option value="stars" ${q.type==='stars'?'selected':''}>5段階評価（星）</option>
+                            <option value="radio" ${q.type==='radio'?'selected':''}>選択式（推奨）</option>
+                            <option value="text" ${q.type==='text'?'selected':''}>記述式</option>
+                        </select>
+                    </div>
+                    <div class="form-group options-container" style="display:${showOpts};">
+                        <label>選択肢を追加</label>
+                        <div class="options-tags" style="margin-bottom:10px;">${optionsHtml}</div>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" class="form-control new-option-input" placeholder="新しい選択肢を入力..." onkeydown="if(event.key==='Enter') addOption(this)">
+                            <button class="btn-outline" style="border: 1px solid var(--border-color); color:var(--text-main);" onclick="addOption(this)">追加</button>
+                        </div>
+                    </div>
+                </div>`;
+                qBox.insertAdjacentHTML('beforeend', html);
+            });
+
+            // キーワードの再描画
+            const kBox = document.getElementById('keywordsContainer');
+            kBox.innerHTML = '';
+            data.config.keywords.forEach(k => {
+                kBox.insertAdjacentHTML('beforeend', `<span class="tag deletable" onclick="this.remove()">${k} <i class="fa-solid fa-xmark"></i></span>`);
+            });
+
+            alert(`【${data.config.title}】を復元しました！\n反映する場合は必ず「保存する」や「発行する」ボタンを押してください。`);
+        }
+
+        // --- 競合分析の自動取得ロジック（バックエンドAPI通信） ---
+        async function addCompetitor() {
+            const input = document.getElementById('competitorUrlInput');
+            const url = input.value.trim();
+            if(!url) {
+                alert("競合店舗のGoogleマップURLを入力してください。");
+                return;
+            }
+
+            // 【重要】 share.google のリンクを検知した場合は自動で図解ガイドを開いて警告する
+            if(url.includes("share.google")) {
+                input.value = ''; // 誤ったURLを消す
+                openHelpModal(); // ガイドを自動オープン
+                return;
+            }
+            
+            const btn = input.nextElementSibling;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> API経由で自動取得中...';
+            
+            try {
+                // Vercelバックエンド（サーバーレス関数）に向かって通信を行う
+                const response = await fetch('/api/fetchCompetitor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '情報の取得に失敗しました。');
+                }
+
+                const grid = document.getElementById('competitorsGrid');
+                const storeName = data.name;
+                const rating = data.rating;
+                const reviewCount = data.userRatingCount;
+                
+                let diffHtml = '';
+                if (reviewCount > 124) { // 自店舗の124件と比較
+                    diffHtml = `<div style="margin-top:15px; padding:10px; background:#FEECEB; border-radius:8px; font-size:12px; color:#EA4335; font-weight:bold;">
+                        <i class="fa-solid fa-fire"></i> 追いつくまであと「${reviewCount - 124}件」の口コミが必要！
+                    </div>`;
+                } else {
+                    diffHtml = `<div style="margin-top:15px; padding:10px; background:#E6F4EA; border-radius:8px; font-size:12px; color:#34A853; font-weight:bold;">
+                        <i class="fa-solid fa-crown"></i> 自店舗が勝っています！（差: ${124 - reviewCount}件）
+                    </div>`;
+                }
+                
+                const newCard = `
+                <div class="card" style="animation: fadeIn 0.4s ease;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span style="background:#4A5568; color:white; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:bold;">ベンチマーク店舗</span>
+                        <button style="border:none; background:none; color:#A3AED0; cursor:pointer;" onclick="this.closest('.card').remove()"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <h3 style="font-size:16px; color:var(--text-main); margin-bottom:5px;">${storeName}</h3>
+                    <div style="font-size:24px; font-weight:700; color:var(--text-main); display:flex; align-items:center; gap:10px;">
+                        ${rating} <span style="font-size:14px; color:#FBBC05;">★★★★☆</span>
+                    </div>
+                    <div style="font-size:14px; color:var(--text-muted); margin-top:5px;">
+                        <i class="fa-solid fa-comment-dots"></i> 口コミ数: <b style="color:var(--text-main)">${reviewCount}件</b>
+                    </div>
+                    ${diffHtml}
+                </div>`;
+                
+                grid.insertAdjacentHTML('beforeend', newCard);
+                input.value = '';
+
+            } catch (error) {
+                console.error(error);
+                alert("エラーが発生しました: " + error.message + "\n※ローカルPCから開いている場合、Vercel上（ネット上）でのみ動作します。");
+            } finally {
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        // モーダルの開閉
+        function openHelpModal() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+        function closeHelpModal() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
+
+        function openLineSettingsModal() {
+            document.getElementById('lineSettingsModal').style.display = 'flex';
+        }
+        function closeLineSettingsModal() {
+            document.getElementById('lineSettingsModal').style.display = 'none';
+        }
+
+        // ページ読み込み時に履歴リストを構成
+        updateHistoryDropdowns();
+        // --- 投稿機能のJS実装（デモ） ---
+        function addPostKeyword() {
+            const input = document.getElementById('postKeywordInput');
+            const val = input.value.trim();
+            if(!val) return;
+            const container = document.getElementById('postKeywordsContainer');
+            const html = `<span class="tag deletable" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
+            container.insertAdjacentHTML('beforeend', html);
+            input.value = '';
+        }
+
+        function addPostEmoji() {
+            const input = document.getElementById('postEmojiInput');
+            const val = input.value.trim();
+            if(!val) return;
+            const container = document.getElementById('postEmojisContainer');
+            const html = `<span class="tag deletable" style="background:#FFF3CD; color:#856404; border-color:#FFEEBA;" onclick="this.remove()">${val} <i class="fa-solid fa-xmark"></i></span>`;
+            container.insertAdjacentHTML('beforeend', html);
+            input.value = '';
+        }
+
+        async function generateAIPost() {
+            const btn = document.getElementById('aiGenerateBtn');
+            const origHTML = btn.innerHTML;
+            
+            // APIキーの取得（初回はプロンプトで入力させる）
+            let apiKey = localStorage.getItem('openai_api_key');
+            if (!apiKey) {
+                apiKey = prompt("OpenAI APIキーを入力してください (sk-...):\n※このキーはお使いのブラウザにのみ安全に保存されます。");
+                if (!apiKey) return;
+                localStorage.setItem('openai_api_key', apiKey.trim());
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> OpenAIと通信して執筆中...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+
+            try {
+                const emojis = Array.from(document.getElementById('postEmojisContainer').querySelectorAll('.tag')).map(t => t.innerText.replace(' ', '').replace('×', ''));
+                const keywords = Array.from(document.getElementById('postKeywordsContainer').querySelectorAll('.tag')).map(t => t.innerText.replace(' ', '').replace('×', ''));
+                
+                const shopName = document.getElementById('myShopName') ? document.getElementById('myShopName').innerText : "店舗名(未設定)";
+                const shopAddress = document.getElementById('myShopAddress') ? document.getElementById('myShopAddress').innerText : "住所(未設定)";
+
+                const systemPrompt = `あなたはプロのMEOライターです。以下の店舗のGoogleマップ「最新情報」投稿文を作成してください。
+
+========================================
+【最重要ルール：出力フォーマット】
+・番号（1. 2. 3.…）、見出し（**太字**）、セクション名（導入、空間、素材…等）は一切出力しないでください。
+・マークダウン記法（**、##、- 等）も一切使わないでください。
+・最初から最後まで、一つの自然に流れる「読み物」として出力してください。
+・段落の区切りは改行のみで表現してください。
+
+【文字数の厳格な制約】
+・合計文字数は必ず「1400文字以上〜1500文字以内」に納めてください。
+・1000文字程度の短い出力は失敗です。各段落を十分に膨らませてください。
+
+【内部構成の参考（これらの要素を自然に盛り込むこと。ただし見出しは絶対に書かない）】
+- 季節感やキーワードに寄り添う温かい挨拶から始める
+- 店内の空間・インテリア・照明・空気感を五感で描写する
+- 使用食材の由来や仕入れのこだわりを深く語る
+- 職人の調理技術や他店にない独自の技法を詳しく解説する
+- スタッフの接客哲学・目配り・心配りを具体的に記述する
+- お客様から寄せられた喜びの声やエピソードを紹介する
+- 今後の新メニュー構想や店舗の展望・地域への想いを語る
+- 最後に感謝と来店を心待ちにする温かいメッセージで締める
+
+【Googleポリシー遵守】
+・本文中に連絡先（電話番号、住所、URL、SNS ID、個人名）を一切含めない。
+・指定された絵文字以外は使用しない。絵文字が指定されていない場合は一切使わない。
+========================================`;
+
+                const userPrompt = `【店舗情報】\n店舗名: ${shopName}\n住所: ${shopAddress}\nキーワード: ${keywords.join(', ')}\n使用可能絵文字: ${emojis.join(' ')}\n\n上記の条件に従い、見出しや番号を一切付けず、一つの流れる文章として投稿文を作成してください。各要素を180〜200文字程度のボリュームで詳しく、情熱的に執筆し、全体で必ず1400文字を超えてください。「はい、承知しました」等の前置きは不要で、投稿文のみを出力してください。`;
+
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: userPrompt }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 2500
+                    })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || 'APIリクエストに失敗しました');
+                }
+
+                const data = await response.json();
+                let fullText = data.choices[0].message.content.trim();
+
+                document.getElementById('postTextarea').value = fullText;
+
+            } catch (error) {
+                console.error(error);
+                alert("AIの生成中にエラーが発生しました。\nAPIキーが間違っていないか、または残高不足でないか確認してください。\n詳細: " + error.message);
+                // キーが無効な場合は次回再入力させるためにリセット
+                if (error.message.includes('API key') || error.message.includes('Incorrect API key') || error.message.includes('401')) {
+                    localStorage.removeItem('openai_api_key');
+                }
+            } finally {
+                btn.innerHTML = origHTML;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
+
+        function registerMyGbpUrl() {
+            const url = document.getElementById('myGbpUrlInput').value;
+            if(!url) { alert('URLを入力してください。'); return; }
+            alert('URLから店舗情報を取得しました！\n（※本番時はAPIを通じて正式な店舗名と住所が自動反映されます）');
+            document.getElementById('myShopInfoDisplay').style.display = 'block';
+            document.getElementById('myShopName').innerText = '新宿 個室イタリアン Roomer'; // デモ表示
+            document.getElementById('myShopAddress').innerText = '東京都新宿区新宿1-2-3';
+        }
+
+        function saveReviewLink() {
+            const url = document.getElementById('reviewLinkInput').value.trim();
+            if(!url) {
+                alert('URLを入力してください。');
+                return;
+            }
+            localStorage.setItem('msmReviewLink', url);
+            alert('レビュー依頼リンクを保存しました！\nアンケート完了画面からこのURLに転送されます。');
+        }
+        function schedulePost() {
+            const text = document.getElementById('postTextarea').value.trim();
+            const time = document.getElementById('postTimeInput').value;
+            
+            if(!text) { alert('まずは投稿文を作成してください。'); return; }
+            if(!time) { alert('投稿日時を設定してください。'); return; }
+            
+            const list = document.getElementById('scheduledPostsList');
+            if(list.innerText.includes('まだ予約されている投稿はありません')) {
+                list.innerHTML = ''; // デフォルトテキストを削除
+            }
+            
+            // 日付をフォーマット
+            const dt = new Date(time);
+            const dateStrStr = `${dt.getFullYear()}/${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+            
+            // 投稿カードを作成
+            const html = `
+            <div class="card" style="padding:15px; margin-bottom:12px; border-left:4px solid #F6AD55; background:white; position:relative; box-shadow:0 1px 3px rgba(0,0,0,0.05); cursor:pointer;" onclick="if(confirm('この予約投稿を取り消しますか？')){ this.remove(); }">
+                <div style="font-size:11px; color:#DD6B20; font-weight:bold; margin-bottom:8px;"><i class="fa-solid fa-clock"></i> ${dateStrStr} に自動投稿予定</div>
+                <div style="font-size:12px; color:#4A5568; line-height:1.5; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
+                    ${text.replace(/\n/g, '<br>')}
+                </div>
+                <button style="position:absolute; top:10px; right:12px; background:none; border:none; color:#CBD5E1; cursor:pointer;" title="取消"><i class="fa-solid fa-trash"></i></button>
+            </div>`;
+            
+            list.insertAdjacentHTML('afterbegin', html);
+            
+            // フォームリセット
+            document.getElementById('postTextarea').value = '';
+            document.getElementById('postTimeInput').value = '';
+            document.getElementById('postKeywordsContainer').innerHTML = '';
+            document.getElementById('postEmojisContainer').innerHTML = '';
+            document.getElementById('postKeywordInput').value = '';
+            document.getElementById('postEmojiInput').value = '';
+            
+            alert('予約投稿をセットしました！\n指定時間（'+dateStrStr+'）になるとGoogleマップへ自動で投稿され、一覧から消去されます。');
+        }
+
+        function immediatePost() {
+            const text = document.getElementById('postTextarea').value.trim();
+            if(!text) { alert('まずは投稿文を作成してください。'); return; }
+            
+            alert('Googleマップへ「今すぐ投稿」を実行しました！（デモ動作）');
+            document.getElementById('postTextarea').value = '';
+            document.getElementById('postKeywordsContainer').innerHTML = '';
+            document.getElementById('postEmojisContainer').innerHTML = '';
+        }
+
+        // コピー機能
+        function copyGeneratedPost() {
+            const textarea = document.getElementById('postTextarea');
+            if(!textarea.value) {
+                alert('コピーするAI作成文がありません。');
+                return;
+            }
+            textarea.select();
+            document.execCommand('copy');
+            alert('投稿文を全選択してコピーしました！');
+            // 選択解除
+            window.getSelection().removeAllRanges();
+        }
+
+
+
+        // --- オンボーディング関連のJS ---
+        function checkOnboardForm() {
+            const url = document.getElementById('onboardUrlInput').value.trim();
+            const chk1 = document.getElementById('checkNotShare').checked;
+            const chk2 = document.getElementById('checkUrlMatch').checked;
+            const btn = document.getElementById('onboardSubmitBtn');
+            
+            if(url.length > 0 && chk1 && chk2) {
+                btn.disabled = false;
+                btn.style.background = 'linear-gradient(135deg, #4285F4, #34A853)';
+                btn.style.cursor = 'pointer';
+                btn.style.boxShadow = '0 10px 25px rgba(66, 133, 244, 0.4)';
+            } else {
+                btn.disabled = true;
+                btn.style.background = '#A0AEC0';
+                btn.style.cursor = 'not-allowed';
+                btn.style.boxShadow = 'none';
+            }
+        }
+        
+        function finishOnboarding() {
+            document.getElementById('initialSetupModal').style.display = 'none';
+            alert('GoogleでのOAuth認証が完了し、店舗とシステムが完全に紐付きました！\n全ての機能をご利用いただけます。');
+        }
+
+        // 本番用：初回ログイン時のみ「初回セットアップModal」を表示するロジックが入ります
+        /*
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => {
+                document.getElementById('initialSetupModal').style.display = 'flex';
+            }, 300);
+        });
+        */
+
+        // 動的データ反映スクリプト（パーソナライズ）
+        document.addEventListener('DOMContentLoaded', function() {
+            const initReviewLink = localStorage.getItem('msmReviewLink');
+            if(initReviewLink) {
+                const reviewInput = document.getElementById('reviewLinkInput');
+                if(reviewInput) reviewInput.value = initReviewLink;
+            }
+            
+            const userDataStr = localStorage.getItem('currentUser');
+            const isMaster = localStorage.getItem('masterAdmin');
+            
+            if (userDataStr) {
+                try {
+                    const userData = JSON.parse(userDataStr);
+                    const storeName = userData.company_name;
+
+                    // 画面内の「dynamic-store-name」を抽出して全て入れ替え
+                    const nameElements = document.querySelectorAll('.dynamic-store-name');
+                    nameElements.forEach(el => {
+                        el.textContent = storeName;
+                    });
+
+                    // プラン別の機能制限
+                    const postsBtn = document.getElementById('nav-posts-btn');
+                    const resBtn = document.getElementById('nav-reservations-btn');
+                    const custBtn = document.getElementById('nav-customers-btn');
+                    
+                    const resWidget = document.getElementById('reservationWidget');
+                    const blogWidget = document.getElementById('blogWidget');
+                    
+                    if (userData.plan === 'A') { // 運用代行プラン
+                        if (postsBtn) postsBtn.style.display = 'none';
+                        if (resBtn) resBtn.style.display = 'none';
+                        if (custBtn) custBtn.style.display = 'none';
+                        if (resWidget) resWidget.style.display = 'none';
+                        if (blogWidget) {
+                            blogWidget.style.display = 'block';
+                            window.agencyBlogs = userData.blogs || []; 
+                            initBlogWidget();
+                        }
+                    } else { // MapOn, MapOnモニタープラン
+                        if (postsBtn) postsBtn.style.display = 'flex';
+                        if (resBtn) resBtn.style.display = 'flex';
+                        if (custBtn) custBtn.style.display = 'flex';
+                        if (resWidget) resWidget.style.display = 'block';
+                        if (blogWidget) blogWidget.style.display = 'none';
+                    }
+
+                } catch(e) {
+                    console.error("ユーザー情報の読み込みエラー:", e);
+                }
+            } else if (isMaster) {
+                // マスター権限で直接見ている場合
+                const nameElements = document.querySelectorAll('.dynamic-store-name');
+                nameElements.forEach(el => {
+                    el.textContent = "(マスター観覧モード)";
+                });
+            }
+        });
+    </script>
+
+    <!-- Supabase連携：設定画面でのパスワード変更処理 -->
+    <script type="module">
+        import { supabase } from './supabase-config.js';
+
+        // --- ブログウィジェット機能 ---
+        window.initBlogWidget = function() {
+            const selector = document.getElementById('blogMonthSelector');
+            const blogs = window.agencyBlogs || [];
+            
+            // 存在する月を抽出
+            const parseYM = (str) => {
+                const m = String(str).match(/(\d+)年(\d+)月/);
+                if(m) return parseInt(m[1]) * 100 + parseInt(m[2]);
+                return 0;
+            };
+            const months = [...new Set(blogs.map(b => b.month))].sort((a,b) => parseYM(b) - parseYM(a));
+            months.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                selector.appendChild(opt);
+            });
+            window.renderBlogList();
+        }
+
+        window.renderBlogList = function() {
+            const container = document.getElementById('blogListContainer');
+            const selectedMonth = document.getElementById('blogMonthSelector').value;
+            const blogs = window.agencyBlogs || [];
+            
+            let filtered = blogs;
+            if (selectedMonth !== 'all') {
+                filtered = blogs.filter(b => b.month === selectedMonth);
+            }
+            
+            // 年月解析ヘルパー (例: 2026年4月 -> 202604)
+            const parseYearMonth = (str) => {
+                const m = String(str).match(/(\d+)年(\d+)月/);
+                if(m) return parseInt(m[1]) * 100 + parseInt(m[2]);
+                return 0; // fallback
+            };
+
+            // 最新順（追加順の逆ではなく、年月そのもので正確にソート）
+            filtered.sort((a, b) => parseYearMonth(b.month) - parseYearMonth(a.month));
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="font-size:13px; color:var(--text-muted); text-align:center; padding:10px;">ブログ記事がまだありません。</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            filtered.forEach((b, i) => {
+                let badge = '';
+                if(i===0) badge = '<span style="font-size:10px; background:#FEF3C7; color:#D97706; padding:2px 8px; border-radius:10px; margin-right:10px;">一番最新</span>';
+                else if(i===1) badge = '<span style="font-size:10px; background:#E2E8F0; color:#4A5568; padding:2px 8px; border-radius:10px; margin-right:10px;">前回</span>';
+
+                container.insertAdjacentHTML('beforeend', `
+                    <div style="display:flex; align-items:center; border:1px solid #E2E8F0; border-radius:10px; padding:12px; background:#fff; transition:0.2s;">
+                        <div style="flex:1;">
+                            ${badge}<a href="${b.url}" target="_blank" style="color:var(--text-main); font-weight:bold; font-size:14px; text-decoration:none;">${b.title}</a>
+                        </div>
+                        <div style="font-size:12px; color:var(--text-muted);">${b.month}</div>
+                        <a href="${b.url}" target="_blank" style="margin-left:15px; color:var(--primary-blue);"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                `);
+            });
+        }
+
+        // --- スタッフ管理機能 (Supabase連携) ---
+
+        // --- 画像リサイズ＆圧縮ヘルパー ---
+        window.compressImage = function(file, maxSize = 300) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > maxSize) { height = Math.round((height * maxSize) / width); width = maxSize; }
+                        } else {
+                            if (height > maxSize) { width = Math.round((width * maxSize) / height); height = maxSize; }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8)); // 軽量JPEG形式(品質80%)に圧縮
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        };
+
+        // --- 画像アップロードヘルパー ---
+        window.handleImageSelect = function(btn) {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*';
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                btn.innerText = '読込中...';
+
+                try {
+                    // ★100件登録してもデータがパンクしないよう、250pxの超軽量サイズに圧縮します
+                    const base64Str = await window.compressImage(file, 250); 
+
+
+                    // 画像プレビューの更新
+                    const card = btn.closest('.card');
+                    const previewContainer = card.querySelector('.photo-preview');
+                    if (previewContainer) {
+                        previewContainer.innerHTML = `<img src="${base64Str}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+                    // hidden inputへの値セット
+                    const hiddenInput = card.querySelector('input[type="hidden"]');
+                    if (hiddenInput) {
+                        hiddenInput.value = base64Str;
+                    }
+                } catch(error) {
+                    console.error("画像処理エラー:", error);
+                    alert("画像の読み込みに失敗しました。");
+                } finally {
+                    btn.innerText = '写真を選択';
+                }
+            };
+            fileInput.click();
+        };
+
+        // --- スタッフ管理機能 (Supabase連携) ---
+
+        window.currentStaffList = []; // メニュー連携用に保持
+
+        // スタッフ一覧をSupabaseから読み込む
+        window.loadStaffList = async function() {
+            const container = document.getElementById('staffListContainer');
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...</div>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('staff')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+
+                if (error) throw error;
+
+                window.currentStaffList = data || []; // キャッシュ保存
+
+                container.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(member => {
+                        window.renderStaffCard(member);
+                    });
+                } else {
+                    container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#A0AEC0; font-size:13px; padding:20px;">スタッフが登録されていません。</p>';
+                }
+            } catch (e) {
+                console.error("スタッフ読み込みエラー:", e);
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#EA4335; font-size:13px; padding:20px;">読み込みに失敗しました。</p>';
+            }
+        };
+
+        // 画面上のカードを描画するヘルパー
+        window.renderStaffCard = function(member = {}) {
+            const container = document.getElementById('staffListContainer');
+            if(container.querySelector('div.fa-spinner')) container.innerHTML = ''; // ローディング消去
+
+            const cardHtml = `
+            <div class="card staff-card" data-id="${member.id || ''}" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px; animation: fadeIn 0.2s;">
+                <div style="display:flex; justify-content:flex-end;"><button class="btn-outline" style="border:none; color:#EA4335; padding:2px;" onclick="deleteStaffConfirm(this)"><i class="fa-solid fa-trash"></i></button></div>
+                <div style="text-align:center; margin-bottom:10px;">
+                    <div class="photo-preview" style="width:70px; height:70px; border-radius:50%; background:#E2E8F0; margin:0 auto 10px auto; display:flex; align-items:center; justify-content:center; color:#A0AEC0; overflow:hidden;">
+                        ${member.photo_url ? `<img src="${member.photo_url}" style="width:100%; height:100%; object-fit:cover;">` : '<i class="fa-solid fa-image"></i>'}
+                    </div>
+                    <button class="btn-outline" style="font-size:10px; padding:2px 8px;" onclick="handleImageSelect(this)">写真を選択</button>
+                    <input type="hidden" class="staff-photo-url" value="${member.photo_url || ''}">
+                </div>
+                <div class="form-group" style="margin-bottom:10px;">
+                    <label style="font-size:11px;">名前</label>
+                    <input type="text" class="form-control staff-name" style="font-size:12px; padding:6px;" value="${member.name || ''}" placeholder="例: 佐藤 花子">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:11px;">長所</label>
+                    <input type="text" class="form-control staff-strength" style="font-size:12px; padding:6px;" value="${member.strength || ''}" placeholder="得意なことなど">
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', cardHtml);
+        }
+
+        // スタッフ情報を保存する
+        window.saveStaffList = async function() {
+            const btn = document.querySelector('button[onclick="saveStaffList()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中...';
+            btn.disabled = true;
+
+            const cards = document.querySelectorAll('.staff-card');
+            const staffData = [];
+
+            cards.forEach(card => {
+                const name = card.querySelector('.staff-name').value.trim();
+                if (name) {
+                    staffData.push({
+                        id: card.dataset.id || crypto.randomUUID(), // 値がない場合は新規としてUUIDを生成
+                        name: name,
+                        strength: card.querySelector('.staff-strength').value.trim(),
+                        photo_url: card.querySelector('.staff-photo-url').value.trim()
+                    });
+                }
+            });
+
+            if (staffData.length === 0) {
+                alert('登録するスタッフ情報を1名以上入力してください。');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                // Upsert（存在すれば更新、なければ追加）を実行
+                const { error } = await supabase
+                    .from('staff')
+                    .upsert(staffData);
+
+                if (error) throw error;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> 保存しました';
+                setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+                
+                await loadStaffList(); // 画面とキャッシュをリフレッシュ
+            } catch (e) {
+                console.error("保存エラー:", e);
+                alert('保存に失敗しました。');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        // スタッフ削除の確認
+        window.deleteStaffConfirm = async function(btn) {
+            const card = btn.closest('.card');
+            const staffId = card.dataset.id;
+
+            if (!staffId) {
+                card.remove(); // まだ保存されていないカードは即座に消す
+                return;
+            }
+
+            if (confirm('このスタッフを削除してもよろしいですか？（この操作は取り消せません）')) {
+                try {
+                    const { error } = await supabase
+                        .from('staff')
+                        .delete()
+                        .eq('id', staffId);
+
+                    if (error) throw error;
+                    card.remove();
+                } catch (e) {
+                    console.error("削除エラー:", e);
+                    alert('削除に失敗しました。');
+                }
+            }
+        };
+
+        // --- メニュー管理機能 (Supabase連携) ---
+
+        window.loadMenuList = async function() {
+            const container = document.getElementById('menuListContainer');
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:20px;"><i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...</div>';
+
+            try {
+                const { data, error } = await supabase
+                    .from('menus')
+                    .select('*')
+                    .order('created_at', { ascending: true });
+
+                if (error) throw error;
+
+                container.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach(item => renderMenuCard(item));
+                } else {
+                    container.innerHTML = '<p style="text-align:center; color:#A0AEC0; font-size:13px; padding:20px;">メニューが登録されていません。</p>';
+                }
+            } catch (e) {
+                console.error("メニュー読み込みエラー:", e);
+                container.innerHTML = '<p style="text-align:center; color:#EA4335; font-size:13px; padding:20px;">読み込みに失敗しました。</p>';
+            }
+        };
+
+        window.renderMenuCard = function(item = {}) {
+            const container = document.getElementById('menuListContainer');
+            if(container.querySelector('div.fa-spinner')) container.innerHTML = ''; // ローディング消去
+
+            // 現在登録されているスタッフのチェックボックスを生成
+            let staffCheckboxesHTML = '';
+            if (window.currentStaffList && window.currentStaffList.length > 0) {
+                window.currentStaffList.forEach(staff => {
+                    staffCheckboxesHTML += `
+                        <label style="font-size:11px; display:flex; align-items:center; gap:4px;">
+                            <input type="checkbox" value="${staff.name}" checked> ${staff.name}
+                        </label>
+                    `;
+                });
+            } else {
+                staffCheckboxesHTML = '<span style="font-size:10px; color:#A0AEC0;">※先にスタッフを登録してください</span>';
+            }
+
+            const cardHtml = `
+            <div class="card menu-card" data-id="${item.id || ''}" style="border:1px solid #E2E8F0; box-shadow:none; padding:15px; animation: fadeIn 0.2s;">
+                <div style="display:grid; grid-template-columns: 100px 1fr; gap:15px;">
+                    <div style="text-align:center;">
+                        <div class="photo-preview" style="width:100%; aspect-ratio:1; border-radius:8px; background:#E2E8F0; margin-bottom:10px; display:flex; align-items:center; justify-content:center; color:#A0AEC0; overflow:hidden;">
+                            ${item.photo_url ? `<img src="${item.photo_url}" style="width:100%; height:100%; object-fit:cover;">` : '<i class="fa-solid fa-image fa-2x"></i>'}
+                        </div>
+                        <button class="btn-outline" style="font-size:10px; padding:2px 8px; width:100%;" onclick="handleImageSelect(this)">写真を選択</button>
+                        <input type="hidden" class="menu-photo-url" value="${item.photo_url || ''}">
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:start;">
+                        <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                            <label style="font-size:11px;">メニュー名 <span style="float:right; color:#EA4335; cursor:pointer;" onclick="deleteMenuConfirm(this)"><i class="fa-solid fa-trash"></i> 削除</span></label>
+                            <input type="text" class="form-control menu-name" style="font-size:12px; padding:6px;" value="${item.item_name || ''}" placeholder="例: プレミアム焼肉コース">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                            <label style="font-size:11px;">メニュー詳細</label>
+                            <textarea class="form-control menu-description" rows="2" style="font-size:12px; padding:6px;" placeholder="内容の説明文">${item.description || ''}</textarea>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11px;">価格 (税込)</label>
+                            <input type="number" class="form-control menu-price" style="font-size:12px; padding:6px;" value="${item.price || ''}" placeholder="8000">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label style="font-size:11px;">所要時間</label>
+                            <select class="form-control menu-duration" style="font-size:12px; padding:6px;">
+                                <option value="30" ${item.duration == 30 ? 'selected' : ''}>30分</option>
+                                <option value="60" ${item.duration == 60 ? 'selected' : ''}>60分</option>
+                                <option value="90" ${item.duration == 90 ? 'selected' : ''}>90分</option>
+                                <option value="120" ${item.duration == 120 ? 'selected' : ''}>120分</option>
+                                <option value="150" ${item.duration == 150 ? 'selected' : ''}>150分</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                            <label style="font-size:11px;">担当可能なスタッフ (複数選択可)</label>
+                            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                                ${staffCheckboxesHTML}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            container.insertAdjacentHTML('beforeend', cardHtml);
+        }
+
+        window.saveMenuList = async function() {
+            const btn = document.querySelector('button[onclick="saveMenuList()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中...';
+            btn.disabled = true;
+
+            const cards = document.querySelectorAll('.menu-card');
+            const menuData = [];
+
+            cards.forEach(card => {
+                const name = card.querySelector('.menu-name').value.trim();
+                if (name) {
+                    menuData.push({
+                        id: card.dataset.id || crypto.randomUUID(), // 値がない場合は新規としてUUIDを生成
+                        item_name: name,
+                        description: card.querySelector('.menu-description').value.trim(),
+                        price: parseInt(card.querySelector('.menu-price').value) || 0,
+                        duration: parseInt(card.querySelector('.menu-duration').value) || 60,
+                        photo_url: card.querySelector('.menu-photo-url').value.trim()
+                    });
+                }
+            });
+
+            if (menuData.length === 0) {
+                alert('登録するメニューを1つ以上入力してください。');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                const { error } = await supabase.from('menus').upsert(menuData);
+                if (error) throw error;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> 保存しました';
+                setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+                
+                await loadMenuList();
+            } catch (e) {
+                console.error("メニュー保存エラー:", e);
+                alert('保存に失敗しました。');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        window.deleteMenuConfirm = async function(btn) {
+            const card = btn.closest('.menu-card');
+            const menuId = card.dataset.id;
+            if (!menuId) { card.remove(); return; }
+
+            if (confirm('このメニューを削除しますか？')) {
+                try {
+                    const { error } = await supabase.from('menus').delete().eq('id', menuId);
+                    if (error) throw error;
+                    card.remove();
+                } catch (e) {
+                    console.error("メニュー削除エラー:", e);
+                    alert('削除に失敗しました。');
+                }
+            }
+        };
+
+    </script>
+
+    <!-- ★ Vite管理のメインエントリーポイント（新しいモジュールシステム） -->
+    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/owner-surveys.js"></script>
+
+    <!-- GBP Connection Wizard (API申請中用モックアップ) -->
+    <div id="gbpConnectWizard" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); backdrop-filter:blur(8px); z-index:99999; justify-content:center; align-items:center; animation: fadeIn 0.4s ease;">
+        <div style="background:white; border-radius:24px; width:90%; max-width:550px; padding:40px; text-align:center; position:relative; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);">
+            <div style="background:#F0F9FF; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+                <i class="fa-brands fa-google" style="color:#4285F4; font-size:40px;"></i>
+            </div>
+            <h2 style="font-size:24px; font-weight:800; color:#0F172A; margin-bottom:15px;">Googleビジネス連携</h2>
+            <p style="font-size:14px; color:#64748B; line-height:1.6; margin-bottom:30px;">
+                MapOnのすべての機能（口コミ収集、自動投稿、ダッシュボード分析など）を利用するには、あなたのお店の「Googleビジネスプロフィール」との連携が必要です。
+            </p>
+            
+            <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:12px; padding:20px; text-align:left; margin-bottom:30px;">
+                <h4 style="font-size:12px; color:#475569; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; font-weight:700;">連携でできるようになること</h4>
+                <ul style="list-style:none; padding:0; margin:0; font-size:13px; color:#334155; display:flex; flex-direction:column; gap:8px;">
+                    <li><i class="fa-solid fa-circle-check" style="color:#059669; margin-right:8px;"></i> 予約や口コミの情報をダッシュボードに一元化</li>
+                    <li><i class="fa-solid fa-circle-check" style="color:#059669; margin-right:8px;"></i> Googleマップへの定期自動投稿</li>
+                    <li><i class="fa-solid fa-circle-check" style="color:#059669; margin-right:8px;"></i> お客様のアクション（閲覧数・検索数）の自動分析</li>
+                </ul>
+            </div>
+
+            <!-- API連携用の本番ボタン (現在は準備中アラート) -->
+            <button onclick="alert('【近日公開予定！】\nGoogle APIの審査が通過し次第、ここから実際のGoogleログイン画面が開き、店舗の連携を安全に行えるようになります。\n※現在は「あとで連携する」からダッシュボードをお試しください。')" style="width:100%; background:#4285F4; color:white; font-size:16px; font-weight:bold; padding:15px; border:none; border-radius:12px; cursor:pointer; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:10px; transition:0.2s;">
+                <i class="fa-brands fa-google"></i> Googleアカウント名で連携する
+            </button>
+            
+            <!-- APIが通るまでの「仮の回避ボタン」 -->
+            <button onclick="document.getElementById('gbpConnectWizard').style.display='none'" style="background:none; border:none; color:#94A3B8; font-size:13px; text-decoration:underline; cursor:pointer;">
+                あとで連携する（仮のダッシュボードへ）
+            </button>
+        </div>
+    </div>
+</body>
+</html>

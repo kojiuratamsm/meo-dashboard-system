@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - MapOn</title>
+    <link rel="icon" href="mapon-logo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #F4F7FE;
+            --card-bg: #FFFFFF;
+            --primary-blue: #4285F4;
+            --text-main: #2B3674;
+            --text-muted: #A3AED0;
+            --border-color: #E2E8F0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+        body { background-color: var(--bg-color); height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+        .login-container { width: 100%; max-width: 450px; background: var(--card-bg); border-radius: 20px; box-shadow: 0px 18px 40px rgba(112, 144, 176, 0.12); padding: 50px 40px; }
+        .logo-area { text-align: center; margin-bottom: 40px; }
+        .logo-area h1 { font-size: 32px; color: var(--primary-blue); letter-spacing: 2px; }
+        .logo-area p { font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: 1px; }
+
+        .form-view { display: none; animation: fadeIn 0.4s ease; }
+        .form-view.active { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid var(--border-color); outline: none; transition: 0.3s; font-size: 14px; }
+        .form-control:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(66,133,244,0.1); }
+
+        .btn-primary { width: 100%; background: linear-gradient(135deg, var(--primary-blue), #60A5FA); border: none; color: white; padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(66,133,244,0.3); }
+
+        .link-text { text-align: center; font-size: 13px; color: var(--primary-blue); margin-top: 25px; cursor: pointer; display: block; font-weight: 600; }
+        .link-text:hover { text-decoration: underline; }
+
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="logo-area">
+            <h1>MapOn</h1>
+            <p>DASHBOARD LOGIN</p>
+        </div>
+
+        <!-- 統合ログイン画面 -->
+        <div id="view-login" class="form-view active">
+            <div class="form-group">
+                <label>ご登録メールアドレス</label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="example@shop.com" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>パスワード</label>
+                <input type="password" id="loginPass" class="form-control" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <button class="btn-primary" onclick="processLogin()"><i class="fa-solid fa-right-to-bracket"></i> ログイン</button>
+            <a class="link-text" href="/reset-password">パスワードをお忘れの方</a>
+        </div>
+
+    </div>
+
+    <!-- 認証機能 / Supabase連携スクリプト -->
+    <script type="module">
+        import { supabase } from './supabase-config.js';
+
+        // 統合ログイン処理（データベース照合）
+        window.processLogin = async function() {
+            const btn = document.querySelector('#view-login .btn-primary');
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+
+            if(!email || !pass) {
+                alert("メールアドレスとパスワードを入力してください。"); 
+                return;
+            }
+
+            // 1. まずSupabaseの「本物の鍵（Auth）」で認証
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: pass
+            });
+
+            if (authError || !authData.user) {
+                alert("メールアドレスまたはパスワードが間違っています。");
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> ログイン';
+                btn.disabled = false;
+                return;
+            }
+
+            // 2. マスター権限の判定(DB側の staff_members で判定する)
+            const { data: isStaff } = await supabase.rpc('is_msm_staff');
+            if (isStaff === true) {
+                localStorage.setItem('masterAdmin', 'true');
+                window.location.href = '/master-dashboard';
+                return;
+            } 
+
+            // 3. 認証成功後、クライアントの店舗情報などをデータベースから取得
+            const { data: clientData, error: dbError } = await supabase
+                .from('clients')
+                .select('*')
+                .eq('auth_id', authData.user.id)
+                .single();
+
+            if (dbError || !clientData) {
+                alert("アカウントは見つかりましたが、店舗情報が未登録です。管理者へお問い合わせください。");
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> ログイン';
+                btn.disabled = false;
+                return;
+            }
+
+            // 認証成功！ブラウザにこの顧客の情報を記憶させる
+            localStorage.setItem('currentUser', JSON.stringify(clientData));
+            // MapOn NEO の契約者は、アンケート管理画面へ
+            if (clientData.plan === 'D') {
+                window.location.href = '/neo';
+                return;
+            }
+            // 本番ダッシュボードへ遷移
+            window.location.href = '/';
+        };
+    </script>
+</body>
+</html>
