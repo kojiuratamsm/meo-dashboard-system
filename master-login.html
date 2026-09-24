@@ -43,7 +43,7 @@
 
         <div class="form-group">
             <label>管理用メールアドレス</label>
-            <input type="email" id="masterEmail" class="form-control" placeholder="urata@msm-jap.com">
+            <input type="email" id="masterEmail" class="form-control" placeholder="staff@msm-jap.com">
         </div>
         <div class="form-group">
             <label>マスターパスワード</label>
@@ -54,6 +54,13 @@
 
     <script type="module">
         import { supabase } from './supabase-config.js';
+
+        const reason = new URLSearchParams(location.search).get('reason');
+        if (reason === 'forbidden') {
+            alert('このアカウントにはマスター管理画面の権限がありません。');
+        } else if (reason === 'setup') {
+            alert('データベースの初期設定が完了していません。\nSupabase の SQL Editor で「MapOn_setup.sql」を実行してください。');
+        }
 
         window.masterLogin = async function() {
             const email = document.getElementById('masterEmail').value;
@@ -81,11 +88,19 @@
                 return;
             }
 
-            if (data.user.email === 'urata@msm-jap.com') {
-                alert('認証成功！マスターダッシュボードへ移動します。');
+            // スタッフかどうかはDB側(staff_members テーブル)で判定する
+            const { data: isStaff, error: roleError } = await supabase.rpc('is_msm_staff');
+            if (roleError && roleError.code === 'PGRST202') {
+                alert('データベースの初期設定が完了していません。\nSupabase の SQL Editor で「MapOn_setup.sql」を実行してください。');
+                await supabase.auth.signOut();
+                return;
+            }
+            if (!roleError && isStaff === true) {
+                // クライアント画面(index.html)の既存の判定が参照するため、フラグは残す
                 localStorage.setItem('masterAdmin', 'true');
                 window.location.href = '/master-dashboard';
             } else {
+                if (roleError) console.error('スタッフ権限の確認に失敗しました:', roleError);
                 alert('マスター権限がないアカウントです。');
                 await supabase.auth.signOut();
             }

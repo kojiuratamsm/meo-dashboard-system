@@ -179,7 +179,7 @@
             <i class="fa-solid fa-pen-to-square"></i> 投稿作成
         </a>
         <a class="nav-item" onclick="switchMainView('reviews', this)" style="position: relative;">
-            <i class="fa-solid fa-star"></i> 口コミ管理
+            <i class="fa-solid fa-star"></i> MapOn NEO
             <span style="position:absolute; right:15px; background:#EA4335; color:white; font-size:10px; padding:2px 6px; border-radius:10px;">HOT</span>
         </a>
         <a class="nav-item" id="nav-competitors-btn" onclick="switchMainView('competitors', this)">
@@ -318,209 +318,15 @@
             </div>
         </div>
 
-        <!-- REVIEWS VIEW -->
+        <!-- REVIEWS VIEW(アンケート回答:閲覧専用。アンケートの作成・編集はMSMが行う) -->
         <div id="view-reviews" class="view-section">
             <header class="header">
                 <div>
-                    <h1>🌟 アンケート＆口コミ管理</h1>
-                    <p>お客様の回答からMEOに強い口コミをAI作成し、Googleへの投稿を促します。</p>
+                    <h1>🌟 MapOn NEO アンケート回答</h1>
+                    <p>お店のアンケートに寄せられた回答と集計です。店頭用のQRコードもここからダウンロードできます。</p>
                 </div>
             </header>
-
-            <div class="metric-tabs" style="display:flex; justify-content:space-between; align-items:center; gap:15px;">
-                <div style="display:flex; flex:1;">
-                    <button class="metric-tab active-tab" id="tab-btn-settings" onclick="switchReviewSubView('settings')" style="flex:none; border-radius:12px 0 0 12px;">アンケート設定・QR発行</button>
-                    <button class="metric-tab" id="tab-btn-data" onclick="switchReviewSubView('data')" style="flex:none; border-radius:0 12px 12px 0; border-left:none;">アンケート回答データ一覧</button>
-                </div>
-                <button class="btn-primary" style="padding:8px 20px; font-size:13px; border-radius:10px; flex:none; width:auto; height:40px; background:var(--primary-blue); box-shadow:0 4px 12px rgba(66,133,244,0.2);" onclick="createNewSurvey()">
-                    <i class="fa-solid fa-circle-plus"></i> 新規作成
-                </button>
-            </div>
-
-            <!-- サブ：設定 -->
-            <div id="subview-settings" style="display: block;">
-                <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start;">
-                    
-                    <!-- 左側：設定カード -->
-                    <div class="card" style="padding: 25px;">
-                        <!-- 履歴UI -->
-                        <div style="display:flex; gap:15px; margin-bottom:25px;">
-                            <div style="flex:1; background:#F8FAFC; border:1px solid #CBD5E0; border-radius:12px; padding:15px; border-left:4px solid #A0AEC0;">
-                                <h3 style="font-size:13px; color:#4A5568; margin-bottom:8px;"><i class="fa-solid fa-folder-open"></i> 過去の下書き</h3>
-                                <select id="draftHistorySelect" class="form-control" style="font-size:12px; padding:8px;" onchange="if(this.value !== '') loadSurveyHistory('draft')">
-                                    <option value="">履歴を選択...</option>
-                                </select>
-                            </div>
-                            <div style="flex:1; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:12px; padding:15px; border-left:4px solid var(--primary-green);">
-                                <h3 style="font-size:13px; color:#166534; margin-bottom:8px;"><i class="fa-solid fa-rocket"></i> 過去の発行済み</h3>
-                                <select id="publishHistorySelect" class="form-control" style="font-size:12px; padding:8px; border-color:#BBF7D0; color:#166534;" onchange="if(this.value !== '') loadSurveyHistory('publish')">
-                                    <option value="">履歴を選択...</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- タイトル・挨拶 -->
-                        <div style="margin-bottom:20px; background:#F4F7FE; padding:15px; border-radius:10px;">
-                            <label style="font-size:14px; font-weight:700; color:var(--text-main); margin-bottom:8px; display:block;">【管理者用】アンケート管理タイトル</label>
-                            <input type="text" id="adminSurveyTitle" class="form-control" placeholder="例: 4月お花見キャンペーン用" style="border:2px solid #E2E8F0;">
-                        </div>
-
-                        <div style="margin-bottom:25px; padding:15px; border-left:4px solid var(--primary-blue); background:#F8FAFC;">
-                            <label style="font-size:14px; font-weight:700; color:var(--text-main); margin-bottom:8px; display:block;">【お客様向け】冒頭の挨拶文</label>
-                            <textarea id="adminSurveyIntroText" class="form-control" style="min-height:80px; border-color:#E2E8F0;">本日はご来店ありがとうございました！&#10;よろしければ簡単なアンケートにご協力ください。</textarea>
-                        </div>
-
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #F4F7FE; padding-bottom:15px; margin-bottom: 20px;">
-                            <h2 class="card-title" style="margin:0;"><span style="color:var(--primary-blue)">STEP 1</span> 質問の作成</h2>
-                        </div>
-                        
-                        <!-- 質問エリア -->
-                        <div id="questionsContainer">
-                            <!-- 質問1 (デフォルト) -->
-                            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <span class="q-label" style="font-weight:bold; color:var(--primary-blue);">質問1</span>
-                                        <div style="display:flex; gap:4px;">
-                                            <button class="btn-outline" style="padding:2px 6px; font-size:12px; border-color:#CBD5E1; color:#64748B;" onclick="moveQuestion(this, -1)" title="上へ移動"><i class="fa-solid fa-chevron-up"></i></button>
-                                            <button class="btn-outline" style="padding:2px 6px; font-size:12px; border-color:#CBD5E1; color:#64748B;" onclick="moveQuestion(this, 1)" title="下へ移動"><i class="fa-solid fa-chevron-down"></i></button>
-                                        </div>
-                                    </div>
-                                    <button class="btn-outline" style="padding:2px 6px; font-size:12px; border:none; color:var(--text-muted);" disabled title="固定質問"><i class="fa-solid fa-lock"></i> 必須固定</button>
-                                </div>
-                                <div class="form-group">
-                                    <label>質問タイトル</label>
-                                    <input type="text" class="form-control question-title" value="本日の満足度を教えてください">
-                                </div>
-                                <div class="form-group">
-                                    <label>回答形式</label>
-                                    <select class="form-control question-type" onchange="handleTypeChange(this)">
-                                        <option value="stars" selected>星評価（5段階）</option>
-                                        <option value="radio">選択式（単一）</option>
-                                        <option value="checkbox">選択式（複数）</option>
-                                        <option value="text">自由記述</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- 質問2 (デフォルト) -->
-                            <div class="question-block-admin" style="margin-bottom:20px; padding:15px; border:1px solid #E2E8F0; border-radius:10px;">
-                                <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
-                                    <div style="display:flex; align-items:center; gap:8px;">
-                                        <span class="q-label" style="font-weight:bold; color:var(--primary-blue);">質問2</span>
-                                        <div style="display:flex; gap:4px;">
-                                            <button class="btn-outline" style="padding:2px 6px; font-size:12px; border-color:#CBD5E1; color:#64748B;" onclick="moveQuestion(this, -1)" title="上へ移動"><i class="fa-solid fa-chevron-up"></i></button>
-                                            <button class="btn-outline" style="padding:2px 6px; font-size:12px; border-color:#CBD5E1; color:#64748B;" onclick="moveQuestion(this, 1)" title="下へ移動"><i class="fa-solid fa-chevron-down"></i></button>
-                                        </div>
-                                    </div>
-                                    <button class="btn-outline" style="padding:2px 6px; font-size:10px; border:none; color:#EA4335;" onclick="this.closest('.question-block-admin').remove(); reorderQuestions();"><i class="fa-solid fa-trash"></i> 削除</button>
-                                </div>
-                                <div class="form-group">
-                                    <label>質問タイトル</label>
-                                    <input type="text" class="form-control question-title" value="本日はどのようなシーンですか？">
-                                </div>
-                                <div class="form-group">
-                                    <label>形式</label>
-                                    <select class="form-control question-type" onchange="handleTypeChange(this)">
-                                        <option value="radio" selected>単一選択</option>
-                                        <option value="checkbox">複数選択</option>
-                                        <option value="text">自由記述</option>
-                                    </select>
-                                </div>
-                                <div class="form-group options-container">
-                                    <div class="options-tags" style="margin-bottom:10px;">
-                                        <span class="tag deletable" onclick="this.remove()">デート <i class="fa-solid fa-xmark"></i></span>
-                                        <span class="tag deletable" onclick="this.remove()">宴会 <i class="fa-solid fa-xmark"></i></span>
-                                    </div>
-                                    <div style="display:flex; gap:10px;">
-                                        <input type="text" class="form-control new-option-input" placeholder="選択肢を追加..." onkeydown="if(event.key==='Enter') addOption(this)">
-                                        <button class="btn-outline" onclick="addOption(this)">追加</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- ＋ボタン -->
-                        <div style="text-align:center; margin: 20px 0 30px;">
-                            <button class="btn-primary" style="width:50px; height:50px; border-radius:50%; font-size:24px; padding:0; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(66,133,244,0.3); border:none;" onclick="addQuestion()">
-                                <i class="fa-solid fa-plus"></i>
-                            </button>
-                            <p style="font-size:12px; color:var(--primary-blue); font-weight:bold; margin-top:8px;">新しい質問を追加</p>
-                        </div>
-
-                        <!-- STEP 2: キーワード -->
-                        <h2 class="card-title" style="border-bottom: 2px solid #F4F7FE; padding-bottom:15px;"><span style="color:var(--primary-blue)">STEP 2</span> 口コミに含める「MEOキーワード」</h2>
-                        <div id="keywordsContainer" style="display:flex; flex-direction:column; gap:10px; margin: 15px 0;">
-                            <span class="tag deletable" style="justify-content:space-between; display:flex;" onclick="this.remove()">新宿 焼肉 <i class="fa-solid fa-xmark"></i></span>
-                            <span class="tag deletable" style="justify-content:space-between; display:flex;" onclick="this.remove()">個室 ディナー <i class="fa-solid fa-xmark"></i></span>
-                        </div>
-                        <div style="display:flex; gap:10px; margin-bottom:40px;">
-                            <input type="text" id="newKeywordInput" class="form-control" placeholder="新しいキーワードを入力..." onkeydown="if(event.key==='Enter') addKeyword()">
-                            <button class="btn-outline" onclick="addKeyword()">追加</button>
-                        </div>
-
-                        <!-- 保存・発行ボタン -->
-                        <div style="display:flex; gap:10px;">
-                            <button class="btn-primary" style="flex:1; background:#A0AEC0; box-shadow:none; border-radius:10px; padding:12px 10px; font-size:14px; min-height:60px;" onclick="saveSurveyAsDraft()">
-                                <i class="fa-solid fa-floppy-disk"></i> 下書き/保存
-                            </button>
-                            <button class="btn-primary" style="flex:2; padding:12px 10px; font-size:14px; min-height:60px;" onclick="generateQR()">
-                                <i class="fa-solid fa-rocket"></i> 今すぐ発行<br>(公開・更新)
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 右側：プレビュー -->
-                    <div style="position: sticky; top: 40px;">
-                        <div class="card" style="text-align: center; padding: 20px;">
-                            <div style="margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid #F4F7FE;">
-                                <h2 class="card-title" style="margin:0; font-size:16px;"><i class="fa-solid fa-eye"></i> プレビュー / 発行</h2>
-                            </div>
-                            <div id="qrArea">
-                                <div id="qrOverlay">
-                                    <div style="margin-bottom:15px;">
-                                        <span style="font-weight:600; color:var(--text-main); font-size:14px;"><i class="fa-solid fa-mobile-screen-button"></i> お客様画面プレビュー</span>
-                                    </div>
-                                    <div style="width: 100%; max-width: 280px; height: 500px; margin: 0 auto; border: 12px solid #2D3748; border-radius: 35px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; background: #fff;">
-                                        <div style="position: absolute; top:0; left:50%; transform:translateX(-50%); width:40%; height:15px; background:#2D3748; border-bottom-left-radius:10px; border-bottom-right-radius:10px; z-index:10;"></div>
-                                        <iframe id="surveyIframe" src="/survey-mockup.html" style="width:100%; height:100%; border:none;" title="アンケートプレビュー"></iframe>
-                                    </div>
-                                </div>
-                                <div id="qrContent" style="display:none; padding-top:20px;">
-                                    <p style="color:var(--primary-green); font-weight:bold; margin-bottom:15px;"><i class="fa-solid fa-check-circle"></i> 発行完了！</p>
-                                    <img id="qrImage" src="" style="width:180px; height:180px; margin-bottom:20px; border-radius:10px; padding:10px; background:white; box-shadow:0 4px 10px rgba(0,0,0,0.05);">
-                                    <div style="background:#F8FAFC; padding:10px; border-radius:8px; border: 1px solid #E2E8F0; word-break:break-all; font-size:12px; margin-bottom:15px;" id="surveyUrlText"></div>
-                                    <button class="btn-primary" style="width:100%;" onclick="copySurveyUrl()"><i class="fa-solid fa-copy"></i> URLをコピー</button>
-                                    <button class="btn-outline" style="width:100%; margin-top:10px; border:none; color:var(--text-muted);" onclick="document.getElementById('qrArea').classList.remove('active'); document.getElementById('qrContent').style.display='none'; document.getElementById('qrOverlay').style.display='block';"><i class="fa-solid fa-arrow-left"></i> 編集に戻る</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- サブ：データ -->
-            <div id="subview-data" style="display: none;">
-                <div class="card" style="padding: 0; overflow: hidden;">
-                    <div style="padding: 25px; border-bottom: 1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
-                        <h2 class="card-title" style="margin:0;">お客様の回答データ（店舗へのリアルな声）</h2>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <label style="font-size:12px; font-weight:bold;">対象のアンケートを確認:</label>
-                            <select id="dataSurveyFilter" class="form-control" style="width:250px; font-size:13px; padding:8px; border-color:var(--border-color);" onchange="renderAnswersTable()">
-                                <option value="">読み込み中...</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table" style="white-space: nowrap;">
-                            <tbody>
-                                <tr><td colspan="10" style="text-align:center; padding:30px; color:#A3AED0;">データを読み込んでいます...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <div class="card" id="ownerSurveyApp"><p style="color:var(--text-muted);">読み込み中...</p></div>
         </div>
         </div>
 
@@ -606,18 +412,6 @@
                         <b>住所:</b> <span id="myShopAddress">未登録</span><br>
                         <span style="font-size:11px; color:var(--primary-green);"><i class="fa-solid fa-check-circle"></i> この情報をもとにAIが自動で投稿などを最適化します</span>
                     </div>
-                </div>
-            </div>
-
-            <!-- レビュー依頼リンクの登録 -->
-            <div class="card" style="margin-bottom:20px;">
-                <h3 style="font-size:16px; margin-bottom:15px; color:var(--text-main);">Googleレビュー依頼リンク</h3>
-                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">お客様がアンケート回答後に「コピーしてGoogleを開く」ボタンを押した際、ここで設定したURLに自動で飛ばすことができます。Googleビジネスプロフィールから「クチコミを依頼」のリンクを取得し貼り付けてください。</p>
-                <div style="display:flex; gap:10px;">
-                    <div class="form-group" style="flex:1; margin-bottom:0;">
-                        <input type="text" id="reviewLinkInput" class="form-control" placeholder="例: https://g.page/r/XXXXX/review" onchange="saveReviewLink()">
-                    </div>
-                    <button class="btn-primary" style="width:auto; padding:0 20px;" onclick="saveReviewLink()">登録する</button>
                 </div>
             </div>
 
@@ -3073,6 +2867,7 @@
 
     <!-- ★ Vite管理のメインエントリーポイント（新しいモジュールシステム） -->
     <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/owner-surveys.js"></script>
 
     <!-- GBP Connection Wizard (API申請中用モックアップ) -->
     <div id="gbpConnectWizard" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); backdrop-filter:blur(8px); z-index:99999; justify-content:center; align-items:center; animation: fadeIn 0.4s ease;">

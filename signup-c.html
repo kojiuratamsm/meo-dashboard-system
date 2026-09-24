@@ -196,10 +196,10 @@
 
             const company_name = companyNode.value.trim();
             const email = emailNode.value.trim();
-            const temp_password = passNode.value.trim();
+            const password = passNode.value.trim();
             const plan = 'C'; // プランC
 
-            if(!company_name || !email || !temp_password) {
+            if(!company_name || !email || !password) {
                 alert("全ての項目を入力してください。");
                 return;
             }
@@ -207,35 +207,20 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 処理中...';
             btn.disabled = true;
 
+            // 店舗情報は signUp の付帯情報として渡し、clients への登録はDBのトリガー
+            // (handle_mapon_signup)が行う。パスワードは Supabase Auth がハッシュ化して保持し、
+            // clients テーブルには保存しない。
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
-                password: temp_password
+                password: password,
+                options: {
+                    data: { signup_source: 'mapon_signup', company_name: company_name, plan: plan }
+                }
             });
 
             if (authError) {
                 console.error("Auth登録エラー:", authError);
                 alert("アカウント作成に失敗しました: " + authError.message);
-                btn.innerHTML = '<span>アカウントを作成して開始</span> <i class="fa-solid fa-arrow-right"></i>';
-                btn.disabled = false;
-                return;
-            }
-
-            const userId = authData.user.id;
-
-            const { data, error } = await supabase.from('clients').insert([
-                { 
-                    auth_id: userId,
-                    company_name: company_name, 
-                    email: email, 
-                    temp_password: temp_password,
-                    plan: plan,
-                    status: '稼働中'
-                }
-            ]);
-
-            if (error) {
-                console.error("登録エラー:", error);
-                alert("店舗情報の登録に失敗しました。詳細: " + error.message);
                 btn.innerHTML = '<span>アカウントを作成して開始</span> <i class="fa-solid fa-arrow-right"></i>';
                 btn.disabled = false;
                 return;

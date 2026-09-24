@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="auth-pending">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>マスター管理 - MSM</title>
+    <!-- 権限確認(staff-guard.js)が終わるまで画面を表示しない -->
+    <style>html.auth-pending body { visibility: hidden; }</style>
     <link rel="icon" href="mapon-logo.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -218,6 +220,7 @@
             <div style="font-size:11px; color:#A0AEC0; margin-top:5px;">MASTER DASHBOARD</div>
         </div>
         <a href="#" class="nav-item active" onclick="switchMasterView('view-clients', this)"><i class="fa-solid fa-users"></i> 全クライアント一覧</a>
+        <a href="/master-surveys" class="nav-item"><i class="fa-solid fa-clipboard-list"></i> MapOn NEO</a>
         
         <!-- 目立つキーワード分析ボタン -->
         <a href="#" class="nav-item" onclick="switchMasterView('view-keyword-analysis', this)" style="background: linear-gradient(135deg, #4285F4, #3b82f6); color: white; display:flex; justify-content:center; gap:8px; font-weight: bold; margin-top: 15px; box-shadow: 0 5px 15px rgba(66,133,244,0.4); border:none; transition: all 0.3s;">
@@ -240,7 +243,7 @@
             <button class="btn-action" style="background:#34A853; width:100%; font-size:11px;" onclick="copySignupUrl('/signup-c')">MapOn(モニター)</button>
         </div>
 
-        <a href="login.html" class="nav-item" style="margin-top:auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
+        <a href="#" onclick="staffLogout(); return false;" class="nav-item" style="margin-top:auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
         
         <div style="padding: 15px; border-top: 1px solid #2D3748; margin-top: 10px; opacity: 0.5;">
             <div style="font-size: 10px; color: #A0AEC0;">SYSTEM VERSION</div>
@@ -293,7 +296,7 @@
                     <tr>
                         <th>店舗名 / 法人名</th>
                         <th>メールアドレス</th>
-                        <th>パスワード</th>
+                        <th>オーナーログイン</th>
                         <th>口コミ収集数</th>
                         <th>ステータス</th>
                         <th>操作</th>
@@ -946,9 +949,18 @@ Googleの評価システム上、成果には一定期間を要しますが、
                     <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">メールアドレス</label>
                     <input type="email" id="newEmail" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
                 </div>
-                <div style="margin-bottom:25px;">
-                    <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">仮パスワード</label>
-                    <input type="text" id="newPassword" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">プラン</label>
+                    <select id="newPlan" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
+                        <option value="A" selected>運用代行プラン</option>
+                        <option value="B">MapOn</option>
+                        <option value="C">MapOn(モニター)</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:25px; background:#F8FAFC; border-radius:8px; padding:12px; font-size:12px; color:#64748B; line-height:1.7;">
+                    <b style="color:#4A5568;">店舗オーナーに管理画面のログインを渡す場合</b><br>
+                    ここでは登録せず、左下の「申し込みフォームURL取得」からフォームのURLをコピーして、店舗に送ってください。
+                    オーナーが自分でパスワードを決めて申し込むと、この一覧に自動で追加されます。
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:10px;">
                     <button onclick="document.getElementById('addClientModal').style.display='none'" style="padding:10px 15px; border-radius:8px; border:none; background:#F8FAFC; color:#64748B; font-weight:bold; cursor:pointer;">キャンセル</button>
@@ -1040,16 +1052,14 @@ Googleの評価システム上、成果には一定期間を要しますが、
         window.openAddClientModal = function() {
             document.getElementById('newCompanyName').value = '';
             document.getElementById('newEmail').value = '';
-            document.getElementById('newPassword').value = '';
+            document.getElementById('newPlan').value = 'A';
             document.getElementById('addClientModal').style.display = 'flex';
         };
 
         // サインアップURLをコピーする処理
         window.copySignupUrl = function(filename) {
             // 現在のURL（master-dashboard.html等）からベースとなるパスを取得して生成
-            const url = window.location.href;
-            const baseUrl = url.substring(0, url.lastIndexOf('/') + 1);
-            const targetUrl = baseUrl + filename;
+            const targetUrl = window.location.origin + filename;
 
             navigator.clipboard.writeText(targetUrl).then(() => {
                 alert(`申し込みフォームのURLをコピーしました！\n\nコピーされたURL:\n${targetUrl}`);
@@ -1062,6 +1072,70 @@ Googleの評価システム上、成果には一定期間を要しますが、
     <!-- Supabase連携のリアルタイム通信スクリプト -->
     <script type="module">
         import { supabase } from './supabase-config.js';
+        import { requireStaff, staffLogout, authHeaders } from './staff-guard.js';
+
+        window.staffLogout = staffLogout;
+
+        // パスワード再設定リンクを発行し、画面に表示する(メールは送らない。スタッフがコピーして手動で送る)
+        window.issueRecoveryLink = async function(clientId) {
+            if (!confirm('この店舗のパスワード再設定用リンクを発行しますか?\n(リンクを知っている人はパスワードを変更できます。必ずご本人にだけ送ってください)')) return;
+            let result;
+            try {
+                const res = await fetch('/api/admin/recovery-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+                    body: JSON.stringify({ client_id: clientId })
+                });
+                result = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(result.error || `サーバーエラー(${res.status})`);
+            } catch (e) {
+                alert('リンクを発行できませんでした: ' + e.message);
+                return;
+            }
+            showRecoveryLinkModal(result);
+        };
+
+        function showRecoveryLinkModal({ link, company_name, email }) {
+            let modal = document.getElementById('recoveryLinkModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'recoveryLinkModal';
+                modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; padding:16px;';
+                modal.innerHTML = `
+                    <div style="background:white; padding:28px; border-radius:15px; width:100%; max-width:520px;">
+                        <h3 style="margin-bottom:6px;">パスワード再設定リンク</h3>
+                        <p id="recoveryLinkTarget" style="font-size:13px; color:#64748B; margin-bottom:14px;"></p>
+                        <textarea id="recoveryLinkText" readonly style="width:100%; height:96px; padding:10px; border:1px solid #E2E8F0; border-radius:8px; font-size:12px; font-family:monospace; resize:none;"></textarea>
+                        <p style="font-size:12px; color:#C05621; background:#FFFAF0; border-radius:8px; padding:10px; margin:12px 0; line-height:1.7;">
+                            ・このリンクを、LINEやメールでオーナーご本人に送ってください。<br>
+                            ・リンクは1回だけ使えます。有効期限はSupabaseの設定によります(初期設定は1時間)。<br>
+                            ・リンクを知っている人は誰でもパスワードを変更できます。本人以外に送らないでください。
+                        </p>
+                        <div style="display:flex; justify-content:flex-end; gap:10px;">
+                            <button id="recoveryLinkClose" style="padding:10px 15px; border-radius:8px; border:none; background:#F8FAFC; color:#64748B; font-weight:bold; cursor:pointer;">閉じる</button>
+                            <button id="recoveryLinkCopy" style="padding:10px 15px; border-radius:8px; border:none; background:#4285F4; color:white; font-weight:bold; cursor:pointer;">コピー</button>
+                        </div>
+                    </div>`;
+                document.body.appendChild(modal);
+                modal.querySelector('#recoveryLinkClose').onclick = () => {
+                    modal.querySelector('#recoveryLinkText').value = '';
+                    modal.style.display = 'none';
+                };
+                modal.querySelector('#recoveryLinkCopy').onclick = async () => {
+                    const ta = modal.querySelector('#recoveryLinkText');
+                    try {
+                        await navigator.clipboard.writeText(ta.value);
+                        alert('コピーしました。');
+                    } catch {
+                        ta.select();
+                        alert('自動でコピーできませんでした。選択された文字をコピーしてください。');
+                    }
+                };
+            }
+            modal.querySelector('#recoveryLinkTarget').textContent = `${company_name}(${email})`;
+            modal.querySelector('#recoveryLinkText').value = link;
+            modal.style.display = 'flex';
+        }
 
         // ページ読み込み時にDBからクライアントを読み込む
         async function loadClients() {
@@ -1108,10 +1182,13 @@ Googleの評価システム上、成果には一定期間を要しますが、
                 tr.innerHTML = `
                     <td class="search-target">${companyDisplay}</td>
                     <td class="search-target">${client.email}</td>
-                    <td style="font-family:monospace; color:#4A5568;">${client.temp_password || '未設定'}</td>
+                    <td style="color:#4A5568;">${client.auth_id ? '<span class="status-badge">あり</span>' : '<span style="color:#A0AEC0;">なし</span>'}</td>
                     <td>- 件</td>
                     <td>${statusHtml}</td>
-                    <td><a href="javascript:void(0)" onclick="masterLoginAs('${clientEncoded}')" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a></td>
+                    <td style="white-space:nowrap;">
+                        <a href="javascript:void(0)" onclick="masterLoginAs('${clientEncoded}')" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a>
+                        ${client.auth_id ? `<a href="javascript:void(0)" onclick="issueRecoveryLink('${client.id}')" class="btn-action" style="background:#718096; margin-left:4px;" title="パスワード再設定用のリンクを発行して、手動で送ります"><i class="fa-solid fa-key"></i> 再設定リンク</a>` : ''}
+                    </td>
                 `;
                 tableBody.appendChild(tr);
             });
@@ -1119,9 +1196,9 @@ Googleの評価システム上、成果には一定期間を要しますが、
 
         // DBに新しいクライアントを保存する
         document.getElementById('saveClientBtn').addEventListener('click', async () => {
-            const company_name = document.getElementById('newCompanyName').value;
-            const email = document.getElementById('newEmail').value;
-            const temp_password = document.getElementById('newPassword').value;
+            const company_name = document.getElementById('newCompanyName').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
+            const plan = document.getElementById('newPlan').value;
 
             if(!company_name || !email) {
                 alert("店舗名とメールアドレスは必須です！");
@@ -1132,20 +1209,22 @@ Googleの評価システム上、成果には一定期間を要しますが、
             btn.innerText = '登録中...';
             btn.disabled = true;
 
+            // スタッフの権限(RLS)で直接登録する。パスワードは扱わない。
             const { error } = await supabase.from('clients').insert([
-                { company_name: company_name, email: email, temp_password: temp_password }
+                { company_name, email, plan, status: '稼働中' }
             ]);
 
             btn.innerText = 'DBに登録';
             btn.disabled = false;
 
             if (error) {
-                alert("エラーが発生しました: " + error.message);
-            } else {
-                alert("新しいクライアントをデータベースに登録しました！");
-                document.getElementById('addClientModal').style.display = 'none';
-                loadClients(); // 再読み込みして画面更新
+                alert("登録できませんでした: " + error.message);
+                return;
             }
+
+            alert("新しいクライアントをデータベースに登録しました！");
+            document.getElementById('addClientModal').style.display = 'none';
+            loadClients(); // 再読み込みして画面更新
         });
 
         // --- ブログ登録ロジック ---
@@ -2924,7 +3003,18 @@ Googleの評価システム上、成果には一定期間を要しますが、
             });
         }
 
-        window.onload = () => {
+        window.onload = async () => {
+            // MSMスタッフとしてログインしていなければ、ここでログイン画面へ移動する
+            const session = await requireStaff();
+            if (!session) return;
+
+            // 既存の不具合の修正:3つのダイアログが「費用対効果」画面(非表示)の中に入っていたため、
+            // クライアント一覧から開いても表示されなかった。body 直下へ移して、どの画面からでも表示できるようにする。
+            ['addClientModal', 'blogListModal', 'blogFormModal'].forEach(id => {
+                const modal = document.getElementById(id);
+                if (modal && modal.parentElement !== document.body) document.body.appendChild(modal);
+            });
+
             loadClients();
             initSavedAnalysisDropdown();
             initSavedCostBenefitDropdown();
