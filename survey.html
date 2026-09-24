@@ -84,14 +84,14 @@
             if (!response) return;
             // 記録を待ちすぎて画面の移動が遅れないよう、最大1.5秒で先に進む
             await Promise.race([
-                supabase.rpc('record_review_action', { p_response_id: response.response_id, p_token: response.action_token, p_action: action, p_edited: null }),
+                supabase.rpc('neo_record_review_action', { p_response_id: response.response_id, p_token: response.action_token, p_action: action, p_edited: null }),
                 new Promise(r => setTimeout(r, 1500)),
             ]).catch(() => {});
         }
 
         async function init() {
             if (!slug) { show('step-closed'); return; }
-            const { data: survey, error } = await supabase.rpc('get_public_survey', { p_slug: slug });
+            const { data: survey, error } = await supabase.rpc('neo_get_public_survey', { p_slug: slug });
             if (error || !survey) { show('step-closed'); return; }
 
             document.title = `${survey.store_name} アンケート`;
@@ -104,7 +104,7 @@
                     box.style.display = 'none';
                     button.disabled = true;
                     button.textContent = '送信中...';
-                    const { data, error } = await supabase.rpc('submit_survey_response', { p_slug: slug, p_answers: answers });
+                    const { data, error } = await supabase.rpc('neo_submit_survey_response', { p_slug: slug, p_answers: answers });
                     button.disabled = false;
                     button.textContent = '回答を送信する';
                     if (error) {

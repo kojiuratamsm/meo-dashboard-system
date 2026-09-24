@@ -22,7 +22,7 @@ async function init() {
     }
 
     const { data: surveys, error } = await supabase
-        .from('surveys')
+        .from('neo_surveys')
         .select('id, title, questions, public_slug, is_published, created_at')
         .eq('client_id', user.id)
         .is('deleted_at', null)

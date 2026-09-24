@@ -63,7 +63,7 @@ export async function renderResults(container, { supabase, survey }) {
         const start = new Date(fromInput.value + 'T00:00:00');
         const end = new Date(toInput.value + 'T00:00:00'); end.setDate(end.getDate() + 1);
         const { data, error } = await supabase
-            .from('survey_responses')
+            .from('neo_survey_responses')
             .select('id, submitted_at, answers, star_rating, review_action, review_action_at')
             .eq('survey_id', survey.id)
             .gte('submitted_at', start.toISOString())

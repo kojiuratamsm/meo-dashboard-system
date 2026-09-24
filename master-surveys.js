@@ -90,9 +90,9 @@ async function renderList() {
     app.replaceChildren(el('p', { class: 'muted', text: '読み込み中...' }));
     await loadClients();
     const [{ data: surveys, error }, { data: stats }] = await Promise.all([
-        supabase.from('surveys').select('id, client_id, title, is_published, public_slug, google_review_url, updated_at, questions')
+        supabase.from('neo_surveys').select('id, client_id, title, is_published, public_slug, google_review_url, updated_at, questions')
             .is('deleted_at', null).order('updated_at', { ascending: false }),
-        supabase.from('survey_stats').select('*'),
+        supabase.from('neo_survey_stats').select('*'),
     ]);
     if (error) throw error;
     const statBy = Object.fromEntries((stats || []).map(s => [s.survey_id, s]));
@@ -140,7 +140,7 @@ async function renderList() {
     draw();
 
     async function duplicate(s) {
-        const { data, error } = await supabase.rpc('duplicate_survey', { p_survey_id: s.id });
+        const { data, error } = await supabase.rpc('neo_duplicate_survey', { p_survey_id: s.id });
         if (error) return alert('複製できませんでした: ' + error.message);
         go(`#/edit/${data}`);
     }
@@ -149,13 +149,13 @@ async function renderList() {
             const check = checkReviewUrl(s.google_review_url);
             if (!check.ok) return alert('公開できません。' + check.message + '\n編集画面でGoogleクチコミURLを設定してください。');
         }
-        const { error } = await supabase.from('surveys').update({ is_published: !s.is_published }).eq('id', s.id);
+        const { error } = await supabase.from('neo_surveys').update({ is_published: !s.is_published }).eq('id', s.id);
         if (error) return alert('変更できませんでした: ' + error.message);
         renderList();
     }
     async function remove(s) {
         if (!confirm(`「${s.title}」を削除しますか?\n公開ページは表示されなくなります。これまでの回答データは残ります。`)) return;
-        const { error } = await supabase.from('surveys').update({ deleted_at: new Date().toISOString(), is_published: false }).eq('id', s.id);
+        const { error } = await supabase.from('neo_surveys').update({ deleted_at: new Date().toISOString(), is_published: false }).eq('id', s.id);
         if (error) return alert('削除できませんでした: ' + error.message);
         renderList();
     }
@@ -171,11 +171,11 @@ async function renderEditor(id) {
     let survey;
     let responseCount = 0;
     if (id) {
-        const { data, error } = await supabase.from('surveys').select('*').eq('id', id).is('deleted_at', null).maybeSingle();
+        const { data, error } = await supabase.from('neo_surveys').select('*').eq('id', id).is('deleted_at', null).maybeSingle();
         if (error) throw error;
         if (!data) return showError('アンケートが見つかりません(削除された可能性があります)。');
         survey = data;
-        const { count } = await supabase.from('survey_responses').select('id', { count: 'exact', head: true }).eq('survey_id', id);
+        const { count } = await supabase.from('neo_survey_responses').select('id', { count: 'exact', head: true }).eq('survey_id', id);
         responseCount = count || 0;
     } else {
         const filter = sessionStorage.getItem('mapon_survey_filter') || '';
@@ -352,8 +352,8 @@ async function renderEditor(id) {
             is_published: willPublish,
         };
         const res = survey.id
-            ? await supabase.from('surveys').update(payload).eq('id', survey.id).select().single()
-            : await supabase.from('surveys').insert(payload).select().single();
+            ? await supabase.from('neo_surveys').update(payload).eq('id', survey.id).select().single()
+            : await supabase.from('neo_surveys').insert(payload).select().single();
         if (res.error) { alert('保存できませんでした: ' + res.error.message); return false; }
         Object.assign(survey, res.data);
         dirty = false;
@@ -446,7 +446,7 @@ async function openQrModal(survey) {
 async function renderResponsesPage(id) {
     app.replaceChildren(el('p', { class: 'muted', text: '読み込み中...' }));
     await loadClients();
-    const { data: survey, error } = await supabase.from('surveys').select('*').eq('id', id).maybeSingle();
+    const { data: survey, error } = await supabase.from('neo_surveys').select('*').eq('id', id).maybeSingle();
     if (error) throw error;
     if (!survey) return showError('アンケートが見つかりません。');
     const area = el('div');

@@ -11,7 +11,8 @@
 --   2. clients / MEO分析 / 費用対効果シート / 改善点ストック を「スタッフのみ」にする
 --      (店舗オーナーは自店舗の clients 行だけ閲覧できる)
 --   3. 申込フォームからの店舗登録を、DBのトリガーで行う(パスワードを clients に保存しない)
---   4. アンケート機能のテーブル(surveys / survey_responses)と、公開ページ用の関数を作る
+--   4. MapOn NEO(アンケート)のテーブル(neo_surveys / neo_survey_responses)と、公開ページ用の関数を作る
+--      ※既存の表・関数と名前がぶつからないよう、すべて neo_ で始まる名前にしている
 -- ============================================================
 
 begin;
@@ -142,7 +143,7 @@ begin
   select format_type(a.atttypid, a.atttypmod) into id_type
   from pg_attribute a where a.attrelid = 'public.clients'::regclass and a.attname = 'id';
   execute format($f$
-    create table if not exists public.surveys (
+    create table if not exists public.neo_surveys (
       id uuid primary key default gen_random_uuid(),
       client_id %s not null references public.clients (id) on delete cascade,
       title text not null default '来店アンケート',
@@ -161,11 +162,11 @@ begin
       )
     )$f$, id_type);
 end $$;
-create index if not exists surveys_client_id_idx on public.surveys (client_id);
+create index if not exists neo_surveys_client_id_idx on public.neo_surveys (client_id);
 
-create table if not exists public.survey_responses (
+create table if not exists public.neo_survey_responses (
   id uuid primary key default gen_random_uuid(),
-  survey_id uuid not null references public.surveys (id) on delete cascade,
+  survey_id uuid not null references public.neo_surveys (id) on delete cascade,
   submitted_at timestamptz not null default now(),
   answers jsonb not null default '{}'::jsonb,
   star_rating smallint check (star_rating between 1 and 5),
@@ -175,50 +176,50 @@ create table if not exists public.survey_responses (
   review_action_at timestamptz,
   draft_edited boolean
 );
-create index if not exists survey_responses_survey_idx on public.survey_responses (survey_id, submitted_at desc);
-create index if not exists survey_responses_ip_idx on public.survey_responses (ip_hash, submitted_at desc);
+create index if not exists neo_survey_responses_survey_idx on public.neo_survey_responses (survey_id, submitted_at desc);
+create index if not exists neo_survey_responses_ip_idx on public.neo_survey_responses (ip_hash, submitted_at desc);
 
-create or replace function public.touch_updated_at()
+create or replace function public.neo_touch_updated_at()
 returns trigger language plpgsql as $$ begin new.updated_at := now(); return new; end $$;
-drop trigger if exists surveys_touch_updated_at on public.surveys;
-create trigger surveys_touch_updated_at before update on public.surveys
-  for each row execute function public.touch_updated_at();
+drop trigger if exists neo_surveys_touch_updated_at on public.neo_surveys;
+create trigger neo_surveys_touch_updated_at before update on public.neo_surveys
+  for each row execute function public.neo_touch_updated_at();
 
-alter table public.surveys enable row level security;
-alter table public.survey_responses enable row level security;
-revoke all on public.surveys, public.survey_responses from anon;
-grant select, insert, update, delete on public.surveys, public.survey_responses to authenticated;
+alter table public.neo_surveys enable row level security;
+alter table public.neo_survey_responses enable row level security;
+revoke all on public.neo_surveys, public.neo_survey_responses from anon;
+grant select, insert, update, delete on public.neo_surveys, public.neo_survey_responses to authenticated;
 
-drop policy if exists surveys_staff_all on public.surveys;
-create policy surveys_staff_all on public.surveys
+drop policy if exists neo_surveys_staff_all on public.neo_surveys;
+create policy neo_surveys_staff_all on public.neo_surveys
   for all to authenticated using (public.is_msm_staff()) with check (public.is_msm_staff());
-drop policy if exists surveys_owner_select on public.surveys;
-create policy surveys_owner_select on public.surveys
+drop policy if exists neo_surveys_owner_select on public.neo_surveys;
+create policy neo_surveys_owner_select on public.neo_surveys
   for select to authenticated using (deleted_at is null and client_id = public.my_client_id());
 
-drop policy if exists survey_responses_staff_all on public.survey_responses;
-create policy survey_responses_staff_all on public.survey_responses
+drop policy if exists neo_survey_responses_staff_all on public.neo_survey_responses;
+create policy neo_survey_responses_staff_all on public.neo_survey_responses
   for all to authenticated using (public.is_msm_staff()) with check (public.is_msm_staff());
-drop policy if exists survey_responses_owner_select on public.survey_responses;
-create policy survey_responses_owner_select on public.survey_responses
+drop policy if exists neo_survey_responses_owner_select on public.neo_survey_responses;
+create policy neo_survey_responses_owner_select on public.neo_survey_responses
   for select to authenticated using (
-    exists (select 1 from public.surveys s
+    exists (select 1 from public.neo_surveys s
             where s.id = survey_id and s.deleted_at is null and s.client_id = public.my_client_id())
   );
 
 -- 一覧用の集計(見る人の権限=RLSで絞り込まれる)
-create or replace view public.survey_stats with (security_invoker = true) as
+create or replace view public.neo_survey_stats with (security_invoker = true) as
   select survey_id,
          count(*)::int as response_count,
          round(avg(star_rating)::numeric, 2) as avg_star,
          max(submitted_at) as last_submitted_at
-  from public.survey_responses
+  from public.neo_survey_responses
   group by survey_id;
-revoke all on public.survey_stats from anon;
-grant select on public.survey_stats to authenticated;
+revoke all on public.neo_survey_stats from anon;
+grant select on public.neo_survey_stats to authenticated;
 
 -- 公開ページ用:表示に必要な項目だけを返す(店舗の内部情報は返さない)
-create or replace function public.get_public_survey(p_slug text)
+create or replace function public.neo_get_public_survey(p_slug text)
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'store_name', c.company_name,
@@ -226,15 +227,15 @@ returns jsonb language sql stable security definer set search_path = public as $
     'intro_text', s.intro_text,
     'questions', s.questions
   )
-  from public.surveys s join public.clients c on c.id = s.client_id
+  from public.neo_surveys s join public.clients c on c.id = s.client_id
   where s.public_slug = p_slug and s.is_published and s.deleted_at is null;
 $$;
 
 -- 公開ページ用:回答を受け付ける(入力チェック・回数制限つき)
-create or replace function public.submit_survey_response(p_slug text, p_answers jsonb)
+create or replace function public.neo_submit_survey_response(p_slug text, p_answers jsonb)
 returns jsonb language plpgsql volatile security definer set search_path = public as $$
 declare
-  v_survey public.surveys%rowtype;
+  v_survey public.neo_surveys%rowtype;
   v_headers json := nullif(current_setting('request.headers', true), '')::json;
   v_ip text;
   v_ip_hash text;
@@ -242,9 +243,9 @@ declare
   v_star smallint;
   q jsonb;
   v_qid text; v_type text; v_required boolean; v_val jsonb; v_ids text[]; v_max int;
-  v_resp public.survey_responses%rowtype;
+  v_resp public.neo_survey_responses%rowtype;
 begin
-  select * into v_survey from public.surveys
+  select * into v_survey from public.neo_surveys
   where public_slug = p_slug and is_published and deleted_at is null;
   if not found then
     raise exception 'survey_not_available' using errcode = 'P0001';
@@ -257,9 +258,9 @@ begin
   v_ip := coalesce(v_headers->>'cf-connecting-ip', split_part(v_headers->>'x-forwarded-for', ',', 1), v_headers->>'x-real-ip', '');
   v_ip_hash := encode(sha256(convert_to(trim(v_ip) || '|mapon-survey', 'UTF8')), 'hex');
   if trim(v_ip) <> '' then
-    if (select count(*) from public.survey_responses
+    if (select count(*) from public.neo_survey_responses
         where ip_hash = v_ip_hash and survey_id = v_survey.id and submitted_at > now() - interval '10 minutes') >= 3
-       or (select count(*) from public.survey_responses
+       or (select count(*) from public.neo_survey_responses
         where ip_hash = v_ip_hash and survey_id = v_survey.id and submitted_at > now() - interval '1 day') >= 20 then
       raise exception 'rate_limited' using errcode = 'P0001';
     end if;
@@ -307,7 +308,7 @@ begin
     end if;
   end loop;
 
-  insert into public.survey_responses (survey_id, answers, star_rating, ip_hash)
+  insert into public.neo_survey_responses (survey_id, answers, star_rating, ip_hash)
   values (v_survey.id, v_clean, v_star, case when trim(v_ip) <> '' then v_ip_hash end)
   returning * into v_resp;
 
@@ -321,13 +322,13 @@ end;
 $$;
 
 -- 公開ページ用:「口コミ協力のお願い」ページでの行動を記録する
-create or replace function public.record_review_action(p_response_id uuid, p_token uuid, p_action text, p_edited boolean default null)
+create or replace function public.neo_record_review_action(p_response_id uuid, p_token uuid, p_action text, p_edited boolean default null)
 returns boolean language plpgsql volatile security definer set search_path = public as $$
 begin
   if p_action not in ('copied_and_opened', 'copy_failed_opened', 'self_write', 'declined') then
     return false;
   end if;
-  update public.survey_responses
+  update public.neo_survey_responses
      set review_action = p_action, review_action_at = now(), draft_edited = p_edited
    where id = p_response_id and action_token = p_token and submitted_at > now() - interval '1 day';
   return found;
@@ -335,26 +336,26 @@ end;
 $$;
 
 -- スタッフ用:アンケートの複製(GoogleクチコミURLも引き継ぐ。複製後は非公開)
-create or replace function public.duplicate_survey(p_survey_id uuid)
+create or replace function public.neo_duplicate_survey(p_survey_id uuid)
 returns uuid language plpgsql volatile security invoker set search_path = public as $$
 declare v_new uuid;
 begin
-  insert into public.surveys (client_id, title, intro_text, google_review_url, questions, is_published)
+  insert into public.neo_surveys (client_id, title, intro_text, google_review_url, questions, is_published)
   select client_id, title || '(コピー)', intro_text, google_review_url, questions, false
-  from public.surveys where id = p_survey_id and deleted_at is null
+  from public.neo_surveys where id = p_survey_id and deleted_at is null
   returning id into v_new;
   if v_new is null then raise exception 'survey_not_found' using errcode = 'P0001'; end if;
   return v_new;
 end;
 $$;
 
-revoke all on function public.get_public_survey(text) from public;
-revoke all on function public.submit_survey_response(text, jsonb) from public;
-revoke all on function public.record_review_action(uuid, uuid, text, boolean) from public;
-revoke all on function public.duplicate_survey(uuid) from public;
-grant execute on function public.get_public_survey(text) to anon, authenticated;
-grant execute on function public.submit_survey_response(text, jsonb) to anon, authenticated;
-grant execute on function public.record_review_action(uuid, uuid, text, boolean) to anon, authenticated;
-grant execute on function public.duplicate_survey(uuid) to authenticated;
+revoke all on function public.neo_get_public_survey(text) from public;
+revoke all on function public.neo_submit_survey_response(text, jsonb) from public;
+revoke all on function public.neo_record_review_action(uuid, uuid, text, boolean) from public;
+revoke all on function public.neo_duplicate_survey(uuid) from public;
+grant execute on function public.neo_get_public_survey(text) to anon, authenticated;
+grant execute on function public.neo_submit_survey_response(text, jsonb) to anon, authenticated;
+grant execute on function public.neo_record_review_action(uuid, uuid, text, boolean) to anon, authenticated;
+grant execute on function public.neo_duplicate_survey(uuid) to authenticated;
 
 commit;
