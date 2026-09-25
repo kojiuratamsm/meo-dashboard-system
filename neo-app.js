@@ -49,6 +49,8 @@ function openModal(content, { wide = false } = {}) {
 // ルーティング
 // ------------------------------------------------------------
 async function route() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { location.replace('/login'); return; }
     const hash = location.hash || '#/';
     const [, view, id] = hash.split('/');
     document.querySelectorAll('.nav-item[data-view]').forEach(a =>
@@ -447,6 +449,20 @@ const PASSWORD_ERRORS = [
     [/reauthenticat|recent login|session/i, '安全のため、一度ログアウトして、もう一度ログインしてから変更してください。'],
 ];
 
+// 本人がメールアドレス・パスワードを変更したら、安全のためログアウトする。
+// ログアウト後は、再読み込みや画面の移動をしても必ずログイン画面になる。
+async function signOutAfterChange(title, text) {
+    await supabase.auth.signOut().catch(() => {});   // この端末も含め、他の端末のログインも終了する
+    try { localStorage.removeItem('currentUser'); } catch {}
+    dirty = false;
+    document.querySelectorAll('.sidebar .nav-item').forEach(a => { a.style.pointerEvents = 'none'; a.style.opacity = '0.4'; });
+    app.replaceChildren(el('div', { class: 'card', style: { maxWidth: '520px', margin: '40px auto', textAlign: 'center' } },
+        el('div', { style: { fontSize: '40px', color: '#34A853', marginBottom: '10px' } }, el('i', { class: 'fa-solid fa-circle-check' })),
+        el('h2', { text: title }),
+        el('p', { style: { lineHeight: '1.8', margin: '10px 0 20px' }, text: `安全のため、ログアウトしました。${text}` }),
+        el('a', { href: '/login', class: 'btn' }, el('i', { class: 'fa-solid fa-right-to-bracket' }), 'ログイン画面へ')));
+}
+
 function renderSettings() {
     const msg = () => el('p', { class: 'msg' });
     const setMsg = (node, ok, text) => { node.className = 'msg ' + (ok ? 'ok' : 'ng'); node.textContent = text; };
@@ -504,8 +520,8 @@ function renderSettings() {
                 const hit = PASSWORD_ERRORS.find(([re]) => re.test(m));
                 return setMsg(passMsg, false, hit ? hit[1] : '変更できませんでした。時間をおいて、もう一度お試しください。');
             }
-            pass1.value = ''; pass2.value = ''; show.checked = false; pass1.type = pass2.type = 'password';
-            setMsg(passMsg, true, 'パスワードを変更しました。次回から新しいパスワードでログインしてください。');
+            pass1.value = ''; pass2.value = '';
+            await signOutAfterChange('パスワードを変更しました。', '新しいパスワードで、もう一度ログインしてください。');
         });
         passCard = el('div', { class: 'card' },
             el('h2', { text: 'パスワードの変更' }),
@@ -544,10 +560,12 @@ function renderSettings() {
             client.email = data || email;
             currentEmail.textContent = client.email;
             emailInput.value = '';
-            if (emailPass) { emailPass.value = ''; await supabase.auth.refreshSession().catch(() => {}); }
-            setMsg(emailMsg, true, isMasterView
-                ? 'メールアドレスを変更しました。契約者は、次回から新しいメールアドレスでログインします。'
-                : 'メールアドレスを変更しました。次回から新しいメールアドレスでログインしてください。');
+            if (!isMasterView) {
+                emailPass.value = '';
+                await signOutAfterChange('メールアドレスを変更しました。', `新しいメールアドレス(${client.email})で、もう一度ログインしてください。`);
+                return;
+            }
+            setMsg(emailMsg, true, 'メールアドレスを変更しました。契約者は、次回から新しいメールアドレスでログインします。');
         } catch {
             setMsg(emailMsg, false, '通信できませんでした。電波の良い場所で、もう一度お試しください。');
         } finally {
