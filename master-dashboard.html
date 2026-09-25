@@ -1081,21 +1081,15 @@ Googleの評価システム上、成果には一定期間を要しますが、
 
         // パスワード再設定リンクを発行し、画面に表示する(メールは送らない。スタッフがコピーして手動で送る)
         window.issueRecoveryLink = async function(clientId) {
-            if (!confirm('この店舗のパスワード再設定用リンクを発行しますか?\n(リンクを知っている人はパスワードを変更できます。必ずご本人にだけ送ってください)')) return;
-            let result;
-            try {
-                const res = await fetch('/api/admin/recovery-link', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
-                    body: JSON.stringify({ client_id: clientId })
-                });
-                result = await res.json().catch(() => ({}));
-                if (!res.ok) throw new Error(result.error || `サーバーエラー(${res.status})`);
-            } catch (e) {
-                alert('リンクを発行できませんでした: ' + e.message);
+            if (!confirm('この店舗の「パスワード再設定URL」を発行しますか?\n(URLを知っている人はパスワードを変更できます。必ずご本人にだけ送ってください)')) return;
+            const { data, error } = await supabase.rpc('neo_issue_password_reset', { p_client_id: String(clientId) });
+            if (error || !data?.token) {
+                const m = String(error?.message || '');
+                alert('URLを発行できませんでした: ' + (m.includes('no_login_account') ? 'この店舗にはログイン用のアカウントがありません。'
+                    : (m.includes('Could not find') || m.includes('does not exist')) ? 'データベースの設定(追加SQL_6)が必要です。' : m || '不明なエラー'));
                 return;
             }
-            showRecoveryLinkModal(result);
+            showRecoveryLinkModal({ link: `${location.origin}/reset-password?t=${data.token}`, company_name: data.company_name, email: data.email });
         };
 
         function showRecoveryLinkModal({ link, company_name, email }) {
@@ -1106,13 +1100,13 @@ Googleの評価システム上、成果には一定期間を要しますが、
                 modal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; padding:16px;';
                 modal.innerHTML = `
                     <div style="background:white; padding:28px; border-radius:15px; width:100%; max-width:520px;">
-                        <h3 style="margin-bottom:6px;">パスワード再設定リンク</h3>
+                        <h3 style="margin-bottom:6px;">パスワード再設定URL</h3>
                         <p id="recoveryLinkTarget" style="font-size:13px; color:#64748B; margin-bottom:14px;"></p>
                         <textarea id="recoveryLinkText" readonly style="width:100%; height:96px; padding:10px; border:1px solid #E2E8F0; border-radius:8px; font-size:12px; font-family:monospace; resize:none;"></textarea>
                         <p style="font-size:12px; color:#C05621; background:#FFFAF0; border-radius:8px; padding:10px; margin:12px 0; line-height:1.7;">
-                            ・このリンクを、LINEやメールでオーナーご本人に送ってください。<br>
-                            ・リンクは1回だけ使えます。有効期限はSupabaseの設定によります(初期設定は1時間)。<br>
-                            ・リンクを知っている人は誰でもパスワードを変更できます。本人以外に送らないでください。
+                            ・このURLを、LINEやメールでご本人に送ってください。開くと、新しいパスワードを決められます。<br>
+                            ・URLは1回だけ使えます。有効期限は発行から24時間です。もう一度発行すると、前のURLは使えなくなります。<br>
+                            ・URLを知っている人は誰でもパスワードを変更できます。本人以外に送らないでください。
                         </p>
                         <div style="display:flex; justify-content:flex-end; gap:10px;">
                             <button id="recoveryLinkClose" style="padding:10px 15px; border-radius:8px; border:none; background:#F8FAFC; color:#64748B; font-weight:bold; cursor:pointer;">閉じる</button>
@@ -1190,7 +1184,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
                     <td>${statusHtml}</td>
                     <td style="white-space:nowrap;">
                         <a href="javascript:void(0)" onclick="masterLoginAs('${clientEncoded}')" class="btn-action"><i class="fa-solid fa-right-to-bracket"></i> 管理画面に入る</a>
-                        ${client.auth_id ? `<a href="javascript:void(0)" onclick="issueRecoveryLink('${client.id}')" class="btn-action" style="background:#718096; margin-left:4px;" title="パスワード再設定用のリンクを発行して、手動で送ります"><i class="fa-solid fa-key"></i> 再設定リンク</a>` : ''}
+                        ${client.auth_id ? `<a href="javascript:void(0)" onclick="issueRecoveryLink('${client.id}')" class="btn-action" style="background:#718096; margin-left:4px;" title="パスワードを忘れた方に送る、パスワード再設定URLを発行します"><i class="fa-solid fa-key"></i> PW再設定URL</a>` : ''}
                     </td>
                 `;
                 tableBody.appendChild(tr);

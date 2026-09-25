@@ -11,7 +11,7 @@
 
 ## データベースの設定(Supabase の SQL Editor で実行)
 - 初めて設定する場合:`supabase/MapOn_setup.sql`
-- すでに MapOn_setup.sql を実行済みの場合:`supabase/追加SQL_2_MapOnNEO契約者.sql`・`supabase/追加SQL_3_設問ガイドURL.sql`・`supabase/追加SQL_4_店舗名の変更.sql`・`supabase/追加SQL_5_メールアドレスの変更.sql` を実行(どちらも何度実行しても問題ありません)
+- すでに MapOn_setup.sql を実行済みの場合:`supabase/追加SQL_2_MapOnNEO契約者.sql`・`supabase/追加SQL_3_設問ガイドURL.sql`・`supabase/追加SQL_4_店舗名の変更.sql`・`supabase/追加SQL_5_メールアドレスの変更.sql`・`supabase/追加SQL_6_パスワード再設定URL.sql` を実行(どちらも何度実行しても問題ありません)
 
 ## 設問の書き方ガイド(【確認する】ボタン)
 マスター画面の「MapOn NEO」→「設問の書き方ガイドのURL」にURLを貼り付けて「保存」すると、契約者の管理画面(アンケート作成の「設問」欄)に【確認する】ボタンが表示されます。空欄にすると、ボタンは表示されません。
@@ -24,6 +24,10 @@ MEO_UPLOAD フォルダの中身をアップロードしてください(`_to_del
 - パスワードの変更:新しいパスワードを2回入力して変更(追加の準備は不要)
 - メールアドレスの変更:確認メールを送らず、その場で変更する。`supabase/追加SQL_5_メールアドレスの変更.sql` の実行が必要(Vercel の設定は不要)
 
+## パスワードを忘れた方への対応
+マスター画面の「MapOn NEO」の契約者一覧(または「全クライアント一覧」)で「PW再設定URL」を押すと、その方専用のURLが発行されます。
+コピーしてLINEやメールで本人に送ってください。開くと新しいパスワードを決められ、そのパスワードでログインできます。
+URLは1回だけ・発行から24時間有効。もう一度発行すると前のURLは使えなくなります。(`supabase/追加SQL_6_パスワード再設定URL.sql` の実行が必要。Vercel の設定は不要)
+
 ## 必要になったときだけ
-- パスワード再設定リンク(オーナーがパスワードを忘れたとき):Vercel に `SUPABASE_SECRET_KEY` を登録し、Supabase の「URL Configuration」の Redirect URLs に `https://www.mapon-meo.com/reset-password` を追加してください。
 - 平文パスワードの削除(後日):`supabase/あとで実行_平文パスワード列の削除.sql`

@@ -74,6 +74,39 @@ function guideUrlCard(current) {
             text: '契約者の管理画面(アンケート作成の「設問」欄)にある【確認する】ボタンのリンク先です。空欄のときは、ボタンは表示されません。' }));
 }
 
+// パスワードを忘れた契約者に送る「パスワード再設定URL」を発行して表示する
+async function issueResetUrl(c) {
+    if (!confirm(`「${c.company_name}」様のパスワード再設定URLを発行しますか?\n(URLを知っている人はパスワードを変更できます。必ずご本人にだけ送ってください)`)) return;
+    const { data, error } = await supabase.rpc('neo_issue_password_reset', { p_client_id: String(c.id) });
+    if (error || !data?.token) {
+        const m = String(error?.message || '');
+        alert('URLを発行できませんでした: ' + (m.includes('no_login_account') ? 'この契約者にはログイン用のアカウントがありません。'
+            : (m.includes('Could not find') || m.includes('does not exist')) ? 'データベースの設定(追加SQL_6)が必要です。' : (m || '不明なエラー')));
+        return;
+    }
+    const url = `${location.origin}/reset-password?t=${data.token}`;
+    const input = el('input', { class: 'input', value: url, readonly: true, style: { fontSize: '12px', fontFamily: 'monospace' } });
+    const copyBtn = el('button', { class: 'btn', type: 'button' }, 'コピー');
+    const bg = el('div', { class: 'modal-bg' });
+    const close = () => bg.remove();
+    copyBtn.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(url); copyBtn.textContent = 'コピーしました'; }
+        catch { input.select(); alert('自動でコピーできませんでした。選択された文字をコピーしてください。'); }
+    });
+    bg.append(el('div', { class: 'modal' },
+        el('h3', { text: 'パスワード再設定URL' }),
+        el('p', { class: 'muted', style: { marginBottom: '10px' }, text: `${data.company_name || ''} 様(${data.email || '-'})` }),
+        input,
+        el('div', { class: 'warnbox', style: { marginTop: '12px' } },
+            el('div', { text: '・このURLを、LINEやメールでご本人に送ってください。開くと、新しいパスワードを決められます。' }),
+            el('div', { text: '・1回だけ使えます。有効期限は発行から24時間です。もう一度発行すると、前のURLは使えなくなります。' }),
+            el('div', { text: '・URLを知っている人は誰でもパスワードを変更できます。本人以外に送らないでください。' })),
+        el('div', { class: 'row', style: { justifyContent: 'flex-end' } },
+            el('button', { class: 'btn sub', type: 'button', onclick: close }, '閉じる'), copyBtn)));
+    bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
+    document.body.append(bg);
+}
+
 async function render() {
     app.replaceChildren(el('p', { class: 'muted', text: '読み込み中...' }));
     const [clientsRes, surveysRes, statsRes, settingRes] = await Promise.all([
@@ -115,8 +148,11 @@ async function render() {
                 el('td', { class: 'muted', text: fmtDate(c.created_at) }),
                 el('td', { text: `${stat.surveys}件` }),
                 el('td', { text: `${stat.responses}件` }),
-                el('td', {}, el('a', { href: `/neo?client=${encodeURIComponent(c.id)}`, class: 'btn small' },
-                    el('i', { class: 'fa-solid fa-right-to-bracket' }), '管理画面に入る')));
+                el('td', {}, el('div', { class: 'row', style: { flexWrap: 'nowrap' } },
+                    el('a', { href: `/neo?client=${encodeURIComponent(c.id)}`, class: 'btn small' },
+                        el('i', { class: 'fa-solid fa-right-to-bracket' }), '管理画面に入る'),
+                    c.auth_id ? el('button', { class: 'btn small sub', type: 'button', title: 'パスワードを忘れた方に送るURLを発行します', onclick: () => issueResetUrl(c) },
+                        el('i', { class: 'fa-solid fa-key' }), 'PW再設定URL') : null)));
         }));
     };
     search.addEventListener('input', draw);
