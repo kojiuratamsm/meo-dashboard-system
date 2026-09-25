@@ -45,7 +45,7 @@ function showMessage(text) {
         const banner = $('masterBanner');
         banner.hidden = false;
         banner.replaceChildren(
-            el('span', {}, el('i', { class: 'fa-solid fa-user-shield' }), ` マスターとして「${client.company_name}」様の管理画面を表示しています`),
+            el('span', {}, el('i', { class: 'fa-solid fa-user-shield' }), ' マスターとして「', el('span', { id: 'bannerStoreName', text: client.company_name }), '」様の管理画面を表示しています'),
             el('a', { href: '/master-surveys', class: 'btn small dark' }, '契約者一覧に戻る'));
     } else {
         // 契約者本人:自分の店舗
@@ -54,8 +54,13 @@ function showMessage(text) {
         client = data;
     }
 
-    $('storeName').textContent = `${client.company_name} 様`;
-    document.title = `MapOn NEO 管理画面 - ${client.company_name}`;
+    const showStoreName = (name) => {
+        $('storeName').textContent = `${name} 様`;
+        const b = document.getElementById('bannerStoreName');
+        if (b) b.textContent = name;
+        document.title = `MapOn NEO 管理画面 - ${name}`;
+    };
+    showStoreName(client.company_name);
     document.documentElement.classList.remove('auth-pending');
-    startNeoApp({ root: $('app'), client });
+    startNeoApp({ root: $('app'), client, isMasterView: isStaff, onStoreNameChange: showStoreName });
 })();

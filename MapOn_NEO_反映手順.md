@@ -11,7 +11,7 @@
 
 ## データベースの設定(Supabase の SQL Editor で実行)
 - 初めて設定する場合:`supabase/MapOn_setup.sql`
-- すでに MapOn_setup.sql を実行済みの場合:`supabase/追加SQL_2_MapOnNEO契約者.sql` と `supabase/追加SQL_3_設問ガイドURL.sql` を実行(どちらも何度実行しても問題ありません)
+- すでに MapOn_setup.sql を実行済みの場合:`supabase/追加SQL_2_MapOnNEO契約者.sql`・`supabase/追加SQL_3_設問ガイドURL.sql`・`supabase/追加SQL_4_店舗名の変更.sql` を実行(どちらも何度実行しても問題ありません)
 
 ## 設問の書き方ガイド(【確認する】ボタン)
 マスター画面の「MapOn NEO」→「設問の書き方ガイドのURL」にURLを貼り付けて「保存」すると、契約者の管理画面(アンケート作成の「設問」欄)に【確認する】ボタンが表示されます。空欄にすると、ボタンは表示されません。

@@ -16,6 +16,8 @@ import { RESULTS_CSS, renderResults, makeQrCanvas, downloadQrPng } from './surve
 
 let app = null;               // 描画先
 let client = null;            // 対象の店舗(契約者)の clients 行
+let isMasterView = false;     // マスター(MSMスタッフ)が契約者の画面を見ているか
+let onStoreNameChange = () => {};
 let dirty = false;            // 編集中で未保存の変更があるか
 let revertingHash = false;    // 「移動しない」を選んだときにURLを戻している最中か
 
@@ -49,7 +51,10 @@ function openModal(content, { wide = false } = {}) {
 async function route() {
     const hash = location.hash || '#/';
     const [, view, id] = hash.split('/');
+    document.querySelectorAll('.nav-item[data-view]').forEach(a =>
+        a.classList.toggle('active', a.dataset.view === (view === 'settings' ? 'settings' : 'surveys')));
     try {
+        if (view === 'settings') return renderSettings();
         if (view === 'new') return await renderEditor(null);
         if (view === 'edit' && id) return await renderEditor(id);
         if (view === 'responses' && id) return await renderResponsesPage(id);
@@ -434,13 +439,102 @@ async function renderResponsesPage(id) {
 }
 
 // ------------------------------------------------------------
+// 設定(店舗名・パスワード)
+// ------------------------------------------------------------
+const PASSWORD_ERRORS = [
+    [/should be different|same_password/i, '今のパスワードと同じです。別のパスワードを入力してください。'],
+    [/weak|at least|characters|weak_password/i, 'パスワードが簡単すぎます。8文字以上で、英字と数字を組み合わせてください。'],
+    [/reauthenticat|recent login|session/i, '安全のため、一度ログアウトして、もう一度ログインしてから変更してください。'],
+];
+
+function renderSettings() {
+    const msg = () => el('p', { class: 'msg' });
+    const setMsg = (node, ok, text) => { node.className = 'msg ' + (ok ? 'ok' : 'ng'); node.textContent = text; };
+
+    // 店舗名
+    const nameInput = el('input', { class: 'input grow', value: client.company_name || '', maxlength: '100' });
+    const nameMsg = msg();
+    const nameBtn = el('button', { class: 'btn', type: 'button' }, '保存');
+    nameBtn.addEventListener('click', async () => {
+        const name = nameInput.value.trim();
+        if (!name) return setMsg(nameMsg, false, '店舗名を入力してください。');
+        if (name === client.company_name) return setMsg(nameMsg, true, '変更はありません。');
+        nameBtn.disabled = true;
+        const { data, error } = await supabase.rpc('neo_update_store_name', { p_client_id: String(client.id), p_name: name });
+        nameBtn.disabled = false;
+        if (error) {
+            const m = String(error.message || '');
+            return setMsg(nameMsg, false, m.includes('Could not find') || m.includes('does not exist')
+                ? '保存できませんでした(データベースの設定が必要です)。担当者にご連絡ください。'
+                : '保存できませんでした。時間をおいて、もう一度お試しください。');
+        }
+        client.company_name = data || name;
+        nameInput.value = client.company_name;
+        onStoreNameChange(client.company_name);
+        setMsg(nameMsg, true, '店舗名を変更しました。');
+    });
+    const nameCard = el('div', { class: 'card' },
+        el('h2', { text: '店舗名' }),
+        el('div', { class: 'row' }, nameInput, nameBtn), nameMsg,
+        el('p', { class: 'muted', style: { marginTop: '8px' }, text: 'アンケートの画面で、お客様にも表示される名前です。' }));
+
+    // パスワード(ログインしている本人のパスワードを変える。マスター表示では変えない)
+    let passCard;
+    if (isMasterView) {
+        passCard = el('div', { class: 'card' },
+            el('h2', { text: 'パスワードの変更' }),
+            el('p', { class: 'muted', style: { lineHeight: '1.8' }, text: 'パスワードは、契約者ご本人がログインした画面でのみ変更できます(マスターとして表示している今の画面で変更すると、マスターのパスワードが変わってしまうため)。' }));
+    } else {
+        const pass1 = el('input', { class: 'input', type: 'password', autocomplete: 'new-password', placeholder: '8文字以上' });
+        const pass2 = el('input', { class: 'input', type: 'password', autocomplete: 'new-password', placeholder: 'もう一度入力' });
+        const show = el('input', { type: 'checkbox' });
+        show.addEventListener('change', () => { pass1.type = pass2.type = show.checked ? 'text' : 'password'; });
+        const passMsg = msg();
+        const passBtn = el('button', { class: 'btn', type: 'button' }, 'パスワードを変更する');
+        passBtn.addEventListener('click', async () => {
+            const p1 = pass1.value, p2 = pass2.value;
+            if (!p1 || !p2) return setMsg(passMsg, false, '新しいパスワードを2回入力してください。');
+            if (p1.length < 8) return setMsg(passMsg, false, 'パスワードは8文字以上にしてください。');
+            if (p1 !== p2) return setMsg(passMsg, false, '1回目と2回目のパスワードが一致しません。もう一度入力してください。');
+            passBtn.disabled = true;
+            const { error } = await supabase.auth.updateUser({ password: p1 });
+            passBtn.disabled = false;
+            if (error) {
+                const m = `${error.code || ''} ${error.message || ''}`;
+                const hit = PASSWORD_ERRORS.find(([re]) => re.test(m));
+                return setMsg(passMsg, false, hit ? hit[1] : '変更できませんでした。時間をおいて、もう一度お試しください。');
+            }
+            pass1.value = ''; pass2.value = ''; show.checked = false; pass1.type = pass2.type = 'password';
+            setMsg(passMsg, true, 'パスワードを変更しました。次回から新しいパスワードでログインしてください。');
+        });
+        passCard = el('div', { class: 'card' },
+            el('h2', { text: 'パスワードの変更' }),
+            el('div', { class: 'field', style: { maxWidth: '420px' } }, el('label', { text: '新しいパスワード' }), pass1),
+            el('div', { class: 'field', style: { maxWidth: '420px' } }, el('label', { text: '新しいパスワード(確認のため、もう一度)' }), pass2),
+            el('label', { class: 'muted', style: { display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '14px', cursor: 'pointer' } }, show, 'パスワードを表示する'),
+            passBtn, passMsg);
+    }
+
+    app.replaceChildren(
+        el('div', { class: 'page-title' }, '設定'),
+        nameCard,
+        el('div', { class: 'card' },
+            el('h2', { text: 'ログイン用メールアドレス' }),
+            el('p', { text: client.email || '-', style: { fontWeight: '700' } }),
+            el('p', { class: 'muted', style: { marginTop: '6px' }, text: 'メールアドレスを変更したい場合は、担当者にご連絡ください。' })),
+        passCard);
+}
+
+// ------------------------------------------------------------
 /**
  * MapOn NEO の管理画面を起動する
  * @param {{ root: HTMLElement, client: {id, company_name} }} options
  */
-export function startNeoApp({ root, client: targetClient }) {
+export function startNeoApp({ root, client: targetClient, isMasterView: master = false, onStoreNameChange: onName }) {
     app = root;
     client = targetClient;
+    isMasterView = master;
+    if (onName) onStoreNameChange = onName;
     document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS }));
     lastHash = location.hash;
     route();
