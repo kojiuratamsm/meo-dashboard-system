@@ -515,13 +515,57 @@ function renderSettings() {
             passBtn, passMsg);
     }
 
+    // ログイン用メールアドレス(確認メールなしで、その場で変更する。DBの関数 neo_change_login_email)
+    const currentEmail = el('p', { text: client.email || '-', style: { fontWeight: '700' } });
+    const emailInput = el('input', { class: 'input', type: 'email', autocomplete: 'email', placeholder: '新しいメールアドレス', inputmode: 'email' });
+    const emailPass = isMasterView ? null : el('input', { class: 'input', type: 'password', autocomplete: 'current-password', placeholder: '今のパスワード' });
+    const emailMsg = msg();
+    const emailBtn = el('button', { class: 'btn', type: 'button' }, 'メールアドレスを変更する');
+    emailBtn.addEventListener('click', async () => {
+        const email = emailInput.value.trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setMsg(emailMsg, false, 'メールアドレスの形式が正しくありません。');
+        if (email === String(client.email || '').toLowerCase()) return setMsg(emailMsg, false, '今と同じメールアドレスです。');
+        if (emailPass && !emailPass.value) return setMsg(emailMsg, false, '本人確認のため、今のパスワードを入力してください。');
+        emailBtn.disabled = true;
+        try {
+            const { data, error } = await supabase.rpc('neo_change_login_email', isMasterView
+                ? { p_new_email: email, p_client_id: String(client.id) }
+                : { p_new_email: email, p_current_password: emailPass.value });
+            if (error) {
+                const m = String(error.message || '');
+                const text = m.includes('wrong_password') ? '今のパスワードが正しくありません。'
+                    : m.includes('email_in_use') ? 'このメールアドレスは、すでに別のアカウントで使われています。'
+                    : m.includes('same_email') ? '今と同じメールアドレスです。'
+                    : m.includes('invalid_email') ? 'メールアドレスの形式が正しくありません。'
+                    : (m.includes('Could not find') || m.includes('does not exist')) ? '変更できませんでした(データベースの設定が必要です)。担当者にご連絡ください。'
+                    : 'メールアドレスを変更できませんでした。時間をおいて、もう一度お試しください。';
+                return setMsg(emailMsg, false, text);
+            }
+            client.email = data || email;
+            currentEmail.textContent = client.email;
+            emailInput.value = '';
+            if (emailPass) { emailPass.value = ''; await supabase.auth.refreshSession().catch(() => {}); }
+            setMsg(emailMsg, true, isMasterView
+                ? 'メールアドレスを変更しました。契約者は、次回から新しいメールアドレスでログインします。'
+                : 'メールアドレスを変更しました。次回から新しいメールアドレスでログインしてください。');
+        } catch {
+            setMsg(emailMsg, false, '通信できませんでした。電波の良い場所で、もう一度お試しください。');
+        } finally {
+            emailBtn.disabled = false;
+        }
+    });
+    const emailCard = el('div', { class: 'card' },
+        el('h2', { text: 'ログイン用メールアドレス' }),
+        el('p', { class: 'muted', text: '今のメールアドレス' }), currentEmail,
+        el('div', { class: 'field', style: { maxWidth: '420px', marginTop: '14px' } }, el('label', { text: '新しいメールアドレス' }), emailInput),
+        emailPass ? el('div', { class: 'field', style: { maxWidth: '420px' } }, el('label', { text: '今のパスワード(本人確認のため)' }), emailPass) : null,
+        emailBtn, emailMsg,
+        el('p', { class: 'muted', style: { marginTop: '8px' }, text: '確認メールは送られません。変更すると、次回から新しいメールアドレスでログインします(パスワードは変わりません)。' }));
+
     app.replaceChildren(
         el('div', { class: 'page-title' }, '設定'),
         nameCard,
-        el('div', { class: 'card' },
-            el('h2', { text: 'ログイン用メールアドレス' }),
-            el('p', { text: client.email || '-', style: { fontWeight: '700' } }),
-            el('p', { class: 'muted', style: { marginTop: '6px' }, text: 'メールアドレスを変更したい場合は、担当者にご連絡ください。' })),
+        emailCard,
         passCard);
 }
 
