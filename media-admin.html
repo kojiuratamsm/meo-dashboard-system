@@ -241,6 +241,20 @@
             <div id="editor-container"></div>
                         </div>
 
+        <div class="card" id="msmStoreCard" style="border: 1px solid #38A169; background: #F0FFF4;">
+            <h2 style="color: #276749; border-bottom: 2px solid #C6F6D5;"><i class="fa-solid fa-store"></i> 店舗選択(MSM管理画面への記録)</h2>
+            <p style="font-size: 13px; color: #22543D; margin-bottom: 12px; line-height: 1.6;">
+                店舗を選んで記事を公開すると、MSM管理画面の「顧客管理 / 案件管理 → MEO対策チャンネル」の、その店舗の「ブログ履歴」に、タイトル・日付・URLが自動で追加されます。公開済みの記事を更新したときも、内容が書き換わります。
+            </p>
+            <div class="form-group" style="margin-bottom: 6px;">
+                <label for="msmStore">店舗</label>
+                <select id="msmStore" class="form-control">
+                    <option value="">読み込み中...</option>
+                </select>
+            </div>
+            <p id="msmStoreStatus" style="font-size: 12px; color: #4A5568; margin: 0;"></p>
+        </div>
+
         <div class="card" style="border: 1px solid #3182CE; background: #EBF8FF;">
             <h2 style="color: #2B6CB0; border-bottom: 2px solid #BEE3F8;"><i class="fa-solid fa-robot"></i> SEO自動生成用データ <span class="seo-badge">裏側でGoogleにアピールします</span></h2>
             <p style="font-size: 13px; color: #2C5282; margin-bottom: 15px; line-height: 1.5;">
@@ -300,6 +314,39 @@
 
     <script type="module">
         import { supabase } from './supabase-config.js';
+        import { msmReady, listMsmMeoStores, findStoreOfArticle, syncArticleToMsm, removeArticleFromMsm, articleUrl } from './msm-sync.js';
+
+        // ---- 店舗選択(MSM管理画面のMEO対策チャンネルの店舗) ----
+        let msmStores = [];
+        async function loadMsmStores(selectedId = null) {
+            const select = document.getElementById('msmStore');
+            const status = document.getElementById('msmStoreStatus');
+            if (!msmReady) {
+                select.innerHTML = '<option value="">(MSM管理画面との連携が未設定です)</option>';
+                select.disabled = true;
+                status.textContent = 'msm-config.js にMSM管理画面のキーを設定すると使えるようになります。';
+                return;
+            }
+            try {
+                msmStores = await listMsmMeoStores();
+            } catch (e) {
+                console.error(e);
+                select.innerHTML = '<option value="">(店舗一覧を読み込めませんでした)</option>';
+                status.textContent = '店舗一覧を読み込めませんでした: ' + (e.message || e);
+                return;
+            }
+            select.disabled = false;
+            select.replaceChildren(new Option('記録しない', ''), ...msmStores.map(st => new Option(st.name + (st.tag === '解約済み' ? '(解約済み)' : ''), String(st.id))));
+            select.value = selectedId !== null && selectedId !== undefined ? String(selectedId) : '';
+            status.textContent = `店舗 ${msmStores.length}件`;
+        }
+        document.getElementById('msmStore').addEventListener('change', (e) => {
+            // 「対象の店舗名」が空なら、選んだ店舗名を入れておく
+            const st = msmStores.find(x => String(x.id) === e.target.value);
+            const nameInput = document.getElementById('seoStoreName');
+            if (st && !nameInput.value.trim()) { nameInput.value = st.name; nameInput.dispatchEvent(new Event('input')); }
+        });
+        loadMsmStores();
 
         // 認証チェック
         let editingArticleId = null; // 編集中の記事ID
@@ -373,6 +420,7 @@
             document.getElementById('seoStoreName').value = '';
             document.getElementById('seoPhone').value = '';
             document.getElementById('seoAddress').value = '';
+            document.getElementById('msmStore').value = '';
             document.getElementById('thumbnailImg').style.display = 'none';
             document.getElementById('thumbnailPlaceholder').style.display = 'flex';
             document.getElementById('blogThumbnail').value = '';
@@ -423,7 +471,8 @@
         checkAuth().then(() => {
             checkAndPromptDraft();
         });
-        loadArticleList();
+        // 記事一覧の読み込みは、このスクリプトの変数(currentAdminPage など)がすべて用意できてから行う
+        queueMicrotask(() => loadArticleList());
         
         window.addAuthor = function() {
             const newName = prompt("新しい執筆者の名前を入力してください:");
@@ -562,7 +611,12 @@
         window.deleteArticle = async function(id) {
             if(confirm('本当にこの記事を削除しますか？')) {
                 await supabase.from('blogs').delete().eq('id', id);
-                alert('削除しました。');
+                let msmNote = '';
+                if (msmReady) {
+                    try { await removeArticleFromMsm(id); }
+                    catch (e) { console.error(e); msmNote = '\n※MSM管理画面のブログ履歴からは外せませんでした。MSM管理画面で手動で削除してください。'; }
+                }
+                alert('削除しました。' + msmNote);
                 loadArticleList();
             }
         };
@@ -597,6 +651,15 @@
             }
             
             document.getElementById('seoStoreName').value = article.store_name || '';
+            document.getElementById('msmStore').value = '';
+            if (msmReady) {
+                // 最新の店舗一覧を読み直し、この記事のURLが記録されている店舗を選ぶ
+                loadMsmStores().then(() => {
+                    if (editingArticleId !== id) return;
+                    const storeId = findStoreOfArticle(msmStores, articleUrl(id));
+                    document.getElementById('msmStore').value = storeId !== null ? String(storeId) : '';
+                });
+            }
             document.getElementById('seoPhone').value = article.phone || '';
             document.getElementById('seoAddress').value = article.address || '';
             if (article.gbp_url !== undefined) document.getElementById('seoGbpUrl').value = article.gbp_url || '';
@@ -987,7 +1050,18 @@
 
             if (publish) {
                 // 公開（新規公開、下書きからの公開、公開済み記事の更新のいずれも）
-                alert(wasNewArticle ? '記事を公開しました！' : (currentArticleStatus === 'draft' ? '下書きを公開しました！' : '記事を更新しました！'));
+                let msmNote = '';
+                if (msmReady) {
+                    const storeId = document.getElementById('msmStore').value;
+                    try {
+                        const storeLabel = await syncArticleToMsm({ articleId: editingArticleId, title, date, person: author || 'MapOn 編集部', storeId: storeId || null });
+                        if (storeLabel) msmNote = `\n\nMSM管理画面の「${storeLabel}」のブログ履歴に記録しました。`;
+                    } catch (e) {
+                        console.error(e);
+                        msmNote = '\n\n※記事は公開されましたが、MSM管理画面への記録に失敗しました。MSM管理画面で手動で追加してください。\n詳細: ' + (e.message || e);
+                    }
+                }
+                alert((wasNewArticle ? '記事を公開しました！' : (currentArticleStatus === 'draft' ? '下書きを公開しました！' : '記事を更新しました！')) + msmNote);
                 clearDraft();
                 resetEditor();
                 switchView('list');
