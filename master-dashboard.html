@@ -2338,10 +2338,38 @@ Googleの評価システム上、成果には一定期間を要しますが、
                 return;
             }
 
-            // Calculate attracted volume based on estimated reach (70% of current month volume)
-            keywords.forEach(k => {
-                k.reach = Math.floor(k.vol0m * 0.7);
-                k.attract = Math.floor(k.reach * convRate);
+            // ---- 端数処理: 小数第1位が 0〜4 は切り捨て、5〜9 は切り上げ（四捨五入） ----
+            // 1e-9 は 90*0.7=62.99999999999999 のような計算機上の微小な誤差で1つ少なくならないための補正
+            const roundHalfUp = (x) => Math.floor(x + 0.5 + 1e-9);
+            // 各キーワードを四捨五入した値の合計が「合計欄の値」とずれる場合だけ、端数の大きい行から1ずつ増減して合わせる
+            const allocateToTotal = (raws, total) => {
+                const vals = raws.map(roundHalfUp);
+                const resid = raws.map((r, i) => r - vals[i]);
+                let diff = total - vals.reduce((a, b) => a + b, 0);
+                let guard = 100;
+                while (diff !== 0 && guard-- > 0) {
+                    let pick = -1;
+                    for (let i = 0; i < raws.length; i++) {
+                        if (raws[i] <= 0) continue;
+                        if (diff < 0 && vals[i] <= 0) continue;
+                        if (pick < 0 || (diff > 0 ? resid[i] > resid[pick] : resid[i] < resid[pick])) pick = i;
+                    }
+                    if (pick < 0) break;
+                    if (diff > 0) { vals[pick] += 1; resid[pick] -= 1; diff -= 1; }
+                    else { vals[pick] -= 1; resid[pick] += 1; diff += 1; }
+                }
+                return vals;
+            };
+
+            // 合計: 推定リーチ数 = 当月検索数の70%（四捨五入）、推定集客数 = 推定リーチ数 × 割合（四捨五入）
+            const reach = roundHalfUp(totalCurrentVol * 0.7);
+            const attract = roundHalfUp(reach * convRate);
+            // 各キーワード（合計と一致するように配分）
+            const kwReach = allocateToTotal(keywords.map(k => k.vol0m * 0.7), reach);
+            const kwAttract = allocateToTotal(kwReach.map(v => v * convRate), attract);
+            keywords.forEach((k, i) => {
+                k.reach = kwReach[i];
+                k.attract = kwAttract[i];
             });
 
             // UI Update: Header and Title
@@ -2351,8 +2379,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
             document.getElementById('cbDateDisplay').innerText = `作成日: ${dateStr}`;
 
             // KPIs
-            const reach = Math.floor(totalCurrentVol * 0.7);
-            const attract = keywords.reduce((sum, item) => sum + item.attract, 0);
+            // reach / attract は上で算出済み（四捨五入）
             const revenue = unitPrice * attract;
 
             document.getElementById('cbReachDisplay').innerText = reach.toLocaleString();
