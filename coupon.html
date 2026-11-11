@@ -54,7 +54,7 @@
 
         <div id="coupon" hidden style="display:flex; flex-direction:column; gap:14px;">
             <div>
-                <div class="tag">アンケートご回答のお礼</div>
+                <div class="tag" id="sourceTag">アンケートご回答のお礼</div>
                 <h1 id="title">クーポン</h1>
             </div>
             <article class="ticket">
@@ -84,7 +84,9 @@
                     <button type="button" class="btn btn-sub" id="btnCancel">まだ使わない</button>
                 </div>
                 <p class="msg" id="useMsg" role="alert"></p>
-                <p class="box">あとで使う場合は、このページをブックマークするか、ホーム画面に追加してください。このページのURLが、クーポンの引換券になります。</p>
+                <p class="box" id="savedNote" hidden><b style="color:#1F2A44;">このクーポンは、このスマートフォンに保存されました。</b><br>次回のご来店で、お店のQRコードを読み取ると、このクーポンが表示されます。</p>
+                <a class="btn btn-sub" id="cardLink" href="#" hidden>会員証・ショップカードを見る</a>
+                <p class="box" id="bookmarkNote">あとで使う場合は、このページをブックマークするか、ホーム画面に追加してください。このページのURLが、クーポンの引換券になります。</p>
                 <button type="button" class="btn btn-sub" id="btnCopyUrl">このページのURLをコピー</button>
             </div>
 

@@ -3,9 +3,11 @@
 // ・URLを知っている人だけが表示できる(会員登録なし)
 // ・「クーポンを使う」→ 確認 →「利用済みにする」で、利用済みになる(スタッフの前で、お客様が自分で押す)
 // ・利用済みにできるのは1回だけ(DBの関数 neo_use_coupon が判定する)
+// ・開いたときに、このクーポンをこの端末に記録する(次にお店のQRコードを読み取ると、アンケートの画面にも表示される)
 
 import { supabase } from './supabase-config.js';
 import { couponHeadline, couponTerms, formatDateJa } from './coupon-lib.js';
+import { walletApi, cardUrl, sourceLabel } from './wallet-lib.js';
 
 const $ = (id) => document.getElementById(id);
 const token = new URLSearchParams(location.search).get('t') || '';
@@ -21,6 +23,7 @@ function render(data) {
     const c = data.coupon || {};
     document.title = `${couponHeadline(c)} クーポン - ${data.store_name || ''}`;
     $('storeName').textContent = data.store_name || '';
+    $('sourceTag').textContent = sourceLabel(data.source);
     $('headline').textContent = couponHeadline(c);
     $('name').textContent = c.name || '';
     $('desc').textContent = c.description || ''; $('desc').hidden = !String(c.description || '').trim();
@@ -44,7 +47,7 @@ function render(data) {
         $('usedTitle').textContent = '期限切れ';
         $('usedNote').textContent = `有効期限は ${lastDay} まででした`;
     } else {
-        $('title').textContent = 'クーポンを受け取りました';
+        $('title').textContent = data.source === 'stamp' ? 'ショップカードの特典クーポン' : 'クーポンを受け取りました';
     }
     $('loading').hidden = true; $('notFound').hidden = true; $('coupon').hidden = false;
 }
@@ -56,6 +59,18 @@ async function load() {
     if (!data) { showNotFound(); return null; }
     render(data);
     return data;
+}
+
+// このクーポンを、この端末に記録する(サーバーが「端末の印」を発行する)。
+// 記録できたら、次にお店のQRコードを読み取ったときに、このクーポンが表示される。
+// 記録できなくても、このページのURLがあればクーポンは使える。
+async function remember(data) {
+    if (!data || data.status !== 'unused') return;
+    const res = await walletApi({ action: 'attach', issue_token: token });
+    if (!res || res.ok !== true) return;
+    $('savedNote').hidden = res.held !== true;
+    if (res.held === true) $('bookmarkNote').textContent = '念のため、このページをブックマークしておくこともできます。このページのURLも、クーポンの引換券になります。';
+    if (res.member === true && res.card_key) { $('cardLink').href = cardUrl(res.card_key); $('cardLink').hidden = false; }
 }
 
 $('btnUse').addEventListener('click', () => { $('confirmBox').hidden = false; $('btnUse').hidden = true; $('useMsg').textContent = ''; $('confirmBox').scrollIntoView({ block: 'center' }); });
@@ -83,4 +98,4 @@ $('btnCopyUrl').addEventListener('click', async () => {
     setTimeout(() => { btn.textContent = 'このページのURLをコピー'; }, 2500);
 });
 
-load();
+load().then(remember);

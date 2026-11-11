@@ -63,6 +63,13 @@
         .btn-spin { background: #FFC53D; color: #2B1B00; font-size: 18px; }
         .lottery .note { color: #D5DEF2; margin-top: 10px; }
         @media (prefers-reduced-motion: reduce) { .wheel { transition-duration: 0.6s; } }
+        /* お持ちのクーポン・会員証(お店のQRコードをもう一度読み取ったときに出る) */
+        .wallet { background: #FFF9EC; border: 1.5px solid #E9B949; border-radius: 16px; padding: 16px 14px; margin-bottom: 16px; }
+        .wallet h2 { font-size: 16px; color: #3D2600; margin-bottom: 10px; }
+        .wallet .note { color: #5A3A00; margin-top: 8px; }
+        .btn-card { background: #fff; color: #1F5FD1; border: 1.5px solid #1F5FD1; min-height: 48px; font-size: 15px; margin-top: 10px; }
+        .card-invite { background: #EEF4FF; border: 1.5px solid #B9CDF3; border-radius: 16px; padding: 16px; text-align: left; margin-top: 16px; }
+        .card-invite h3 { font-size: 16px; margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -71,6 +78,14 @@
             <div class="store" id="storeName">&nbsp;</div>
             <p class="intro" id="intro"></p>
         </header>
+
+        <!-- お持ちのクーポン・会員証(この端末が持っているものだけ。持っていなければ出ない) -->
+        <section id="walletBox" class="wallet" hidden>
+            <h2 id="walletTitle">お持ちのクーポン</h2>
+            <ul class="wl-list" id="walletList"></ul>
+            <p class="note" id="walletNote">お会計のときに「使う」を押して、スタッフの前で利用済みにしてください。</p>
+            <a class="btn btn-card" id="walletCard" href="#" hidden>会員証・ショップカードを見る</a>
+        </section>
 
         <!-- 読み込み中 -->
         <section id="step-loading" class="panel center"><p>読み込み中...</p></section>
@@ -121,6 +136,11 @@
                 <p class="note" id="rewardNote">次回のご来店で使えるクーポンです。会員登録は不要です。</p>
                 <button type="button" class="btn btn-reward" id="btnReward">アンケート回答によるクーポン取得</button>
                 <p class="note" id="rewardMsg" role="status" style="margin-top:8px;"></p>
+            </div>
+            <div class="card-invite" id="cardInvite" hidden>
+                <h3 id="cardInviteTitle">ショップカード</h3>
+                <p class="note" id="cardInviteNote">ご来店ごとにスタンプがたまります。登録はお名前と電話番号だけです。</p>
+                <a class="btn btn-card" id="cardInviteLink" href="#">ショップカードを作る</a>
             </div>
             <div class="info" id="doneCopy" hidden>
                 <h3 id="doneCopyTitle">文章はコピーされています</h3>

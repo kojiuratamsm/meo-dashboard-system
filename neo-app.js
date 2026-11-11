@@ -5,6 +5,9 @@
 //   #/new              新規作成
 //   #/edit/<id>        作成・編集
 //   #/responses/<id>   回答一覧・集計
+//   #/coupons          クーポン・抽選
+//   #/members          会員・ショップカード
+//   #/settings         設定
 
 import { supabase } from './supabase-config.js';
 import {
@@ -14,6 +17,7 @@ import {
 import { reviewUrlGuide, GUIDE_CSS } from './neo-guide.js';
 import { RESULTS_CSS, renderResults, makeQrCanvas, downloadQrPng } from './survey-results.js';
 import { renderCoupons, COUPON_CSS } from './neo-coupons.js';
+import { renderMembers, MEMBERS_CSS } from './neo-members.js';
 
 let app = null;               // 描画先
 let client = null;            // 対象の店舗(契約者)の clients 行
@@ -71,10 +75,11 @@ async function route() {
     const hash = location.hash || '#/';
     const [, view, id] = hash.split('/');
     document.querySelectorAll('.nav-item[data-view]').forEach(a =>
-        a.classList.toggle('active', a.dataset.view === (view === 'settings' ? 'settings' : view === 'coupons' ? 'coupons' : 'surveys')));
+        a.classList.toggle('active', a.dataset.view === (['settings', 'coupons', 'members'].includes(view) ? view : 'surveys')));
     try {
         if (view === 'settings') return renderSettings();
         if (view === 'coupons') return await renderCoupons({ app, client, openModal });
+        if (view === 'members') return await renderMembers({ app, client, openModal });
         if (view === 'new') return await renderEditor(null);
         if (view === 'edit' && id) return await renderEditor(id);
         if (view === 'responses' && id) return await renderResponsesPage(id);
@@ -632,7 +637,7 @@ export function startNeoApp({ root, client: targetClient, isMasterView: master =
     client = targetClient;
     isMasterView = master;
     if (onName) onStoreNameChange = onName;
-    document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS + COUPON_CSS }));
+    document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS + COUPON_CSS + MEMBERS_CSS }));
     lastHash = location.hash;
     route();
 }

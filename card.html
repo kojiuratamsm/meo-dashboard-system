@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
+    <title>会員証・ショップカード</title>
+    <link rel="apple-touch-icon" href="mapon-logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #F4F7FE; color: #1F2A44; min-height: 100vh; }
+        .wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 48px; display: flex; flex-direction: column; gap: 14px; }
+        .stack { display: flex; flex-direction: column; gap: 14px; }
+        .tag { font-size: 13px; font-weight: 700; color: #3A4A6B; text-align: center; }
+        h1 { font-size: 22px; text-align: center; line-height: 1.5; }
+        h2 { font-size: 16px; line-height: 1.5; }
+        .box { background: #fff; border: 1px solid #E2E8F0; border-radius: 14px; padding: 14px; font-size: 13px; line-height: 1.8; color: #55607A; }
+        .panel { background: #fff; border-radius: 16px; padding: 18px 16px; box-shadow: 0 2px 10px rgba(31,42,68,0.06); }
+        .note { font-size: 13px; color: #55607A; line-height: 1.7; }
+        .banner { border-radius: 14px; padding: 14px 16px; font-size: 15px; font-weight: 700; line-height: 1.6; }
+        .banner small { display: block; font-size: 13px; font-weight: 500; margin-top: 2px; }
+        .banner.ok { background: #E3F4E8; color: #14522A; border: 1.5px solid #8CCB9B; }
+        .banner.info { background: #E4EAF5; color: #26365C; border: 1.5px solid #B8C2D3; }
+        .banner.warn { background: #FDEBDD; color: #7A2B0C; border: 1.5px solid #F0B48A; }
+        /* 会員証 */
+        .member { background: linear-gradient(135deg, #10244F, #1F5FD1); color: #fff; border-radius: 18px; padding: 18px; box-shadow: 0 8px 22px rgba(16,36,79,0.25); }
+        .member .store { font-size: 14px; font-weight: 700; opacity: 0.95; word-break: break-word; }
+        .member .label { font-size: 11px; opacity: 0.85; margin-top: 14px; }
+        .member .no { font-size: 26px; font-weight: 700; letter-spacing: 0.08em; }
+        .member .who { font-size: 16px; font-weight: 700; margin-top: 6px; word-break: break-word; }
+        /* ショップカード */
+        .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+        .count { font-size: 14px; color: #55607A; white-space: nowrap; }
+        .count b { font-size: 26px; color: #1F2A44; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .cell { aspect-ratio: 1; border-radius: 50%; border: 2px dashed #B8C2D3; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #55607A; background: #fff; }
+        .cell.reward { border-color: #E9B949; color: #7A4B00; background: #FFF4DC; font-size: 12px; }
+        .cell.on { border: 2px solid #1F5FD1; background: #1F5FD1; color: #fff; font-size: 18px; }
+        .cell.on.reward { border-color: #8A4B00; background: #8A4B00; }
+        .next { margin-top: 12px; font-size: 14px; font-weight: 700; color: #7A4B00; background: #FFF4DC; border-radius: 10px; padding: 10px 12px; line-height: 1.6; }
+        .rewards { list-style: none; margin-top: 10px; font-size: 13px; color: #55607A; line-height: 1.8; }
+        .history { list-style: none; font-size: 13px; color: #55607A; line-height: 2; }
+        .history li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid #EEF2F7; }
+        .history li:last-child { border-bottom: none; }
+        /* 登録フォーム */
+        .field { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+        .field label { font-size: 14px; font-weight: 700; }
+        .field input[type="text"], .field input[type="tel"] { width: 100%; min-height: 52px; border: 1.5px solid #B8C2D3; border-radius: 12px; padding: 10px 14px; font-size: 17px; font-family: inherit; color: #1F2A44; background: #fff; }
+        .field input:focus { outline: 2px solid #1F5FD1; outline-offset: 1px; }
+        .hint { font-size: 12px; color: #55607A; line-height: 1.6; }
+        .consent { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; font-size: 13px; line-height: 1.7; color: #1F2A44; }
+        .consent input { width: 24px; height: 24px; flex: none; margin-top: 1px; accent-color: #1F5FD1; }
+        details { background: #F4F7FE; border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 12px; line-height: 1.8; color: #3A4A6B; }
+        details summary { cursor: pointer; font-weight: 700; font-size: 13px; color: #1F5FD1; min-height: 28px; }
+        details p { white-space: pre-wrap; margin-top: 6px; }
+        .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 56px; border: none; border-radius: 14px; padding: 12px 16px; font-size: 17px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: inherit; }
+        .btn:disabled { opacity: 0.6; cursor: default; }
+        .btn-primary { background: #1F5FD1; color: #fff; }
+        .msg { font-size: 13px; color: #B3261E; line-height: 1.7; min-height: 18px; margin-top: 10px; }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <p class="box" id="loading" style="text-align:center;">読み込み中...</p>
+
+        <div class="banner" id="banner" role="status" hidden></div>
+
+        <!-- 開けなかったとき -->
+        <div id="errorView" class="box" hidden style="text-align:center;">
+            <b style="color:#1F2A44; font-size:16px;" id="errorTitle">会員証を表示できません</b><br><span id="errorText">お店のQRコードを、もう一度読み取ってください。</span>
+        </div>
+
+        <!-- 会員登録 -->
+        <section id="joinView" class="stack" hidden>
+            <div>
+                <div class="tag" id="joinStore"></div>
+                <h1>ショップカードを作成</h1>
+            </div>
+            <div class="panel">
+                <p class="note">入力は2つだけです。パスワードやSMS認証はありません。</p>
+                <p class="note" id="joinCardInfo" style="margin-top:6px;"></p>
+                <form id="joinForm" novalidate>
+                    <div class="field">
+                        <label for="joinName">お名前</label>
+                        <input type="text" id="joinName" name="name" autocomplete="name" maxlength="40" required>
+                    </div>
+                    <div class="field">
+                        <label for="joinPhone">電話番号</label>
+                        <input type="tel" id="joinPhone" name="tel" autocomplete="tel" inputmode="tel" maxlength="20" placeholder="090-1234-5678" required>
+                        <p class="hint">カードをなくしたとき・機種変更のときに、お店でのご本人確認に使います。</p>
+                    </div>
+                    <details>
+                        <summary>利用規約</summary>
+                        <p id="termsText"></p>
+                    </details>
+                    <details>
+                        <summary>個人情報の利用目的</summary>
+                        <p id="privacyText"></p>
+                    </details>
+                    <label class="consent" for="joinConsent">
+                        <input type="checkbox" id="joinConsent">
+                        <span>利用規約と個人情報の利用目的を確認しました。入力した情報は、このお店のショップカードの管理だけに使われます。</span>
+                    </label>
+                    <p class="msg" id="joinMsg" role="alert"></p>
+                    <button type="submit" class="btn btn-primary" id="btnJoin">登録してカードを表示</button>
+                </form>
+            </div>
+            <p class="note" style="text-align:center;">登録しなくても、アンケートとクーポンはご利用いただけます</p>
+        </section>
+
+        <!-- 会員証・ショップカード -->
+        <section id="cardView" class="stack" hidden>
+            <div class="tag">会員証・ショップカード</div>
+            <div class="member">
+                <div class="store" id="storeName"></div>
+                <div class="label">会員番号</div>
+                <div class="no" id="memberNo"></div>
+                <div class="who" id="memberName"></div>
+            </div>
+            <p class="box" id="howTo">レジ横のQRコードを、このスマートフォンのカメラで読み取ると、スタンプが付きます(1日1回)。</p>
+            <div class="panel" id="stampPanel">
+                <div class="card-head">
+                    <h2 id="cardName">ショップカード</h2>
+                    <div class="count"><b id="stampCount">0</b> / <span id="stampGoal">10</span>個</div>
+                </div>
+                <div class="grid" id="stampGrid" role="img" aria-label="スタンプ"></div>
+                <p class="next" id="nextReward" hidden></p>
+                <ul class="rewards" id="rewardList"></ul>
+                <p class="note" id="expireNote" style="margin-top:6px;" hidden></p>
+            </div>
+            <p class="box" id="closedNote" hidden>このお店のショップカードは、現在お休み中です。お持ちのクーポンは、そのままご利用いただけます。</p>
+        </section>
+
+        <!-- 使えるクーポン(会員でなくても、この端末が持っていれば表示する) -->
+        <section id="couponBox" class="panel" hidden>
+            <h2 id="couponTitle" style="margin-bottom:10px;">使えるクーポン</h2>
+            <ul class="wl-list" id="couponList"></ul>
+            <p class="note" style="margin-top:10px;">お会計のときに「使う」を押して、スタッフの前で利用済みにしてください。</p>
+        </section>
+
+        <section id="historyBox" class="panel" hidden>
+            <h2 style="margin-bottom:6px;">スタンプのりれき</h2>
+            <ul class="history" id="historyList"></ul>
+        </section>
+
+        <p class="box" id="homeHint" hidden>このページを「ホーム画面に追加」しておくと、次回からすぐに会員証を開けます。<br>iPhone:共有ボタン →「ホーム画面に追加」 / Android:メニュー →「ホーム画面に追加」</p>
+    </div>
+    <script type="module" src="./card-page.js"></script>
+</body>
+</html>

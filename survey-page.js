@@ -2,6 +2,7 @@
 // お客様がスマートフォンで開くアンケートの画面(survey.html)。
 //   ① アンケート →(回答を保存)→ ② AIが作った文章 → ③ 回答のお礼(クーポン取得のボタン)→ クーポン画面(coupon.html)
 //   店舗が「ルーレットで抽選する」を選んでいるときは、③ のあとにルーレットを回してからクーポン画面へ進む。
+//   お店のQRコードをもう一度読み取ったときは、この端末が持っているクーポン(と会員証への入口)を上に出す。
 // ・クーポンは「アンケート回答へのお礼」。口コミを投稿したかどうかに関係なく、回答した人全員に同じボタンを出す。
 // ・②は、お店にGoogle口コミURLが設定されているときだけ表示する(未設定なら ①→③)。
 // ・星の数や回答の内容によって、②の表示を変えない(全員に同じ画面を出す)。
@@ -9,8 +10,9 @@
 
 import { supabase } from './supabase-config.js';
 import { renderSurveyForm, SURVEY_FORM_CSS } from './survey-lib.js';
+import { walletApi, renderCouponList, cardUrl, WALLET_CSS } from './wallet-lib.js';
 
-document.head.append(Object.assign(document.createElement('style'), { textContent: SURVEY_FORM_CSS }));
+document.head.append(Object.assign(document.createElement('style'), { textContent: SURVEY_FORM_CSS + WALLET_CSS }));
 
 const $ = (id) => document.getElementById(id);
 const steps = ['step-loading', 'step-closed', 'step-form', 'step-draft', 'step-done', 'step-lottery'];
@@ -39,6 +41,38 @@ async function recordAction(action, edited = null) {
         supabase.rpc('neo_record_review_action', { p_response_id: response.response_id, p_token: response.action_token, p_action: action, p_edited: edited }),
         new Promise(r => setTimeout(r, 1500)),
     ]).catch(() => {});
+}
+
+// ---- お持ちのクーポン・会員証 ----
+// お店のQRコード(このアンケートのURL)をもう一度読み取ると、この端末が持っているクーポンを上に出す。
+// だれの端末かは、サーバーが発行した「端末の印」(Cookie)で決まる。持っていなければ、何も出さない。
+// 表示は、回答の内容や口コミを投稿したかどうかに関係なく、全員同じ。
+async function loadWallet() {
+    const view = await walletApi({ action: 'view', slug });
+    if (!view || view.ok !== true) return;
+    const coupons = view.coupons || [], card = view.card || {}, isMember = !!view.member;
+    const showCardLink = isMember && !!card.key;
+    $('walletTitle').textContent = coupons.length ? `お持ちのクーポン ${coupons.length}枚` : '会員証・ショップカード';
+    renderCouponList($('walletList'), coupons);
+    $('walletList').hidden = coupons.length === 0;
+    $('walletNote').hidden = coupons.length === 0;
+    $('walletCard').hidden = !showCardLink;
+    if (showCardLink) $('walletCard').href = cardUrl(card.key);
+    $('walletBox').hidden = coupons.length === 0 && !showCardLink;
+    // ③の画面の案内(ショップカードを公開しているお店だけ)
+    const invite = $('cardInvite');
+    invite.hidden = !(card.enabled && card.key);
+    if (card.enabled && card.key) {
+        $('cardInviteTitle').textContent = card.name || 'ショップカード';
+        $('cardInviteNote').textContent = isMember ? '会員証とスタンプは、こちらから確認できます。' : 'ご来店ごとにスタンプがたまります。登録はお名前と電話番号だけです。';
+        $('cardInviteLink').textContent = isMember ? '会員証・ショップカードを見る' : 'ショップカードを作る';
+        $('cardInviteLink').href = cardUrl(card.key);
+    }
+}
+// 受け取ったクーポンを、この端末に記録する(次にお店のQRコードを読み取ったときに出る)。
+// 記録を待ちすぎて画面の移動が遅れないよう、最大2.5秒で先に進む(クーポン画面でも、もう一度記録する)。
+function rememberCoupon(issueToken) {
+    return Promise.race([walletApi({ action: 'attach', issue_token: issueToken }), new Promise(r => setTimeout(r, 2500))]).catch(() => {});
 }
 
 // ---- ③ 回答のお礼 ----
@@ -147,8 +181,9 @@ function bindRewardStep() {
         // 決まったクーポン:その場で発行して、クーポン画面へ進む
         btn.disabled = true; $('rewardMsg').textContent = '';
         const { data, error } = await claimReward();
+        if (error || !data?.issue_token) { btn.disabled = false; $('rewardMsg').textContent = rewardErrorText(error); return; }
+        await rememberCoupon(data.issue_token);
         btn.disabled = false;
-        if (error || !data?.issue_token) { $('rewardMsg').textContent = rewardErrorText(error); return; }
         location.href = couponUrl(data.issue_token);
     });
 
@@ -162,6 +197,7 @@ function bindRewardStep() {
             $('lotteryMsg').textContent = rewardErrorText(error);
             return;
         }
+        rememberCoupon(data.issue_token);   // ルーレットが回っている間に記録する
         const prizes = reward.prizes || [];
         const index = Math.max(0, prizes.findIndex(p => p.id === data.prize_id));
         const seg = 360 / (prizes.length || 1);
@@ -315,6 +351,7 @@ async function init() {
     $('intro').textContent = survey.intro_text || '';
     bindDraftStep();
     bindRewardStep();
+    loadWallet();   // 待たずに進める(持っているクーポンがあれば、あとから上に出る)
 
     // すでに回答を送っている場合(再読み込み・Googleから「戻る」)は、③を表示する
     const saved = loadState();

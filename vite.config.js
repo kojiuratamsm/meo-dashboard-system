@@ -15,6 +15,7 @@ export default defineConfig({
         masterSurveys: resolve(__dirname, 'master-surveys.html'),
         survey: resolve(__dirname, 'survey.html'),
         coupon: resolve(__dirname, 'coupon.html'),
+        card: resolve(__dirname, 'card.html'),
         neo: resolve(__dirname, 'neo.html'),
         signupNeo: resolve(__dirname, 'signup-neo.html'),
         signupA: resolve(__dirname, 'signup-a.html'),
