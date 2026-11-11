@@ -151,7 +151,7 @@
         <div class="header">
             <div class="logo">MapOn</div>
             <div class="plan-badge"><i class="fa-solid fa-star" style="color:#fbbf24;"></i> MapOn NEO</div>
-            <h1>アンケート管理画面のお申し込み</h1>
+            <h1>店舗管理画面のお申し込み</h1>
         </div>
         
         <div class="form-body" id="signupForm">
@@ -160,22 +160,29 @@
             </p>
 
             <div class="form-group">
-                <label>お名前(店舗名・会社名)</label>
-                <input type="text" id="companyName" class="form-control" placeholder="例: 焼肉 新宿本店">
+                <label for="ownerName">氏名</label>
+                <input type="text" id="ownerName" class="form-control" placeholder="例: 山田 太郎" autocomplete="name" maxlength="100">
             </div>
             
             <div class="form-group">
-                <label>ログイン用メールアドレス</label>
-                <input type="email" id="emailUrl" class="form-control" placeholder="example@shop.com">
+                <label for="emailUrl">メールアドレス(ログインのときに使います)</label>
+                <input type="email" id="emailUrl" class="form-control" placeholder="example@shop.com" autocomplete="username">
             </div>
             
             <div class="form-group">
-                <label>お好きなパスワード(8文字以上・半角英数字)</label>
+                <label for="passwordVal">パスワード(8文字以上・半角英数字)</label>
                 <input type="password" id="passwordVal" class="form-control" placeholder="••••••••" autocomplete="new-password" minlength="8">
             </div>
 
+            <div class="form-group">
+                <label for="passwordConfirm">確認パスワード(同じパスワードをもう一度)</label>
+                <input type="password" id="passwordConfirm" class="form-control" placeholder="••••••••" autocomplete="new-password" minlength="8">
+            </div>
+
+            <p id="formError" role="alert" style="display:none; background:#FEECEB; color:#C5221F; border-radius:10px; padding:12px; font-size:13px; line-height:1.6; margin-bottom:16px;"></p>
+
             <button class="btn-submit" id="submitBtn" onclick="registerClient()">
-                <span>アカウントを作成して開始</span> <i class="fa-solid fa-arrow-right"></i>
+                <span>申し込む</span> <i class="fa-solid fa-arrow-right"></i>
             </button>
         </div>
     </div>
@@ -185,8 +192,8 @@
         <div class="success-icon"><i class="fa-solid fa-check"></i></div>
         <h2 style="font-size:24px; font-weight:800; margin-bottom:15px; color:#1e293b;">登録が完了しました！</h2>
         <p style="color:#64748b; font-size:15px; line-height:1.6; margin-bottom:30px;">
-            アカウントの発行が正常に完了しました。<br>
-            登録したメールアドレスとパスワードで<br>ログインすると、MapOn NEO の管理画面が開きます。
+店舗管理画面を発行しました。<br>
+            登録したメールアドレスとパスワードで<br>ログインすると、店舗管理画面が開きます。
         </p>
         <button class="btn-submit" style="width:auto; padding:12px 30px;" onclick="window.location.href='/login'">ログイン画面へ進む</button>
     </div>
@@ -195,36 +202,58 @@
         import { supabase } from './supabase-config.js';
 
         window.registerClient = async function() {
-            const companyNode = document.getElementById('companyName');
+            const ownerNode = document.getElementById('ownerName');
             const emailNode = document.getElementById('emailUrl');
             const passNode = document.getElementById('passwordVal');
+            const confirmNode = document.getElementById('passwordConfirm');
+            const errorBox = document.getElementById('formError');
             const btn = document.getElementById('submitBtn');
+            if (btn.disabled) return;   // 二重送信を防ぐ
 
-            const company_name = companyNode.value.trim();
+            const owner_name = ownerNode.value.trim();
             const email = emailNode.value.trim();
             const password = passNode.value.trim();
+            const passwordConfirm = confirmNode.value.trim();
             const plan = 'D'; // MapOn NEO
 
-            if(!company_name || !email || !password) {
-                alert("全ての項目を入力してください。");
+            // 入力の間違いは、アラートではなくフォームの中に表示する
+            const showError = (message, node) => {
+                errorBox.textContent = message;
+                errorBox.style.display = 'block';
+                if (node) node.focus();
+            };
+            errorBox.style.display = 'none';
+
+            if(!owner_name || !email || !password || !passwordConfirm) {
+                showError("全ての項目を入力してください。", !owner_name ? ownerNode : !email ? emailNode : !password ? passNode : confirmNode);
+                return;
+            }
+            if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showError("メールアドレスの形式が正しくありません。", emailNode);
                 return;
             }
             if(password.length < 8) {
-                alert("パスワードは8文字以上で入力してください。");
+                showError("パスワードは8文字以上で入力してください。", passNode);
+                return;
+            }
+            if(password !== passwordConfirm) {
+                showError("パスワードと確認パスワードが一致しません。もう一度入力してください。", confirmNode);
                 return;
             }
 
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 処理中...';
             btn.disabled = true;
 
-            // 店舗情報は signUp の付帯情報として渡し、clients への登録はDBのトリガー
+            // 氏名は signUp の付帯情報として渡し、clients への登録はDBのトリガー
             // (handle_mapon_signup)が行う。パスワードは Supabase Auth がハッシュ化して保持し、
             // clients テーブルには保存しない。
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
-                    data: { signup_source: 'mapon_signup', company_name: company_name, plan: plan }
+                    // 店舗名は申し込み時には聞かない(初回ログインのときに入力してもらう)。
+                    // company_name を渡さないと、トリガーが「(店舗名未入力)」で登録する。
+                    data: { signup_source: 'mapon_signup', owner_name: owner_name, plan: plan }
                 }
             });
 
@@ -239,8 +268,8 @@
                 } else if (/rate limit/i.test(reason)) {
                     reason = '短い時間に何度も登録が行われました。しばらく待ってから、もう一度お試しください。';
                 }
-                alert("アカウント作成に失敗しました。\n" + reason);
-                btn.innerHTML = '<span>アカウントを作成して開始</span> <i class="fa-solid fa-arrow-right"></i>';
+                showError("アカウント作成に失敗しました。" + reason);
+                btn.innerHTML = '<span>申し込む</span> <i class="fa-solid fa-arrow-right"></i>';
                 btn.disabled = false;
                 return;
             }

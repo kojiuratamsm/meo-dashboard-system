@@ -108,19 +108,23 @@ end $$;
 -- ------------------------------------------------------------
 -- 3. 申込フォーム(signup-a/b/c)からの店舗登録
 -- ------------------------------------------------------------
+-- 氏名(申し込みフォームの「氏名」)を保存する列
+alter table public.clients add column if not exists owner_name text;
+
 create or replace function public.handle_mapon_signup()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare
   meta jsonb := coalesce(new.raw_user_meta_data, '{}'::jsonb);
   v_plan text := meta->>'plan';
   v_company text := left(coalesce(nullif(trim(meta->>'company_name'), ''), '(店舗名未入力)'), 100);
+  v_owner text := left(nullif(trim(meta->>'owner_name'), ''), 100);   -- 氏名(未入力なら null)
 begin
   if meta->>'signup_source' is distinct from 'mapon_signup' then
     return new;  -- 申込フォーム以外で作られたユーザー(ライター等)は対象外
   end if;
   if v_plan not in ('A', 'B', 'C', 'D') then v_plan := null; end if;  -- D = MapOn NEO
-  insert into public.clients (auth_id, company_name, email, plan, status)
-  values (new.id, v_company, new.email, v_plan, '稼働中');
+  insert into public.clients (auth_id, company_name, owner_name, email, plan, status)
+  values (new.id, v_company, v_owner, new.email, v_plan, '稼働中');
   return new;
 end;
 $$;

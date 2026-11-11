@@ -41,8 +41,8 @@ function urlRow(label, path, note) {
 function urlCard() {
     return el('div', { class: 'card' },
         el('h2', { text: '契約者に送るURL' }),
-        urlRow('申し込みフォーム', '/signup-neo', '運用代行の契約者に送ってください。名前・メールアドレス・パスワードを入力すると、MapOn NEO の管理画面が発行されます。'),
-        urlRow('ログインページ', '/login', '申し込み後は、このページから登録したメールアドレスとパスワードでログインすると、MapOn NEO の管理画面が開きます。'));
+        urlRow('申し込みフォーム', '/signup-neo', '契約者に送ってください。氏名・メールアドレス・パスワード・確認パスワードを入力すると、店舗管理画面が発行され、下の契約者一覧に自動で追加されます。'),
+        urlRow('ログインページ', '/login', '申し込み後は、このページから登録したメールアドレスとパスワードでログインすると、店舗管理画面が開きます。初回だけ、店舗名の入力があります。'));
 }
 
 // 契約者の管理画面「設問」欄の【確認する】ボタンのリンク先
@@ -109,8 +109,16 @@ async function issueResetUrl(c) {
 
 async function render() {
     app.replaceChildren(el('p', { class: 'muted', text: '読み込み中...' }));
+    // 氏名(owner_name)の列は「追加SQL_7」で追加される。まだ実行されていない場合は、氏名なしで一覧を表示する。
+    const loadClients = async () => {
+        const base = 'id, company_name, email, created_at, auth_id';
+        const withOwner = await supabase.from('clients').select(base + ', owner_name').eq('plan', NEO_PLAN).order('created_at', { ascending: false });
+        if (!withOwner.error) return { ...withOwner, hasOwnerName: true };
+        const plain = await supabase.from('clients').select(base).eq('plan', NEO_PLAN).order('created_at', { ascending: false });
+        return { ...plain, hasOwnerName: false };
+    };
     const [clientsRes, surveysRes, statsRes, settingRes] = await Promise.all([
-        supabase.from('clients').select('id, company_name, email, created_at, auth_id').eq('plan', NEO_PLAN).order('created_at', { ascending: false }),
+        loadClients(),
         supabase.from('neo_surveys').select('id, client_id').is('deleted_at', null),
         supabase.from('neo_survey_stats').select('survey_id, response_count'),
         supabase.from('neo_settings').select('value').eq('key', 'question_guide_url').maybeSingle(),
@@ -130,20 +138,27 @@ async function render() {
     }
     const clients = clientsRes.data || [];
 
-    const search = el('input', { class: 'input', placeholder: '名前・メールアドレスで検索', style: { maxWidth: '320px' } });
+    // 申し込みから7日以内は「新しい申し込み」と表示する
+    const NEW_DAYS = 7;
+    const isNew = (c) => c.created_at && (Date.now() - new Date(c.created_at).getTime()) < NEW_DAYS * 86400000;
+    const namePending = (c) => !c.company_name || c.company_name === '(店舗名未入力)';
+    const search = el('input', { class: 'input', placeholder: '店舗名・氏名・メールアドレスで検索', style: { maxWidth: '320px' } });
     const tbody = el('tbody');
     const draw = () => {
         const q = search.value.trim().toLowerCase();
-        const list = clients.filter(c => !q || `${c.company_name} ${c.email}`.toLowerCase().includes(q));
+        const list = clients.filter(c => !q || `${c.company_name} ${c.owner_name || ''} ${c.email}`.toLowerCase().includes(q));
         if (!list.length) {
-            tbody.replaceChildren(el('tr', {}, el('td', { colspan: '6', class: 'muted', style: { textAlign: 'center', padding: '30px', lineHeight: '1.8' },
+            tbody.replaceChildren(el('tr', {}, el('td', { colspan: '7', class: 'muted', style: { textAlign: 'center', padding: '30px', lineHeight: '1.8' },
                 text: clients.length ? '該当する契約者がいません。' : 'まだ登録した契約者がいません。上の「申し込みフォーム」のURLを、契約者に送ってください。' })));
             return;
         }
         tbody.replaceChildren(...list.map(c => {
             const stat = perClient[String(c.id)] || { surveys: 0, responses: 0 };
             return el('tr', {},
-                el('td', { style: { fontWeight: '700' }, text: c.company_name }),
+                el('td', { style: { fontWeight: '700' } },
+                    namePending(c) ? el('span', { class: 'muted', text: '未設定(初回ログインで入力)' }) : c.company_name,
+                    isNew(c) ? el('span', { class: 'badge on', style: { marginLeft: '8px' }, text: '新しい申し込み' }) : null),
+                el('td', { text: c.owner_name || '-' }),
                 el('td', { text: c.email || '-' }),
                 el('td', { class: 'muted', text: fmtDate(c.created_at) }),
                 el('td', { text: `${stat.surveys}件` }),
@@ -167,8 +182,10 @@ async function render() {
         el('div', { class: 'card' },
             el('h2', { text: `契約者一覧(${clients.length}件)` }),
             el('div', { class: 'row', style: { marginBottom: '14px' } }, search),
+            clientsRes.hasOwnerName ? null : el('p', { class: 'muted', style: { marginBottom: '10px', fontSize: '12px' },
+                text: '氏名の列を表示するには、Supabase で「追加SQL_7_申し込みフォームの氏名.sql」を実行してください。' }),
             el('div', { class: 'table-wrap' }, el('table', { class: 'table' },
-                el('thead', {}, el('tr', {}, ...['名前', 'メールアドレス', '登録日', 'アンケート', '回答', ''].map(h => el('th', { text: h })))),
+                el('thead', {}, el('tr', {}, ...['店舗名', '氏名', 'メールアドレス', '登録日', 'アンケート', '回答', ''].map(h => el('th', { text: h })))),
                 tbody))));
     draw();
 }
