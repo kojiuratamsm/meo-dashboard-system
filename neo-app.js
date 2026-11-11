@@ -13,6 +13,7 @@ import {
 } from './survey-lib.js';
 import { reviewUrlGuide, GUIDE_CSS } from './neo-guide.js';
 import { RESULTS_CSS, renderResults, makeQrCanvas, downloadQrPng } from './survey-results.js';
+import { renderCoupons, COUPON_CSS } from './neo-coupons.js';
 
 let app = null;               // 描画先
 let client = null;            // 対象の店舗(契約者)の clients 行
@@ -70,9 +71,10 @@ async function route() {
     const hash = location.hash || '#/';
     const [, view, id] = hash.split('/');
     document.querySelectorAll('.nav-item[data-view]').forEach(a =>
-        a.classList.toggle('active', a.dataset.view === (view === 'settings' ? 'settings' : 'surveys')));
+        a.classList.toggle('active', a.dataset.view === (view === 'settings' ? 'settings' : view === 'coupons' ? 'coupons' : 'surveys')));
     try {
         if (view === 'settings') return renderSettings();
+        if (view === 'coupons') return await renderCoupons({ app, client, openModal });
         if (view === 'new') return await renderEditor(null);
         if (view === 'edit' && id) return await renderEditor(id);
         if (view === 'responses' && id) return await renderResponsesPage(id);
@@ -630,7 +632,7 @@ export function startNeoApp({ root, client: targetClient, isMasterView: master =
     client = targetClient;
     isMasterView = master;
     if (onName) onStoreNameChange = onName;
-    document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS }));
+    document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS + COUPON_CSS }));
     lastHash = location.hash;
     route();
 }

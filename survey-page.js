@@ -1,6 +1,8 @@
 // survey-page.js
 // お客様がスマートフォンで開くアンケートの画面(survey.html)。
-//   ① アンケート →(回答を保存)→ ② AIが作った文章 → ③ 回答のお礼
+//   ① アンケート →(回答を保存)→ ② AIが作った文章 → ③ 回答のお礼(クーポン取得のボタン)→ クーポン画面(coupon.html)
+//   店舗が「ルーレットで抽選する」を選んでいるときは、③ のあとにルーレットを回してからクーポン画面へ進む。
+// ・クーポンは「アンケート回答へのお礼」。口コミを投稿したかどうかに関係なく、回答した人全員に同じボタンを出す。
 // ・②は、お店にGoogle口コミURLが設定されているときだけ表示する(未設定なら ①→③)。
 // ・星の数や回答の内容によって、②の表示を変えない(全員に同じ画面を出す)。
 // ・「文章を送信する」は、文章をコピーしてGoogleの口コミ画面を開くだけ。貼り付けと投稿は、お客様自身が行う。
@@ -11,7 +13,7 @@ import { renderSurveyForm, SURVEY_FORM_CSS } from './survey-lib.js';
 document.head.append(Object.assign(document.createElement('style'), { textContent: SURVEY_FORM_CSS }));
 
 const $ = (id) => document.getElementById(id);
-const steps = ['step-loading', 'step-closed', 'step-form', 'step-draft', 'step-done'];
+const steps = ['step-loading', 'step-closed', 'step-form', 'step-draft', 'step-done', 'step-lottery'];
 const show = (id) => { steps.forEach(s => { $(s).hidden = s !== id; }); window.scrollTo(0, 0); };
 
 const slug = new URLSearchParams(location.search).get('s') || '';
@@ -58,6 +60,123 @@ function showDone({ sent = false, text = '', copied = false } = {}) {
         $('doneText').textContent = 'またのご来店をお待ちしております。';
     }
     show('step-done');
+    loadReward();
+}
+
+// ---- アンケート回答のお礼(クーポン・ルーレット) ----
+let reward = { mode: 'none' };
+const couponUrl = (token) => `/coupon?t=${encodeURIComponent(token)}`;
+// 同じ端末での受け取り回数を数えるための印(この端末のブラウザに保存する、でたらめな文字)
+function deviceId() {
+    try {
+        let v = localStorage.getItem('neo_device_id');
+        if (!v) {
+            v = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`);
+            localStorage.setItem('neo_device_id', v);
+        }
+        return v;
+    } catch { return null; }
+}
+const REWARD_ERRORS = [
+    ['limit_reached', 'このスマートフォンでは、すでにクーポンを受け取っています。'],
+    ['reward_not_available', '申し訳ありません。ただいまクーポンをお渡しできません。'],
+    ['response_not_found', '回答から時間がたったため、クーポンを受け取れませんでした。'],
+];
+function rewardErrorText(error) {
+    const m = String(error?.message || '');
+    return (REWARD_ERRORS.find(([code]) => m.includes(code)) || [null, '通信できませんでした。電波の良い場所で、もう一度お試しください。'])[1];
+}
+
+// お礼があるかどうかを確かめて、③にボタンを出す(口コミを投稿したかどうかでは変えない)
+async function loadReward() {
+    const box = $('rewardBox');
+    box.hidden = true;
+    if (!response?.response_id) return;
+    let data = null;
+    try {
+        ({ data } = await supabase.rpc('neo_get_reward_info', { p_response_id: response.response_id, p_token: response.action_token }));
+    } catch { data = null; }
+    reward = data && data.mode ? data : { mode: 'none' };
+    if (reward.mode === 'none') return;
+    const claimed = reward.mode === 'claimed';
+    $('rewardTitle').textContent = claimed ? 'クーポンを受け取り済みです' : reward.mode === 'lottery' ? 'ルーレットでクーポンが当たります' : 'クーポンをお受け取りください';
+    $('rewardNote').textContent = claimed ? 'お会計のときに、クーポンの画面をスタッフにお見せください。' : '次回のご来店で使えるクーポンです。会員登録は不要です。';
+    $('btnReward').textContent = claimed ? 'クーポンを見る' : 'アンケート回答によるクーポン取得';
+    $('rewardMsg').textContent = '';
+    box.hidden = false;
+}
+
+async function claimReward() {
+    try {
+        return await supabase.rpc('neo_claim_reward', { p_response_id: response.response_id, p_token: response.action_token, p_device: deviceId() });
+    } catch (e) {
+        return { data: null, error: e };
+    }
+}
+
+// ルーレットの見た目を作る(景品の名前だけ。当たりはサーバーが決める)
+function buildWheel(prizes) {
+    const n = prizes.length, seg = 360 / n;
+    const palette = [['#1F5FD1', '#FFFFFF'], ['#FFD98A', '#3D2600'], ['#0B3A8F', '#FFFFFF'], ['#FFF1CC', '#3D2600']];
+    const color = (i) => (n % 2 === 1 && i === n - 1) ? palette[2] : palette[i % 2];   // 隣どうしが同じ色にならないようにする
+    const wheel = $('wheel');
+    wheel.style.background = `conic-gradient(${prizes.map((_, i) => `${color(i)[0]} ${i * seg}deg ${(i + 1) * seg}deg`).join(', ')})`;
+    wheel.replaceChildren(...prizes.map((p, i) => {
+        const label = document.createElement('div');
+        label.className = 'wheel-label';
+        const text = String(p.label || '').replace(/クーポン$/, '') || String(p.label || '');   // 輪の中は短く(例:「50%OFFクーポン」→「50%OFF」)
+        label.textContent = text.length > 8 ? text.slice(0, 7) + '…' : text;
+        label.style.color = color(i)[1];
+        label.style.transform = `rotate(${i * seg + seg / 2}deg) translateY(-92px)`;
+        return label;
+    }));
+    wheel.setAttribute('aria-label', 'ルーレット。景品は ' + prizes.map(p => p.label).join('、'));
+}
+
+function bindRewardStep() {
+    $('btnReward').addEventListener('click', async () => {
+        const btn = $('btnReward');
+        if (reward.mode === 'claimed') { location.href = couponUrl(reward.issue_token); return; }
+        if (reward.mode === 'lottery') {
+            buildWheel(reward.prizes || []);
+            $('lotteryResult').textContent = '';
+            $('btnSpin').hidden = false; $('btnShowCoupon').hidden = true;
+            show('step-lottery');
+            return;
+        }
+        // 決まったクーポン:その場で発行して、クーポン画面へ進む
+        btn.disabled = true; $('rewardMsg').textContent = '';
+        const { data, error } = await claimReward();
+        btn.disabled = false;
+        if (error || !data?.issue_token) { $('rewardMsg').textContent = rewardErrorText(error); return; }
+        location.href = couponUrl(data.issue_token);
+    });
+
+    // ルーレット:先にサーバーで抽選し、決まった景品のところで止まるように回す
+    $('btnSpin').addEventListener('click', async () => {
+        const btn = $('btnSpin');
+        btn.disabled = true; btn.textContent = '抽選中…'; $('lotteryMsg').textContent = '';
+        const { data, error } = await claimReward();
+        if (error || !data?.issue_token) {
+            btn.disabled = false; btn.textContent = 'ルーレットを回す';
+            $('lotteryMsg').textContent = rewardErrorText(error);
+            return;
+        }
+        const prizes = reward.prizes || [];
+        const index = Math.max(0, prizes.findIndex(p => p.id === data.prize_id));
+        const seg = 360 / (prizes.length || 1);
+        const wobble = (Math.random() - 0.5) * seg * 0.5;                 // 止まる位置を少しだけずらす(見た目だけ)
+        const angle = 360 * 6 - (index * seg + seg / 2) + wobble;         // 上の矢印の位置に、当たった景品が来る角度
+        $('wheel').style.transform = `rotate(${angle}deg)`;
+        const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        await new Promise(r => setTimeout(r, reduced ? 700 : 4400));
+        $('lotteryResult').textContent = `「${data.coupon?.name || prizes[index]?.label || 'クーポン'}」が当たりました`;
+        btn.hidden = true;
+        $('btnShowCoupon').href = couponUrl(data.issue_token);
+        $('btnShowCoupon').hidden = false;
+        $('lotteryMsg').textContent = 'クーポンは、次の画面で保存できます。';
+        reward = { mode: 'claimed', issue_token: data.issue_token };
+    });
 }
 
 // 文章をコピーする。タップの処理の中で、すぐに実行する必要がある(後回しにするとiPhoneでは拒否される)。
@@ -195,6 +314,7 @@ async function init() {
     $('storeName').textContent = survey.store_name;
     $('intro').textContent = survey.intro_text || '';
     bindDraftStep();
+    bindRewardStep();
 
     // すでに回答を送っている場合(再読み込み・Googleから「戻る」)は、③を表示する
     const saved = loadState();

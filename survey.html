@@ -44,6 +44,25 @@
         .stack { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
         .info { background: #F4F7FE; border-radius: 12px; padding: 14px; text-align: left; margin-top: 14px; }
         .info h3 { font-size: 15px; margin-bottom: 4px; }
+        /* アンケート回答のお礼(クーポン) */
+        .reward { background: #FFF4DC; border: 1.5px solid #E9B949; border-radius: 16px; padding: 18px 16px; text-align: left; margin-top: 16px; }
+        .reward-tag { font-size: 12px; font-weight: 700; color: #7A4B00; margin-bottom: 4px; }
+        .reward h3 { font-size: 18px; color: #3D2600; margin-bottom: 6px; }
+        .reward .note { color: #5A3A00; }
+        .btn-reward { background: #8A4B00; color: #fff; margin-top: 12px; font-size: 16px; }
+        /* ルーレット */
+        .lottery { background: #10244F; color: #fff; border-radius: 16px; padding: 24px 16px 20px; text-align: center; }
+        .lottery .reward-tag { color: #FFD98A; }
+        .lottery h2 { font-size: 22px; margin-bottom: 14px; }
+        .wheel-wrap { position: relative; width: 300px; height: 316px; margin: 0 auto 16px; }
+        .wheel-pointer { position: absolute; left: 134px; top: 0; width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-top: 28px solid #fff; z-index: 2; }
+        .wheel { position: absolute; left: 0; top: 16px; width: 300px; height: 300px; border-radius: 50%; border: 8px solid #fff; transition: transform 4.2s cubic-bezier(.12,.6,.1,1); }
+        .wheel-label { position: absolute; left: 87px; top: 129px; width: 110px; height: 26px; line-height: 26px; text-align: center; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; }
+        .wheel-hub { position: absolute; left: 118px; top: 134px; width: 64px; height: 64px; border-radius: 50%; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.25); }
+        .lottery-result { font-size: 18px; font-weight: 700; min-height: 28px; margin-bottom: 12px; color: #FFD98A; }
+        .btn-spin { background: #FFC53D; color: #2B1B00; font-size: 18px; }
+        .lottery .note { color: #D5DEF2; margin-top: 10px; }
+        @media (prefers-reduced-motion: reduce) { .wheel { transition-duration: 0.6s; } }
     </style>
 </head>
 <body>
@@ -96,6 +115,13 @@
         <section id="step-done" class="panel center" hidden>
             <h2>アンケートへのご回答<br>ありがとうございました</h2>
             <p id="doneText">またのご来店をお待ちしております。</p>
+            <div class="reward" id="rewardBox" hidden>
+                <div class="reward-tag">アンケートご回答のお礼</div>
+                <h3 id="rewardTitle">クーポンをお受け取りください</h3>
+                <p class="note" id="rewardNote">次回のご来店で使えるクーポンです。会員登録は不要です。</p>
+                <button type="button" class="btn btn-reward" id="btnReward">アンケート回答によるクーポン取得</button>
+                <p class="note" id="rewardMsg" role="status" style="margin-top:8px;"></p>
+            </div>
             <div class="info" id="doneCopy" hidden>
                 <h3 id="doneCopyTitle">文章はコピーされています</h3>
                 <p class="note">Googleの口コミ画面で、入力欄を長押しして「ペースト」を選ぶと貼り付けられます。</p>
@@ -105,6 +131,21 @@
                     <a class="btn btn-link" id="reopenLink" target="_blank" rel="noopener noreferrer" href="#">Googleの口コミ画面をもう一度開く</a>
                 </div>
             </div>
+        </section>
+
+        <!-- ④ ルーレット(店舗が「ルーレットで抽選する」を選んでいるときだけ) -->
+        <section id="step-lottery" class="lottery" hidden>
+            <div class="reward-tag">アンケートご回答のお礼</div>
+            <h2>クーポンルーレット</h2>
+            <div class="wheel-wrap">
+                <div class="wheel-pointer" aria-hidden="true"></div>
+                <div class="wheel" id="wheel" role="img" aria-label="ルーレット"></div>
+                <div class="wheel-hub" aria-hidden="true"></div>
+            </div>
+            <p class="lottery-result" id="lotteryResult" role="status"></p>
+            <button type="button" class="btn btn-spin" id="btnSpin">ルーレットを回す</button>
+            <a class="btn btn-spin" id="btnShowCoupon" href="#" hidden>クーポンを見る</a>
+            <p class="note" id="lotteryMsg">アンケートに回答した方が1回まわせます。</p>
         </section>
 
         <p class="footer">ご回答の内容は、お店のサービス向上のために利用します。<br>お名前や連絡先をご記入いただく必要はありません。</p>
