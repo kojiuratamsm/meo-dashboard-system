@@ -31,7 +31,7 @@ export function findPromoWords(text) {
 const REVIEW_URL_RE = /^https:\/\/[^\s/?#]+\.[^\s]+$/;
 export function checkReviewUrl(url) {
     const u = String(url || '').trim();
-    if (!u) return { ok: false, message: 'GoogleクチコミURLを入力してください(公開の条件です)。' };
+    if (!u) return { ok: false, message: 'Google口コミ投稿ページのURLを入力してください。' };
     if (!u.startsWith('https://')) return { ok: false, message: 'https:// で始まるURLを入力してください。' };
     try {
         const parsed = new URL(u);
@@ -250,15 +250,17 @@ export const SURVEY_FORM_CSS = `
 .sv-stars:has(.sv-star-input:checked) .sv-star { color: #F6B000; }
 .sv-stars .sv-star-input:checked + .sv-star ~ .sv-star { color: #CBD5E0; }
 .sv-star-input:focus-visible + .sv-star { outline: 2px solid #4285F4; border-radius: 4px; }
-.sv-choices { display: flex; flex-direction: column; gap: 8px; }
-.sv-choice { display: flex; align-items: center; gap: 10px; border: 1px solid #E2E8F0; border-radius: 10px; padding: 12px; font-size: 15px; cursor: pointer; }
-.sv-choice input { width: 18px; height: 18px; accent-color: #4285F4; flex: none; }
-.sv-choice:has(input:checked) { border-color: #4285F4; background: #EEF4FF; }
+.sv-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.sv-choice { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 1.5px solid #B8C2D3; border-radius: 22px; font-size: 15px; line-height: 1.3; cursor: pointer; background: #fff; color: #1F2A44; user-select: none; -webkit-tap-highlight-color: transparent; }
+.sv-choice input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.sv-choice:has(input:checked) { border-color: #1F5FD1; background: #1F5FD1; color: #fff; font-weight: 700; }
+.sv-choice:has(input:checked)::before { content: '✓'; font-weight: 700; }
+.sv-choice:has(input:focus-visible) { outline: 2px solid #1F5FD1; outline-offset: 2px; }
 .sv-input { width: 100%; font-size: 16px; padding: 12px; border: 1px solid #E2E8F0; border-radius: 10px; font-family: inherit; background: #fff; }
 .sv-textarea { resize: vertical; min-height: 96px; }
 .sv-error { display: none; color: #D93025; font-size: 12px; margin-top: 8px; }
 .sv-has-error { box-shadow: 0 0 0 2px #F28B82; }
 .sv-has-error .sv-error { display: block; }
-.sv-submit { background: #4285F4; color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 700; cursor: pointer; }
+.sv-submit { background: #1F5FD1; color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 700; cursor: pointer; }
 .sv-submit:disabled { opacity: 0.6; cursor: default; }
 `;

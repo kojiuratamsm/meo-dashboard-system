@@ -8,23 +8,42 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #F4F7FE; color: #2D3748; min-height: 100vh; }
+        body { font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif; background: #F4F7FE; color: #1F2A44; min-height: 100vh; }
         .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px 48px; }
-        .hero { background: #fff; padding: 28px 20px 22px; margin: 0 -16px 16px; text-align: center; position: relative; box-shadow: 0 6px 20px rgba(0,0,0,0.04); }
+        .hero { background: #fff; padding: 24px 20px 18px; margin: 0 -16px 16px; text-align: center; position: relative; box-shadow: 0 6px 20px rgba(0,0,0,0.04); }
         .hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: linear-gradient(90deg, #4285F4, #34A853, #FBBC05, #EA4335); }
         .store { font-size: 20px; font-weight: 700; }
         .intro { font-size: 14px; color: #4A5568; margin-top: 10px; line-height: 1.7; white-space: pre-wrap; }
-        .panel { background: #fff; border-radius: 16px; padding: 22px 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); text-align: center; }
-        .panel h2 { font-size: 18px; margin-bottom: 12px; }
+        .panel { background: #fff; border-radius: 16px; padding: 22px 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .panel.center { text-align: center; }
+        .panel h2 { font-size: 20px; margin-bottom: 10px; line-height: 1.5; }
         .panel p { font-size: 14px; line-height: 1.8; color: #4A5568; }
-        .note { font-size: 12px; color: #718096; margin: 14px 0; line-height: 1.7; }
-        .btn { display: block; width: 100%; border: none; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; margin-top: 12px; font-family: inherit; }
-        .btn-primary { background: #4285F4; color: #fff; }
-        .btn-link { background: none; color: #718096; font-weight: 500; font-size: 14px; text-decoration: underline; padding: 10px; }
-        .error-box { background: #FEECEB; color: #C5221F; border-radius: 10px; padding: 12px; font-size: 13px; margin-bottom: 14px; display: none; }
-        .footer { text-align: center; font-size: 11px; color: #A0AEC0; margin-top: 28px; line-height: 1.7; }
+        .note { font-size: 13px; color: #55607A; line-height: 1.7; }
+        .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 54px; border: none; border-radius: 14px; padding: 12px 16px; font-size: 17px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: inherit; }
+        .btn:disabled { opacity: 0.6; cursor: default; }
+        .btn-primary { background: #1F5FD1; color: #fff; }
+        .btn-outline { background: #fff; color: #1F5FD1; border: 1.5px solid #1F5FD1; min-height: 44px; width: auto; font-size: 14px; padding: 8px 14px; border-radius: 12px; }
+        .btn-outline:disabled { color: #55607A; border-color: #B8C2D3; }
+        .btn-link { background: none; color: #1F5FD1; font-weight: 700; font-size: 14px; min-height: 44px; }
+        .error-box { background: #FEECEB; color: #C5221F; border-radius: 10px; padding: 12px; font-size: 13px; margin-bottom: 14px; display: none; line-height: 1.6; }
+        .footer { text-align: center; font-size: 11px; color: #55607A; margin-top: 28px; line-height: 1.7; }
         [hidden] { display: none !important; }
-        /* SURVEY_FORM_CSS はスクリプトで追加 */
+        /* 回答の進み具合 */
+        .progress { display: flex; align-items: center; gap: 10px; margin: 0 2px 14px; }
+        .progress-bar { flex: 1; height: 6px; border-radius: 3px; background: #DDE4EF; overflow: hidden; }
+        .progress-fill { height: 6px; width: 0; background: #1F5FD1; transition: width .2s; }
+        .progress-text { font-size: 12px; font-weight: 700; color: #55607A; white-space: nowrap; }
+        /* AIが作った文章 */
+        .seg { display: flex; background: #E4EAF5; border-radius: 12px; padding: 4px; gap: 4px; margin: 14px 0; }
+        .seg button { flex: 1 1 0; min-height: 44px; border: none; border-radius: 9px; background: none; color: #3A4A6B; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
+        .seg button[aria-pressed="true"] { background: #fff; color: #1F2A44; font-weight: 700; box-shadow: 0 1px 3px rgba(31,42,68,0.15); }
+        .seg button:disabled { opacity: 0.5; cursor: default; }
+        .draft-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+        .draft-text { width: 100%; min-height: 180px; border: 1.5px solid #B8C2D3; border-radius: 14px; padding: 14px; font-size: 16px; line-height: 1.7; font-family: inherit; resize: vertical; background: #fff; color: #1F2A44; }
+        .draft-text:disabled { background: #F4F7FE; }
+        .stack { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+        .info { background: #F4F7FE; border-radius: 12px; padding: 14px; text-align: left; margin-top: 14px; }
+        .info h3 { font-size: 15px; margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -35,107 +54,62 @@
         </header>
 
         <!-- 読み込み中 -->
-        <section id="step-loading" class="panel"><p>読み込み中...</p></section>
+        <section id="step-loading" class="panel center"><p>読み込み中...</p></section>
 
         <!-- 受付停止・存在しない -->
-        <section id="step-closed" class="panel" hidden>
+        <section id="step-closed" class="panel center" hidden>
             <h2>このアンケートは現在受け付けていません</h2>
             <p>ご協力いただきありがとうございました。</p>
         </section>
 
         <!-- ① アンケート -->
         <section id="step-form" hidden>
+            <div class="progress" aria-hidden="true">
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-text" id="progressText"></div>
+            </div>
             <div class="error-box" id="formError" role="alert"></div>
             <div id="formArea"></div>
         </section>
 
-        <!-- ② 口コミ協力のお願い(星の数にかかわらず、全員に同じ内容を表示する) -->
-        <section id="step-review" class="panel" hidden>
-            <h2>ご回答ありがとうございました</h2>
-            <p>よろしければ、Googleのクチコミで<br>ご感想をお聞かせください。</p>
-            <p class="note">投稿するかどうかは、お客様のご判断です。<br>投稿しなくても、アンケートの回答は届いています。</p>
-            <button type="button" class="btn btn-primary" id="btnSelfWrite">Googleのクチコミ画面を開いて書く</button>
-            <button type="button" class="btn btn-link" id="btnDecline">今回は投稿しない</button>
+        <!-- ② AIが作った文章(星の数にかかわらず、全員に同じ画面を表示する) -->
+        <section id="step-draft" class="panel" hidden>
+            <h2 id="draftTitle">文章ができました</h2>
+            <p id="draftNote"></p>
+            <div class="seg" id="lengthSeg" role="group" aria-label="文章の長さ">
+                <button type="button" data-length="short">短め</button>
+                <button type="button" data-length="normal">ふつう</button>
+                <button type="button" data-length="long">長め</button>
+            </div>
+            <label class="draft-label" for="draftText">口コミ文章(自由に書き直せます)</label>
+            <textarea id="draftText" class="draft-text" maxlength="1000"></textarea>
+            <div class="stack">
+                <button type="button" class="btn btn-outline" id="btnRegen" style="align-self:flex-start;">別の文章にする</button>
+                <p class="note" id="draftMsg" role="status"></p>
+                <button type="button" class="btn btn-primary" id="btnSend">文章を送信する</button>
+                <p class="note" style="text-align:center;">ボタンを押すと文章がコピーされ、Googleの口コミ画面が開きます。<br>入力欄を長押しして貼り付け、ご自身で投稿してください。</p>
+                <button type="button" class="btn btn-link" id="btnSkip">投稿せずに次へ進む</button>
+            </div>
         </section>
 
-        <!-- ③ 完了 -->
-        <section id="step-done" class="panel" hidden>
-            <h2>ありがとうございました</h2>
-            <p>アンケートへのご協力に感謝いたします。<br>またのご来店をお待ちしております。</p>
+        <!-- ③ 回答のお礼 -->
+        <section id="step-done" class="panel center" hidden>
+            <h2>アンケートへのご回答<br>ありがとうございました</h2>
+            <p id="doneText">またのご来店をお待ちしております。</p>
+            <div class="info" id="doneCopy" hidden>
+                <h3 id="doneCopyTitle">文章はコピーされています</h3>
+                <p class="note">Googleの口コミ画面で、入力欄を長押しして「ペースト」を選ぶと貼り付けられます。</p>
+                <textarea id="doneDraft" class="draft-text" style="min-height:110px; margin-top:10px; font-size:14px;" readonly></textarea>
+                <div class="stack">
+                    <button type="button" class="btn btn-outline" id="btnCopyAgain">もう一度コピーする</button>
+                    <a class="btn btn-link" id="reopenLink" target="_blank" rel="noopener noreferrer" href="#">Googleの口コミ画面をもう一度開く</a>
+                </div>
+            </div>
         </section>
 
         <p class="footer">ご回答の内容は、お店のサービス向上のために利用します。<br>お名前や連絡先をご記入いただく必要はありません。</p>
     </div>
 
-    <script type="module">
-        import { supabase } from './supabase-config.js';
-        import { renderSurveyForm, SURVEY_FORM_CSS } from './survey-lib.js';
-
-        document.head.append(Object.assign(document.createElement('style'), { textContent: SURVEY_FORM_CSS }));
-
-        const $ = (id) => document.getElementById(id);
-        const steps = ['step-loading', 'step-closed', 'step-form', 'step-review', 'step-done'];
-        const show = (id) => { steps.forEach(s => { $(s).hidden = s !== id; }); window.scrollTo(0, 0); };
-
-        const slug = new URLSearchParams(location.search).get('s') || '';
-        let response = null; // { response_id, action_token, google_review_url }
-
-        async function recordAction(action) {
-            if (!response) return;
-            // 記録を待ちすぎて画面の移動が遅れないよう、最大1.5秒で先に進む
-            await Promise.race([
-                supabase.rpc('neo_record_review_action', { p_response_id: response.response_id, p_token: response.action_token, p_action: action, p_edited: null }),
-                new Promise(r => setTimeout(r, 1500)),
-            ]).catch(() => {});
-        }
-
-        async function init() {
-            if (!slug) { show('step-closed'); return; }
-            const { data: survey, error } = await supabase.rpc('neo_get_public_survey', { p_slug: slug });
-            if (error || !survey) { show('step-closed'); return; }
-
-            document.title = `${survey.store_name} アンケート`;
-            $('storeName').textContent = survey.store_name;
-            $('intro').textContent = survey.intro_text || '';
-
-            renderSurveyForm($('formArea'), survey.questions || [], {
-                onSubmit: async (answers, button) => {
-                    const box = $('formError');
-                    box.style.display = 'none';
-                    button.disabled = true;
-                    button.textContent = '送信中...';
-                    const { data, error } = await supabase.rpc('neo_submit_survey_response', { p_slug: slug, p_answers: answers });
-                    button.disabled = false;
-                    button.textContent = '回答を送信する';
-                    if (error) {
-                        const msg = String(error.message || '');
-                        if (msg.includes('survey_not_available')) { show('step-closed'); return; }
-                        box.textContent = msg.includes('rate_limited')
-                            ? '短い時間に何度も送信されています。しばらく時間をおいてからお試しください。'
-                            : msg.includes('required_missing')
-                                ? '必須の項目が入力されていません。'
-                                : '送信できませんでした。電波の良い場所で、もう一度お試しください。';
-                        box.style.display = 'block';
-                        window.scrollTo(0, 0);
-                        return;
-                    }
-                    response = data;
-                    show('step-review');
-                },
-            });
-            show('step-form');
-        }
-
-        $('btnSelfWrite').addEventListener('click', async () => {
-            await recordAction('self_write');
-            if (response?.google_review_url) location.href = response.google_review_url;
-        });
-        $('btnDecline').addEventListener('click', async () => {
-            await recordAction('declined');
-            show('step-done');
-        });
-
-        init();
-    </script>
+    <script type="module" src="./survey-page.js"></script>
 </body>
 </html>

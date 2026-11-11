@@ -25,6 +25,22 @@ window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault()
 
 const clientName = () => client?.company_name || '';
 
+// Google口コミURLは「設定」で店舗ごとに管理する(以前はアンケートごとに設定していた)
+const hasReviewUrl = () => !!String(client?.google_review_url || '').trim();
+function reviewUrlNotice() {
+    if (hasReviewUrl()) return null;
+    return el('div', { class: 'warnbox', id: 'reviewUrlNotice' },
+        'Google口コミURLが未設定です。このままでも公開できますが、お客様の画面に口コミ文章の作成と投稿のボタンは出ません。',
+        el('a', { href: '#/settings', style: { marginLeft: '8px', fontWeight: '700' } }, '設定でURLを登録する'));
+}
+// 公開・保存の失敗を、分かる言葉にする
+function publishErrorText(error) {
+    const m = String(error?.message || '');
+    if (m.includes('surveys_publish_requires_review_url'))
+        return 'データベースの設定が必要です(Supabase で「追加SQL_8」を実行してください)。';
+    return m || '不明なエラー';
+}
+
 function fmtDate(iso) {
     if (!iso) return '-';
     const d = new Date(iso); const z = (n) => String(n).padStart(2, '0');
@@ -120,12 +136,14 @@ async function renderList() {
         }));
     };
 
-    app.replaceChildren(
+    app.replaceChildren(...[
         el('div', { class: 'page-title' }, 'アンケート', el('a', { href: '#/new', class: 'btn' }, el('i', { class: 'fa-solid fa-plus' }), '新規作成')),
+        reviewUrlNotice(),
         el('div', { class: 'card' },
             el('div', { class: 'table-wrap' }, el('table', { class: 'table' },
                 el('thead', {}, el('tr', {}, ...['タイトル', '状態', '回答', '星の平均', '更新日時', '操作'].map(h => el('th', { text: h })))),
-                tbody))));
+                tbody))),
+    ].filter(Boolean));
     draw();
 
     async function duplicate(s) {
@@ -134,12 +152,8 @@ async function renderList() {
         go(`#/edit/${data}`);
     }
     async function togglePublish(s) {
-        if (!s.is_published) {
-            const check = checkReviewUrl(s.google_review_url);
-            if (!check.ok) return alert('公開できません。' + check.message + '\n編集画面でGoogleクチコミURLを設定してください。');
-        }
         const { error } = await supabase.from('neo_surveys').update({ is_published: !s.is_published }).eq('id', s.id);
-        if (error) return alert('変更できませんでした: ' + error.message);
+        if (error) return alert('変更できませんでした: ' + publishErrorText(error));
         renderList();
     }
     async function remove(s) {
@@ -189,7 +203,7 @@ async function renderEditor(id) {
     } else {
         survey = {
             client_id: client.id, title: '来店アンケート', intro_text: DEFAULT_INTRO,
-            google_review_url: '', questions: defaultQuestions(), is_published: false,
+            questions: defaultQuestions(), is_published: false,
         };
     }
     survey.questions = Array.isArray(survey.questions) ? survey.questions : [];
@@ -202,22 +216,6 @@ async function renderEditor(id) {
     const introInput = el('textarea', { class: 'textarea', maxlength: '500' });
     introInput.value = survey.intro_text || '';
     introInput.addEventListener('input', () => { survey.intro_text = introInput.value; markDirty(); });
-
-    // --- GoogleクチコミURL ---
-    const urlInput = el('input', { class: 'input grow', value: survey.google_review_url || '', placeholder: 'https://g.page/r/XXXXXXXX/review', inputmode: 'url' });
-    const urlMsg = el('p', { class: 'msg' });
-    const checkUrl = () => {
-        const r = checkReviewUrl(urlInput.value);
-        urlMsg.className = 'msg ' + (r.ok ? 'ok' : 'ng');
-        urlMsg.textContent = r.message;
-        return r.ok;
-    };
-    urlInput.addEventListener('input', () => { survey.google_review_url = urlInput.value.trim(); markDirty(); checkUrl(); });
-    const urlOpenBtn = el('button', { class: 'btn sub', type: 'button', onclick: () => {
-        if (!checkUrl()) return;
-        window.open(urlInput.value.trim(), '_blank', 'noopener,noreferrer');
-    } }, el('i', { class: 'fa-solid fa-arrow-up-right-from-square' }), 'リンクを確認');
-    if (survey.google_review_url) checkUrl();
 
     // --- 設問 ---
     const qArea = el('div');
@@ -319,10 +317,6 @@ async function renderEditor(id) {
                     problems.push(`設問${i + 1}:ひな形の「(〜に書き換えてください)」が残っています。お店のメニュー名などに書き換えてください。`);
             }
         });
-        if (forPublish) {
-            const r = checkReviewUrl(survey.google_review_url);
-            if (!r.ok) problems.push('GoogleクチコミURL:' + r.message);
-        }
         return problems;
     }
 
@@ -334,7 +328,6 @@ async function renderEditor(id) {
             client_id: survey.client_id,
             title: survey.title.trim(),
             intro_text: survey.intro_text || '',
-            google_review_url: (survey.google_review_url || '').trim() || null,
             questions: survey.questions.map(q => ({
                 id: q.id, type: q.type, label: q.label.trim(), required: !!q.required,
                 ...(CHOICE_TYPES.has(q.type) ? { options: q.options.map(o => ({ id: o.id, label: o.label.trim() })) } : {}),
@@ -344,7 +337,7 @@ async function renderEditor(id) {
         const res = survey.id
             ? await supabase.from('neo_surveys').update(payload).eq('id', survey.id).select().single()
             : await supabase.from('neo_surveys').insert(payload).select().single();
-        if (res.error) { alert('保存できませんでした: ' + res.error.message); return false; }
+        if (res.error) { alert('保存できませんでした: ' + publishErrorText(res.error)); return false; }
         Object.assign(survey, res.data);
         dirty = false;
         return true;
@@ -378,10 +371,7 @@ async function renderEditor(id) {
         el('div', { class: 'card' }, el('h2', { text: '基本' }),
             el('div', { class: 'field' }, el('label', { text: 'タイトル(管理用。お客様には表示されません)' }), titleInput),
             el('div', { class: 'field' }, el('label', { text: '冒頭のあいさつ(お客様に表示されます)' }), introInput)),
-        el('div', { class: 'card' }, el('h2', { text: 'GoogleクチコミURL(公開の条件)' }),
-            el('div', { class: 'row' }, urlInput, urlOpenBtn), urlMsg,
-            el('p', { class: 'muted', style: { marginTop: '8px' }, text: '入力例:https://g.page/r/CAbCdEfGhIjKlMnOp/review' }),
-            reviewUrlGuide()),
+        reviewUrlNotice(),
         el('div', { class: 'card' }, el('h2', { text: '設問' }),
             questionHint(guideUrl),
             qArea, el('p', { class: 'muted', style: { margin: '10px 0 6px' }, text: '設問を追加:' }), addQ),
@@ -399,7 +389,7 @@ function openPreview(survey) {
             el('div', { style: { fontWeight: '700', fontSize: '18px' }, text: clientName() }),
             el('p', { style: { fontSize: '13px', color: '#4A5568', whiteSpace: 'pre-wrap', marginTop: '8px' }, text: survey.intro_text || '' })),
         area), { wide: true });
-    renderSurveyForm(area, survey.questions, { onSubmit: () => alert('プレビューのため、送信はされません。'), submitLabel: '回答を送信する(プレビュー)' });
+    renderSurveyForm(area, survey.questions, { onSubmit: () => alert('プレビューのため、送信はされません。'), submitLabel: (hasReviewUrl() ? '文章を生成する' : '回答を送信する') + '(プレビュー)' });
 }
 
 async function openQrModal(survey) {
@@ -494,6 +484,48 @@ function renderSettings() {
         el('div', { class: 'row' }, nameInput, nameBtn), nameMsg,
         el('p', { class: 'muted', style: { marginTop: '8px' }, text: 'アンケートの画面で、お客様にも表示される名前です。' }));
 
+    // Google口コミ設定(店舗ごとに1つ。AIで作った文章の「文章を送信する」ボタンの行き先になる)
+    const urlInput = el('input', { class: 'input grow', id: 'reviewUrlInput', value: client.google_review_url || '', placeholder: 'https://g.page/r/XXXXXXXX/review', inputmode: 'url', maxlength: '500' });
+    const urlMsg = msg();
+    const urlBadge = el('span', { class: 'badge', id: 'reviewUrlBadge' });
+    const syncBadge = () => { urlBadge.className = 'badge ' + (hasReviewUrl() ? 'on' : 'off'); urlBadge.textContent = hasReviewUrl() ? '設定済み' : '未設定'; };
+    syncBadge();
+    const urlSaveBtn = el('button', { class: 'btn', type: 'button' }, '保存する');
+    const urlOpenBtn = el('button', { class: 'btn sub', type: 'button', onclick: () => {
+        const r = checkReviewUrl(urlInput.value);
+        if (!r.ok) return setMsg(urlMsg, false, r.message);
+        window.open(urlInput.value.trim(), '_blank', 'noopener,noreferrer');
+    } }, el('i', { class: 'fa-solid fa-arrow-up-right-from-square' }), 'リンクを確認');
+    urlSaveBtn.addEventListener('click', async () => {
+        const url = urlInput.value.trim();
+        if (url) {
+            const r = checkReviewUrl(url);
+            if (!r.ok) return setMsg(urlMsg, false, r.message);
+        } else if (!confirm('URLを空欄にすると、お客様の画面に口コミのボタンが出なくなります。よろしいですか?')) return;
+        if (url === String(client.google_review_url || '')) return setMsg(urlMsg, true, '変更はありません。');
+        urlSaveBtn.disabled = true;
+        const { data, error } = await supabase.rpc('neo_update_review_url', { p_client_id: String(client.id), p_url: url });
+        urlSaveBtn.disabled = false;
+        if (error) {
+            const m = String(error.message || '');
+            return setMsg(urlMsg, false, m.includes('invalid_url') ? 'URLの形式が正しくありません。https:// で始まるURLを貼り付けてください。'
+                : (m.includes('Could not find') || m.includes('does not exist')) ? '保存できませんでした(データベースの設定が必要です)。担当者にご連絡ください。'
+                : '保存できませんでした。時間をおいて、もう一度お試しください。');
+        }
+        client.google_review_url = (data ?? url) || null;
+        urlInput.value = client.google_review_url || '';
+        syncBadge();
+        setMsg(urlMsg, true, client.google_review_url ? '保存しました。次に回答したお客様から、このURLが使われます。' : 'URLを空欄にしました。お客様の画面に口コミのボタンは出ません。');
+    });
+    const reviewCard = el('div', { class: 'card', id: 'reviewUrlCard' },
+        el('h2', {}, 'Google口コミ設定 ', urlBadge),
+        el('div', { class: 'field' }, el('label', { for: 'reviewUrlInput', text: 'Google口コミ投稿ページURL' }),
+            el('div', { class: 'row' }, urlInput, urlOpenBtn, urlSaveBtn)),
+        urlMsg,
+        el('p', { class: 'muted', style: { marginTop: '8px', lineHeight: '1.7' },
+            text: 'Googleビジネスプロフィールの口コミ投稿ページURLを入力してください。設定したURLは、AI口コミ生成後の投稿ボタンに反映されます。入力例:https://g.page/r/CAbCdEfGhIjKlMnOp/review' }),
+        reviewUrlGuide());
+
     // パスワード(ログインしている本人のパスワードを変える。マスター表示では変えない)
     let passCard;
     if (isMasterView) {
@@ -583,6 +615,7 @@ function renderSettings() {
     app.replaceChildren(
         el('div', { class: 'page-title' }, '設定'),
         nameCard,
+        reviewCard,
         emailCard,
         passCard);
 }

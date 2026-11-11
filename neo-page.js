@@ -56,6 +56,15 @@ function askStoreName(client) {
     });
 }
 
+// 店舗の情報を読み込む。Google口コミURLの列は「追加SQL_8」で追加されるため、
+// まだ実行されていない場合は、URLなしで読み込む(ログインできなくならないようにする)。
+async function loadClient(filter) {
+    const base = 'id, company_name, email, plan';
+    const full = await filter(supabase.from('clients').select(base + ', google_review_url')).maybeSingle();
+    if (!full.error) return full;
+    return await filter(supabase.from('clients').select(base)).maybeSingle();
+}
+
 function showMessage(text) {
     document.documentElement.classList.remove('auth-pending');
     $('app').replaceChildren(el('div', { class: 'card' }, el('p', { text, style: { lineHeight: '1.8' } })));
@@ -82,7 +91,7 @@ function showMessage(text) {
     if (isStaff) {
         // マスター:指定された契約者の画面を開く
         if (!requestedId) { location.replace('/master-surveys'); return; }
-        const { data, error } = await supabase.from('clients').select('id, company_name, email, plan').eq('id', requestedId).maybeSingle();
+        const { data, error } = await loadClient((q) => q.eq('id', requestedId));
         if (error || !data) { showMessage('契約者が見つかりません。マスター画面の「MapOn NEO」から開き直してください。'); return; }
         client = data;
         const banner = $('masterBanner');
@@ -92,7 +101,7 @@ function showMessage(text) {
             el('a', { href: '/master-surveys', class: 'btn small dark' }, '契約者一覧に戻る'));
     } else {
         // 契約者本人:自分の店舗
-        const { data, error } = await supabase.from('clients').select('id, company_name, email, plan').eq('auth_id', session.user.id).maybeSingle();
+        const { data, error } = await loadClient((q) => q.eq('auth_id', session.user.id));
         if (error || !data) { showMessage('アカウントは確認できましたが、店舗情報が登録されていません。お手数ですが、担当者にお問い合わせください。'); return; }
         client = data;
     }

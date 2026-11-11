@@ -3,7 +3,7 @@
 // 「管理画面に入る」で、その契約者の MapOn NEO 管理画面(neo.html)をマスターとして開く。
 
 import { supabase } from './supabase-config.js';
-import { requireStaff, staffLogout } from './staff-guard.js';
+import { requireStaff, staffLogout, authHeaders } from './staff-guard.js';
 import { el } from './survey-lib.js';
 
 const NEO_PLAN = 'D';
@@ -43,6 +43,28 @@ function urlCard() {
         el('h2', { text: '契約者に送るURL' }),
         urlRow('申し込みフォーム', '/signup-neo', '契約者に送ってください。氏名・メールアドレス・パスワード・確認パスワードを入力すると、店舗管理画面が発行され、下の契約者一覧に自動で追加されます。'),
         urlRow('ログインページ', '/login', '申し込み後は、このページから登録したメールアドレスとパスワードでログインすると、店舗管理画面が開きます。初回だけ、店舗名の入力があります。'));
+}
+
+// AIの文章生成(口コミ文章の下書き)が動くかを、マスター画面から確かめる
+function aiCheckCard() {
+    const msg = el('p', { class: 'msg', id: 'aiCheckMsg', role: 'status' });
+    const btn = el('button', { class: 'btn small', type: 'button', id: 'aiCheckBtn' }, '接続テストをする');
+    btn.addEventListener('click', async () => {
+        btn.disabled = true; msg.className = 'msg'; msg.textContent = '確認中です…';
+        try {
+            const res = await fetch('/api/admin/ai-check', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(await authHeaders()) }, body: '{}' });
+            const data = await res.json().catch(() => null);
+            msg.className = 'msg ' + (data?.ok ? 'ok' : 'ng');
+            msg.textContent = data?.message || 'テストできませんでした。MEO_UPLOAD のアップロードが済んでいるか確認してください。';
+        } catch {
+            msg.className = 'msg ng'; msg.textContent = '通信できませんでした。時間をおいて、もう一度お試しください。';
+        } finally { btn.disabled = false; }
+    });
+    return el('div', { class: 'card' },
+        el('h2', { text: 'AIの文章生成(接続テスト)' }),
+        el('div', { class: 'row' }, btn), msg,
+        el('p', { class: 'muted', style: { marginTop: '6px', fontSize: '12px', lineHeight: '1.7' },
+            text: 'お客様のアンケート回答から口コミ文章を作るAIが、正しく設定されているかを確かめます。APIキーを登録・変更したあとに押してください。1回のテストで使う利用料は、ごくわずかです。' }));
 }
 
 // 契約者の管理画面「設問」欄の【確認する】ボタンのリンク先
@@ -175,6 +197,7 @@ async function render() {
     app.replaceChildren(
         el('div', { class: 'page-title' }, 'MapOn NEO'),
         urlCard(),
+        aiCheckCard(),
         settingRes.error
             ? el('div', { class: 'card' }, el('h2', { text: '設問の書き方ガイドのURL' }),
                 el('p', { class: 'muted', text: 'この欄を使うには、Supabase で「追加SQL_3_設問ガイドURL.sql」を実行してください。' }))
