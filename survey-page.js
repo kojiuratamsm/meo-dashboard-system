@@ -354,6 +354,14 @@ function bindProgress(form, collect, total) {
     update();
 }
 
+// アンケートを開いた回数を、1回だけ記録する(同じタブでの再読み込み・Googleから「戻る」では数えない)。
+// だれが開いたかは記録しない。記録できなくても、アンケートはそのまま使える。
+function countView() {
+    const key = `neo_viewed_${slug}`;
+    try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch { /* 保存できなくても続ける */ }
+    try { supabase.rpc('neo_survey_view', { p_slug: slug }).then(() => {}, () => {}); } catch { /* 続ける */ }
+}
+
 async function init() {
     if (!slug) { show('step-closed'); return; }
     const { data: survey, error } = await supabase.rpc('neo_get_public_survey', { p_slug: slug });
@@ -365,6 +373,7 @@ async function init() {
     bindDraftStep();
     bindRewardStep();
     loadWallet();   // 待たずに進める(持っているクーポンがあれば、あとから上に出る)
+    countView();    // 待たずに進める(店舗のダッシュボードの「アンケートを開いた回数」)
 
     // すでに回答を送っている場合(再読み込み・Googleから「戻る」)は、③を表示する
     const saved = loadState();

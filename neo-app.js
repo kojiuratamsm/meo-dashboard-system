@@ -18,6 +18,7 @@ import { reviewUrlGuide, GUIDE_CSS } from './neo-guide.js';
 import { RESULTS_CSS, renderResults, makeQrCanvas, downloadQrPng } from './survey-results.js';
 import { renderCoupons, COUPON_CSS } from './neo-coupons.js';
 import { renderMembers, MEMBERS_CSS } from './neo-members.js';
+import { renderDashboard, DASHBOARD_CSS } from './neo-dashboard.js';
 import { placeWordMessage, keywordMessage, buildAiSettings, keywordOptions, hasFreeText, MAX_KEYWORDS } from './ai-settings-lib.js';
 
 let app = null;               // 描画先
@@ -73,11 +74,25 @@ function openModal(content, { wide = false } = {}) {
 async function route() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { location.replace('/login'); return; }
-    const hash = location.hash || '#/';
+    // 開いた直後(アドレスに行き先がないとき)は、ダッシュボードを出す。左の「アンケート」は #/
+    const landing = !location.hash;
+    const hash = location.hash || '#/dashboard';
     const [, view, id] = hash.split('/');
-    document.querySelectorAll('.nav-item[data-view]').forEach(a =>
-        a.classList.toggle('active', a.dataset.view === (['settings', 'coupons', 'members'].includes(view) ? view : 'surveys')));
+    const markNav = (v) => document.querySelectorAll('.nav-item[data-view]').forEach(a =>
+        a.classList.toggle('active', a.dataset.view === (['settings', 'coupons', 'members', 'dashboard'].includes(v) ? v : 'surveys')));
+    markNav(view);
     try {
+        if (view === 'dashboard') {
+            if (await renderDashboard({ app, client }) !== false) return;
+            // データベースの設定(追加SQL_12)がまだのとき:開いた直後なら、これまでどおりアンケートの一覧を出す
+            if (!landing) {
+                app.replaceChildren(el('div', { class: 'page-title' }, 'ダッシュボード'), el('div', { class: 'card' },
+                    el('p', { style: { lineHeight: '1.8' }, text: 'ダッシュボードを使うには、データベースの設定が必要です(Supabase で「追加SQL_12」を実行してください)。' })));
+                return;
+            }
+            markNav('surveys');
+            return await renderList();
+        }
         if (view === 'settings') return renderSettings();
         if (view === 'coupons') return await renderCoupons({ app, client, openModal });
         if (view === 'members') return await renderMembers({ app, client, openModal });
@@ -702,7 +717,7 @@ export function startNeoApp({ root, client: targetClient, isMasterView: master =
     client = targetClient;
     isMasterView = master;
     if (onName) onStoreNameChange = onName;
-    document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS + COUPON_CSS + MEMBERS_CSS }));
+    document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS + COUPON_CSS + MEMBERS_CSS + DASHBOARD_CSS }));
     lastHash = location.hash;
     route();
 }

@@ -30,6 +30,14 @@
         .member .label { font-size: 11px; opacity: 0.85; margin-top: 14px; }
         .member .no { font-size: 26px; font-weight: 700; letter-spacing: 0.08em; }
         .member .who { font-size: 16px; font-weight: 700; margin-top: 6px; word-break: break-word; }
+        .member .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+        .member .rank { flex: none; font-size: 13px; font-weight: 700; padding: 3px 12px; border-radius: 999px; border: 1.5px solid currentColor; max-width: 60%; word-break: break-word; }
+        /* ランク(カードがいっぱいになると上がる) */
+        .rankbox { margin-top: 14px; border-top: 1px solid #EEF2F7; padding-top: 12px; font-size: 13px; color: #55607A; line-height: 1.7; }
+        .rankbox b { color: #1F2A44; }
+        .ranklist { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+        .ranklist li { border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
+        .ranklist li.now { outline: 2px solid #1F2A44; outline-offset: 2px; }
         /* ショップカード */
         .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
         .count { font-size: 14px; color: #55607A; white-space: nowrap; }
@@ -135,8 +143,11 @@
         <!-- 会員証・ショップカード -->
         <section id="cardView" class="stack" hidden>
             <div class="tag">会員証・ショップカード</div>
-            <div class="member">
-                <div class="store" id="storeName"></div>
+            <div class="member" id="memberCard">
+                <div class="top">
+                    <div class="store" id="storeName"></div>
+                    <div class="rank" id="rankBadge" hidden></div>
+                </div>
                 <div class="label">会員番号</div>
                 <div class="no" id="memberNo"></div>
                 <div class="who" id="memberName"></div>
@@ -151,6 +162,10 @@
                 <p class="next" id="nextReward" hidden></p>
                 <ul class="rewards" id="rewardList"></ul>
                 <p class="note" id="expireNote" style="margin-top:6px;" hidden></p>
+                <div class="rankbox" id="rankBox" hidden>
+                    <p id="rankNext"></p>
+                    <ol class="ranklist" id="rankList" aria-label="ランクの一覧"></ol>
+                </div>
             </div>
             <p class="box" id="closedNote" hidden>このお店のショップカードは、現在お休み中です。お持ちのクーポンは、そのままご利用いただけます。</p>
         </section>

@@ -10,6 +10,7 @@
 
 import { walletApi, renderCouponList, WALLET_CSS } from './wallet-lib.js';
 import { formatDateJa } from './coupon-lib.js';
+import { rankColor, ranksOf, rankIndex } from './rank-lib.js';
 
 document.head.append(Object.assign(document.createElement('style'), { textContent: WALLET_CSS }));
 
@@ -57,6 +58,7 @@ function termsText(card) {
         '・スタンプは、ご来店のときにお店のQRコードを読み取ると付きます(同じ会員は1日1回まで)。',
         '・特典は、スタンプが決められた数になったときに、クーポンとしてお渡しします。クーポンには有効期限があります。',
         card.expire_months ? `・スタンプは、最後に付いた日から${card.expire_months}か月で消えます。` : null,
+        ranksOf(card).length ? '・カードがいっぱいになると、ランクが上がります。ランクによって、特典が変わることがあります。' : null,
         '・カードとスタンプは、ほかの方に譲ることはできません。',
         '・正しくない方法で付いたスタンプは、取り消すことがあります。',
         '・内容は、変更・終了することがあります。',
@@ -86,6 +88,8 @@ function renderJoin(view) {
     const card = view.card || {};
     $('joinStore').textContent = view.store_name || '';
     const info = [`スタンプ${card.goal}個のカードです。`, ...rewardsSummary(card)];
+    const ranks = ranksOf(card);
+    if (ranks.length) info.push(`カードがいっぱいになると、ランクが上がります(${ranks.map(r => r.name).join(' → ')})`);
     $('joinCardInfo').textContent = info.join(' / ');
     $('termsText').textContent = termsText(card);
     $('privacyText').textContent = privacyText(view.store_name);
@@ -100,9 +104,16 @@ function renderCard(view) {
     $('memberName').textContent = `${m.name} 様`;
     const enabled = card.enabled === true;
     $('stampPanel').hidden = !enabled; $('howTo').hidden = !enabled; $('closedNote').hidden = enabled;
+    // ランク(いっぱいになったカードの枚数で決まる)。会員証の色と名前、特典が、ランクのものになる
+    const ranks = ranksOf(card), rankNo = rankIndex(card, m.cards_completed), rank = rankNo >= 0 ? ranks[rankNo] : null;
+    const color = rankColor(rank ? rank.color : 'blue');
+    $('memberCard').style.background = color.bg; $('memberCard').style.color = color.fg;
+    $('rankBadge').hidden = !rank;
+    $('rankBadge').textContent = rank ? rank.name : '';
+    const rewards = rank ? (rank.rewards || []) : (card.rewards || []);
     if (enabled) {
         const goal = Number(card.goal) || 10, stamps = Number(m.stamps) || 0;
-        const rewardAt = new Set((card.rewards || []).map(r => Number(r.at)));
+        const rewardAt = new Set(rewards.map(r => Number(r.at)));
         $('cardName').textContent = card.name || 'ショップカード';
         $('stampCount').textContent = String(stamps);
         $('stampGoal').textContent = String(goal);
@@ -114,10 +125,23 @@ function renderCard(view) {
             cell.textContent = n <= stamps ? '✓' : rewardAt.has(n) ? '特典' : String(n);
             return cell;
         }));
-        const next = (card.rewards || []).find(r => Number(r.at) > stamps);
+        const next = rewards.find(r => Number(r.at) > stamps);
         $('nextReward').hidden = !next;
         if (next) $('nextReward').textContent = `あと${Number(next.at) - stamps}個で「${next.label}」がもらえます`;
-        $('rewardList').replaceChildren(...rewardsSummary(card).map(t => Object.assign(document.createElement('li'), { textContent: t })));
+        $('rewardList').replaceChildren(...rewardsSummary({ rewards }).map(t => Object.assign(document.createElement('li'), { textContent: t })));
+        $('rankBox').hidden = !rank;
+        if (rank) {
+            const nextRank = ranks[rankNo + 1];
+            $('rankNext').replaceChildren('いまのランク:', Object.assign(document.createElement('b'), { textContent: rank.name }),
+                nextRank ? ` / このカードがいっぱいになると「${nextRank.name}」に上がります。` : ' / いちばん上のランクです。カードがいっぱいになると、同じランクで次のカードが始まります。');
+            $('rankList').replaceChildren(...ranks.map((r, i) => {
+                const li = document.createElement('li'), c = rankColor(r.color);
+                li.textContent = r.name + (i === rankNo ? '(いま)' : '');
+                li.style.background = c.bg; li.style.color = c.fg;
+                if (i === rankNo) li.className = 'now';
+                return li;
+            }));
+        }
         const exp = $('expireNote');
         exp.hidden = !card.expire_months;
         exp.textContent = m.stamps_expire_on
@@ -172,7 +196,8 @@ function showStampResult(stamp) {
     if (stamp.status === 'stamped') {
         const rewards = (stamp.rewards || []).map(r => `「${r.label}」`).join('');
         const lines = [];
-        if (Number(stamp.completed) > 0) lines.push('カードがいっぱいになりました。新しいカードが始まります。');
+        if (stamp.rank_up && stamp.rank_up.name) lines.push(`カードがいっぱいになり、ランクが「${stamp.rank_up.name}」に上がりました。新しいカードが始まります。`);
+        else if (Number(stamp.completed) > 0) lines.push('カードがいっぱいになりました。新しいカードが始まります。');
         if (rewards) lines.push(`特典のクーポン${rewards}が届きました。下の「使えるクーポン」からご利用ください。`);
         banner('ok', 'スタンプが1個付きました', lines.join(' '));
     } else if (STAMP_MESSAGES[stamp.status]) {

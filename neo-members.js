@@ -9,6 +9,7 @@
 import { supabase } from './supabase-config.js';
 import { el } from './survey-lib.js';
 import { makeQrCanvas } from './survey-results.js';
+import { RANK_COLORS, MAX_RANKS, RANK_NAME_MAX, rankColor, rankIndex, defaultRanks } from './rank-lib.js';
 
 export const MEMBERS_CSS = `
 .mb-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
@@ -28,6 +29,18 @@ export const MEMBERS_CSS = `
 .mb-section { border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 14px; }
 .mb-section h4 { font-size: 14px; margin-bottom: 8px; }
 .mb-hist { font-size: 12px; color: #4A5568; line-height: 1.9; max-height: 180px; overflow-y: auto; }
+.mb-radio { display: flex; flex-direction: column; gap: 8px; max-width: 640px; }
+.mb-radio label { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 1.6; color: #2D3748; }
+.mb-radio label.on { border-color: var(--primary-blue); background: #F5F9FF; }
+.mb-radio input { margin-top: 4px; width: 18px; height: 18px; flex: none; }
+.mb-radio small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+.mb-rank { border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-top: 10px; max-width: 760px; }
+.mb-rank-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.mb-rank-head .no { font-size: 13px; font-weight: 700; min-width: 64px; }
+.mb-rank-head .input { max-width: 200px; }
+.mb-rank-head .select { max-width: 150px; }
+.mb-rank .select.kind { max-width: 320px; margin-bottom: 8px; }
+.mb-chip { display: inline-block; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .mb-print { display: none; }
 @media print {
   html.mb-printing body > *:not(.mb-print) { display: none !important; }
@@ -46,6 +59,14 @@ const ERRORS = [
     ['invalid_goal', 'スタンプの数は、3〜100 の整数で入力してください。'],
     ['invalid_expire', 'スタンプの有効期限を選び直してください。'],
     ['invalid_notice', 'お店からの注意書きは、1000文字以内にしてください。'],
+    ['rank_invalid_rewards', 'ランクの特典は、1つのランクにつき5つまでにしてください。'],
+    ['rank_reward_at_invalid', 'ランクの特典の「スタンプ何個目」は、1からスタンプの数までで、同じ数が重ならないようにしてください。'],
+    ['rank_reward_coupon_invalid', 'ランクの特典に、公開中でないクーポン(下書き・削除済み)が含まれています。'],
+    ['invalid_ranks', 'ランクは、2つ以上・5つまでにしてください。'],
+    ['invalid_rank_name', 'ランクの名前を入力してください(12文字まで)。'],
+    ['rank_name_duplicate', '同じ名前のランクがあります。別の名前にしてください。'],
+    ['invalid_rank_color', 'ランクの色を選び直してください。'],
+    ['invalid_full_mode', '「スタンプがすべて貯まったあと」を選び直してください。'],
     ['invalid_rewards', '特典は5つまでにしてください。'],
     ['reward_at_invalid', '特典の「スタンプ何個目」は、1からスタンプの数までで、同じ数が重ならないようにしてください。'],
     ['reward_coupon_invalid', '特典に、公開中でないクーポン(下書き・削除済み)が含まれています。'],
@@ -101,26 +122,57 @@ async function printQr({ storeName, title, url, lines }) {
     window.print();
 }
 
+// 特典の行を確認する。where は、エラー文の頭に付ける言葉(ランクの特典のとき「ランク「シルバー」の」)
+function checkRewards(list, goal, where = '') {
+    const rewards = [];
+    for (const r of list || []) {
+        const at = Number(String(r.at || '').trim());
+        if (!r.coupon_id) return { error: `${where}特典に、クーポンが選ばれていない行があります。選ぶか、行を削除してください。` };
+        if (!Number.isInteger(at) || at < 1 || at > MAX_STAMPS) return { error: `${where}特典の「スタンプ何個目」は、1〜${MAX_STAMPS} の整数で入力してください。` };
+        if (at > goal) return { error: `${where}スタンプ${at}個目の特典を付けるには、「スタンプの数(カード1枚あたり)」を${at}個以上にしてください(いまは${goal}個です)。` };
+        if (rewards.some(x => x.at === at)) return { error: `${where}スタンプ${at}個目の特典が、2つあります。1つにしてください。` };
+        rewards.push({ at, coupon_id: r.coupon_id });
+    }
+    if (rewards.length > 5) return { error: `${where}特典は5つまでにしてください。` };
+    return { rewards: rewards.sort((a, b) => a.at - b.at) };
+}
+
 /** ショップカードの入力内容を確認して、保存する形にする。問題があれば { error } を返す */
 export function buildCardPayload(f) {
     const name = String(f.card_name || '').trim();
     if (!name || name.length > 30) return { error: 'カード名を入力してください(30文字まで)。' };
     const goal = Number(String(f.stamp_goal || '').trim());
     if (!Number.isInteger(goal) || goal < 3 || goal > MAX_STAMPS) return { error: `スタンプの数は、3〜${MAX_STAMPS} の整数で入力してください。` };
-    const rewards = [];
-    for (const r of f.rewards || []) {
-        const at = Number(String(r.at || '').trim());
-        if (!r.coupon_id) return { error: '特典に、クーポンが選ばれていない行があります。選ぶか、行を削除してください。' };
-        if (!Number.isInteger(at) || at < 1 || at > MAX_STAMPS) return { error: `特典の「スタンプ何個目」は、1〜${MAX_STAMPS} の整数で入力してください。` };
-        if (at > goal) return { error: `スタンプ${at}個目の特典を付けるには、「スタンプの数(カード1枚あたり)」を${at}個以上にしてください(いまは${goal}個です)。` };
-        if (rewards.some(x => x.at === at)) return { error: `スタンプ${at}個目の特典が、2つあります。1つにしてください。` };
-        rewards.push({ at, coupon_id: r.coupon_id });
-    }
-    if (rewards.length > 5) return { error: '特典は5つまでにしてください。' };
+    const base = checkRewards(f.rewards, goal);
+    if (base.error) return base;
     const notice = String(f.join_notice || '').trim();
     if (notice.length > 1000) return { error: 'お店からの注意書きは、1000文字以内にしてください。' };
-    return { payload: { enabled: !!f.enabled, card_name: name, stamp_goal: goal, rewards: rewards.sort((a, b) => a.at - b.at),
-        expire_months: f.expire_months ? Number(f.expire_months) : null, join_notice: notice } };
+    const payload = { enabled: !!f.enabled, card_name: name, stamp_goal: goal, rewards: base.rewards,
+        expire_months: f.expire_months ? Number(f.expire_months) : null, join_notice: notice };
+    // 「スタンプがすべて貯まったあと」(追加SQL_12 を実行済みのときだけ送る)
+    if (f.full_mode !== undefined) {
+        payload.full_mode = f.full_mode === 'rank' ? 'rank' : 'repeat';
+        if (payload.full_mode === 'rank') {
+            const list = f.ranks || [];
+            if (list.length < 2 || list.length > MAX_RANKS) return { error: `ランクは、2つ以上・${MAX_RANKS}つまでにしてください。` };
+            const ranks = [];
+            for (let i = 0; i < list.length; i++) {
+                const rank = list[i], rname = String(rank.name || '').trim();
+                if (!rname || rname.length > RANK_NAME_MAX) return { error: `${i + 1}番目のランクの名前を入力してください(${RANK_NAME_MAX}文字まで)。` };
+                if (ranks.some(x => x.name === rname)) return { error: `ランクの名前「${rname}」が、2つあります。別の名前にしてください。` };
+                if (!RANK_COLORS.some(c => c.key === rank.color)) return { error: `ランク「${rname}」の色を選んでください。` };
+                let rewards = null;   // null = 基本の特典と同じ
+                if (i > 0 && rank.own) {
+                    const own = checkRewards(rank.rewards, goal, `ランク「${rname}」の`);
+                    if (own.error) return own;
+                    rewards = own.rewards;
+                }
+                ranks.push({ name: rname, color: rank.color, rewards });
+            }
+            payload.ranks = ranks;
+        }
+    }
+    return { payload };
 }
 
 export async function renderMembers({ app, client, openModal }) {
@@ -164,7 +216,15 @@ export async function renderMembers({ app, client, openModal }) {
         enabled: !!settings.enabled, card_name: settings.card_name || 'ショップカード', stamp_goal: String(settings.stamp_goal || 10),
         expire_months: settings.expire_months ? String(settings.expire_months) : '', join_notice: settings.join_notice || '',
         rewards: (settings.rewards || []).map(r => ({ at: String(r.at), coupon_id: r.coupon_id })),
+        // 「スタンプがすべて貯まったあと」。追加SQL_12 がまだのとき(列がないとき)は undefined のままにして、送らない
+        full_mode: settings.full_mode === undefined ? undefined : (settings.full_mode === 'rank' ? 'rank' : 'repeat'),
+        ranks: (Array.isArray(settings.ranks) ? settings.ranks : []).map(r => ({ name: r.name || '', color: r.color || 'blue', own: Array.isArray(r.rewards),
+            rewards: (r.rewards || []).map(x => ({ at: String(x.at), coupon_id: x.coupon_id })) })),
     };
+    // いまの会員のランク(保存済みの設定で決まる)。ランクを使わないときは null
+    const rankOf = (m) => { const i = rankIndex(settings, m.cards_completed); return i < 0 ? null : settings.ranks[i]; };
+    const rankChip = (m) => { const r = rankOf(m); if (!r) return null; const c = rankColor(r.color);
+        return el('span', { class: 'mb-chip', style: { background: c.bg, color: c.fg, marginLeft: '8px' }, text: r.name }); };
     function drawCard() {
         const enabled = el('select', { class: 'select', id: 'cardEnabled', style: { maxWidth: '320px' } },
             el('option', { value: '1', text: '公開(お客様が登録できる)', selected: state.enabled }), el('option', { value: '0', text: '非公開(登録もスタンプも止める)', selected: !state.enabled }));
@@ -180,8 +240,9 @@ export async function renderMembers({ app, client, openModal }) {
         expire.addEventListener('change', () => { state.expire_months = expire.value; });
         const notice = el('textarea', { class: 'textarea', id: 'cardNotice', maxlength: '1000', placeholder: '例:スタンプは、1回のご来店(お会計)につき1個です。' }); notice.value = state.join_notice;
         notice.addEventListener('input', () => { state.join_notice = notice.value; });
-        const rewardRows = state.rewards.map((r, i) => {
-            const at = el('input', { class: 'input', inputmode: 'numeric', 'aria-label': `特典${i + 1}:スタンプ何個目` }); at.value = r.at;
+        // 特典の行(基本の特典と、ランク専用の特典で共用)。name は、読み上げ用の呼び名
+        const rewardRowsOf = (list, name) => list.map((r, i) => {
+            const at = el('input', { class: 'input', inputmode: 'numeric', 'aria-label': `${name}${i + 1}:スタンプ何個目` }); at.value = r.at;
             at.addEventListener('input', () => { r.at = at.value; });
             // カードのスタンプの数より大きい個数を入れたときは、カードの数を合わせる(例:10個のカードで「50個目」→ カードを50個に)
             at.addEventListener('change', () => {
@@ -191,12 +252,67 @@ export async function renderMembers({ app, client, openModal }) {
                     drawCard();
                 }
             });
-            const sel = el('select', { class: 'select', 'aria-label': `特典${i + 1}のクーポン` }, el('option', { value: '', text: '(クーポンを選ぶ)' }),
+            const sel = el('select', { class: 'select', 'aria-label': `${name}${i + 1}のクーポン` }, el('option', { value: '', text: '(クーポンを選ぶ)' }),
                 ...coupons.map(c => el('option', { value: c.id, text: c.name + (c.issue_limit ? '(発行枚数の上限あり)' : ''), selected: c.id === r.coupon_id })));
             sel.addEventListener('change', () => { r.coupon_id = sel.value; });
             return el('div', { class: 'mb-reward' }, 'スタンプ', at, '個目で', sel,
-                el('button', { class: 'icon-btn', type: 'button', 'aria-label': `特典${i + 1}を削除`, onclick: () => { state.rewards.splice(i, 1); drawCard(); } }, el('i', { class: 'fa-solid fa-trash' }), '削除'));
+                el('button', { class: 'icon-btn', type: 'button', 'aria-label': `${name}${i + 1}を削除`, onclick: () => { list.splice(i, 1); drawCard(); } }, el('i', { class: 'fa-solid fa-trash' }), '削除'));
         });
+        const rewardRows = rewardRowsOf(state.rewards, '特典');
+
+        // ---- スタンプがすべて貯まったあと(また1個目から/ランクが上がる) ----
+        let fullField = null;
+        if (state.full_mode === undefined) {
+            fullField = el('div', { class: 'field', id: 'fullModeField' }, el('label', { text: 'スタンプがすべて貯まったあと' }),
+                el('p', { class: 'muted', style: { lineHeight: '1.7' }, text: 'いまは「また1個目から始める」です。ランクを使うには、データベースの設定が必要です(Supabase で「追加SQL_12」を実行してください)。' }));
+        } else {
+            const radio = (value, title, sub) => {
+                const input = el('input', { type: 'radio', name: 'fullMode', value, id: `fullMode_${value}`, checked: state.full_mode === value });
+                input.addEventListener('change', () => {
+                    state.full_mode = value;
+                    if (value === 'rank' && state.ranks.length < 2) state.ranks = defaultRanks();
+                    drawCard();
+                });
+                return el('label', { class: state.full_mode === value ? 'on' : '', for: `fullMode_${value}` }, input, el('span', {}, title, el('small', { text: sub })));
+            };
+            const rankBoxes = state.full_mode !== 'rank' ? [] : state.ranks.map((rank, i) => {
+                const nameInput = el('input', { class: 'input', maxlength: String(RANK_NAME_MAX), 'aria-label': `${i + 1}番目のランクの名前`, placeholder: '例:シルバー' }); nameInput.value = rank.name;
+                nameInput.addEventListener('input', () => { rank.name = nameInput.value; chip.textContent = rank.name || `ランク${i + 1}`; });
+                const colorSel = el('select', { class: 'select', 'aria-label': `${i + 1}番目のランクの会員証の色` },
+                    ...RANK_COLORS.map(c => el('option', { value: c.key, text: c.label, selected: c.key === rank.color })));
+                const paint = () => { const c = rankColor(rank.color); chip.style.background = c.bg; chip.style.color = c.fg; };
+                colorSel.addEventListener('change', () => { rank.color = colorSel.value; paint(); });
+                const chip = el('span', { class: 'mb-chip', 'aria-hidden': 'true', text: rank.name || `ランク${i + 1}` });
+                paint();
+                const head = el('div', { class: 'mb-rank-head' }, el('span', { class: 'no', text: `${i + 1}番目` }), nameInput, colorSel, chip,
+                    state.ranks.length > 2 ? el('button', { class: 'icon-btn', type: 'button', 'aria-label': `${i + 1}番目のランクを削除`, style: { marginLeft: 'auto' },
+                        onclick: () => { state.ranks.splice(i, 1); drawCard(); } }, el('i', { class: 'fa-solid fa-trash' }), '削除') : null);
+                if (i === 0) {
+                    return el('div', { class: 'mb-rank' }, head,
+                        el('p', { class: 'muted', style: { fontSize: '12px', lineHeight: '1.7' }, text: '登録したときのランクです。特典は、上の「特典」で決めたものです。' }));
+                }
+                const kind = el('select', { class: 'select kind', 'aria-label': `${i + 1}番目のランクの特典の決め方` },
+                    el('option', { value: 'same', text: '特典は、上の「特典」と同じ', selected: !rank.own }),
+                    el('option', { value: 'own', text: 'このランクだけの特典を決める', selected: !!rank.own }));
+                kind.addEventListener('change', () => { rank.own = kind.value === 'own'; drawCard(); });
+                return el('div', { class: 'mb-rank' }, head, kind,
+                    ...(rank.own ? [
+                        ...rewardRowsOf(rank.rewards, `${i + 1}番目のランクの特典`),
+                        el('button', { class: 'btn sub small', type: 'button', disabled: rank.rewards.length >= 5 || !coupons.length,
+                            onclick: () => { rank.rewards.push({ at: rank.rewards.length ? '' : state.stamp_goal, coupon_id: '' }); drawCard(); } }, el('i', { class: 'fa-solid fa-plus' }), 'このランクの特典を追加'),
+                        rank.rewards.length ? null : el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '6px' }, text: '特典を1つも入れないと、このランクでは特典が届きません。' }),
+                    ] : []));
+            });
+            fullField = el('div', { class: 'field', id: 'fullModeField' }, el('label', { text: 'スタンプがすべて貯まったあと' }),
+                el('div', { class: 'mb-radio', role: 'radiogroup', 'aria-label': 'スタンプがすべて貯まったあと' },
+                    radio('repeat', 'また1個目から始める', '同じカード・同じ特典で、次のカードが0個から始まります。'),
+                    radio('rank', 'ランクが上がる', '会員証の色と名前が変わります。ランクごとに、特典を変えることもできます。')),
+                ...rankBoxes,
+                state.full_mode === 'rank' ? el('button', { class: 'btn sub small', type: 'button', id: 'addRank', style: { marginTop: '10px' }, disabled: state.ranks.length >= MAX_RANKS,
+                    onclick: () => { state.ranks.push({ name: '', color: 'black', own: false, rewards: [] }); drawCard(); } }, el('i', { class: 'fa-solid fa-plus' }), 'ランクを追加') : null,
+                state.full_mode === 'rank' ? el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '8px', lineHeight: '1.7', maxWidth: '760px' },
+                    text: `ランクは、いっぱいになったカードの枚数で決まります(1枚いっぱいになると2番目、2枚で3番目)。いちばん上のランクでは、いっぱいになっても同じランクのまま、次のカードが始まります。ランクは${MAX_RANKS}つまで作れます。すでに会員がいるときは、これまでにいっぱいになった枚数で、すぐにランクが決まります。スタンプの有効期限が切れても、ランクは下がりません。` }) : null);
+        }
         const msg = el('p', { class: 'msg', role: 'status' });
         const saveBtn = el('button', { class: 'btn', type: 'button', id: 'saveCard' }, '保存する');
         saveBtn.addEventListener('click', async () => {
@@ -227,6 +343,7 @@ export async function renderMembers({ app, client, openModal }) {
                     onclick: () => { state.rewards.push({ at: state.rewards.length ? '' : state.stamp_goal, coupon_id: '' }); drawCard(); } }, el('i', { class: 'fa-solid fa-plus' }), '特典を追加'),
                 el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '6px', lineHeight: '1.7' },
                     text: '「スタンプ何個目」は、1〜100 で入力できます。カードのスタンプの数より大きい数を入れると、カードの数がその数に変わります。特典は、クーポンとしてお客様の会員証に届きます。使うときは、お客様がスタッフの前で「クーポンを使う」を押します。発行枚数の上限があるクーポンは、上限に達すると届かなくなります。' })),
+            fullField,
             el('div', { class: 'field' }, el('label', { for: 'cardExpire', text: 'スタンプの有効期限' }), expire),
             el('div', { class: 'field' }, el('label', { for: 'cardNotice', text: 'お店からの注意書き(登録の画面の「利用規約」に表示されます)' }), notice),
             el('div', { class: 'row', style: { justifyContent: 'flex-end' } }, saveBtn), msg);
@@ -311,7 +428,7 @@ export async function renderMembers({ app, client, openModal }) {
                 el('td', { style: { fontWeight: '700' }, text: memberNo(m.member_no) }),
                 el('td', { text: `${m.name} 様` }),
                 el('td', { text: `***-****-${m.phone_last4}` }),
-                el('td', { text: `${m.stamps} / ${goal}個` + (m.cards_completed ? `(満了${m.cards_completed}枚)` : '') }),
+                el('td', {}, `${m.stamps} / ${goal}個` + (m.cards_completed ? `(満了${m.cards_completed}枚)` : ''), rankChip(m)),
                 el('td', { text: jst(m.last_stamp_at) }),
                 el('td', { text: jst(m.created_at) }),
                 el('td', {}, el('button', { class: 'btn small sub', type: 'button', onclick: () => openMember(m.id) }, 'くわしく'))))
@@ -383,14 +500,14 @@ export async function renderMembers({ app, client, openModal }) {
             content.replaceChildren(
                 el('h3', { text: `${memberNo(m.member_no)} ${m.name} 様` }),
                 el('p', { id: 'memberSummary', style: { fontSize: '14px', lineHeight: '1.8' },
-                    text: `いまのスタンプ:${m.stamps} / ${settings.stamp_goal}個` + (m.cards_completed ? `(いっぱいになったカード ${m.cards_completed}枚)` : '') + ` / ${stampedToday ? '今日はQRコードで付いています' : '今日はまだQRコードで付いていません'}` }),
+                    text: (rankOf(m) ? `ランク:${rankOf(m).name} / ` : '') + `いまのスタンプ:${m.stamps} / ${settings.stamp_goal}個` + (m.cards_completed ? `(いっぱいになったカード ${m.cards_completed}枚)` : '') + ` / ${stampedToday ? '今日はQRコードで付いています' : '今日はまだQRコードで付いていません'}` }),
                 el('div', { class: 'row', style: { fontSize: '14px' } }, '電話番号:', phoneNode, phoneBtn),
                 msg,
                 el('div', { class: 'mb-section' }, el('h4', { text: '手で付ける・取り消す(修正用)' }),
                     el('div', { class: 'row' },
                         el('div', { class: 'mb-step' }, el('button', { type: 'button', 'aria-label': '減らす', onclick: () => step(-1) }, '−'), out, el('button', { type: 'button', 'aria-label': '増やす', id: 'stampPlus', onclick: () => step(1) }, '+')),
                         el('button', { class: 'btn', type: 'button', id: 'stampAdd', onclick: () => run('neo_member_stamp_manual', { p_member_id: id, p_delta: count, p_note: note.value.trim() || null },
-                            (d) => `スタンプを${count}個付けました。` + ((d?.rewards || []).length ? `特典「${d.rewards.map(r => r.label).join('」「')}」のクーポンが、お客様の会員証に届きました。` : '') + (d?.reward_missed ? '※特典のクーポンは発行できませんでした(公開中でない、または発行枚数の上限に達しています)。' : '')) }, 'スタンプを付ける'),
+                            (d) => `スタンプを${count}個付けました。` + (d?.rank_up?.name ? `ランクが「${d.rank_up.name}」に上がりました。` : '') + ((d?.rewards || []).length ? `特典「${d.rewards.map(r => r.label).join('」「')}」のクーポンが、お客様の会員証に届きました。` : '') + (d?.reward_missed ? '※特典のクーポンは発行できませんでした(公開中でない、または発行枚数の上限に達しています)。' : '')) }, 'スタンプを付ける'),
                         el('button', { class: 'btn sub', type: 'button', id: 'stampCancel', onclick: () => { if (confirm(`スタンプを${count}個取り消しますか?\n取り消すスタンプで届いた特典のクーポンが未使用なら、そのクーポンも取り消されます。`)) run('neo_member_stamp_manual', { p_member_id: id, p_delta: -count, p_note: note.value.trim() || null }, () => `スタンプを${count}個取り消しました。`); } }, '取り消す')),
                     el('div', { class: 'field', style: { marginTop: '10px', marginBottom: 0 } }, note),
                     el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '6px' }, text: 'ふだんは、お客様がスタンプ用QRコードを読み取ります。ここは、読み取れなかったときや付け間違いの修正に使います。だれが操作したかは、履歴に残ります。' })),
