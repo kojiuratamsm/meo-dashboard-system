@@ -107,6 +107,7 @@ function renderCard(view) {
         $('stampCount').textContent = String(stamps);
         $('stampGoal').textContent = String(goal);
         $('stampGrid').setAttribute('aria-label', `スタンプ ${goal}個中 ${stamps}個`);
+        $('stampGrid').classList.toggle('many', goal > 30);
         $('stampGrid').replaceChildren(...Array.from({ length: goal }, (_, i) => {
             const n = i + 1, cell = document.createElement('div');
             cell.className = 'cell' + (n <= stamps ? ' on' : '') + (rewardAt.has(n) ? ' reward' : '');

@@ -18,6 +18,7 @@ import { reviewUrlGuide, GUIDE_CSS } from './neo-guide.js';
 import { RESULTS_CSS, renderResults, makeQrCanvas, downloadQrPng } from './survey-results.js';
 import { renderCoupons, COUPON_CSS } from './neo-coupons.js';
 import { renderMembers, MEMBERS_CSS } from './neo-members.js';
+import { placeWordMessage, keywordMessage, buildAiSettings, keywordOptions, hasFreeText, MAX_KEYWORDS } from './ai-settings-lib.js';
 
 let app = null;               // 描画先
 let client = null;            // 対象の店舗(契約者)の clients 行
@@ -215,7 +216,8 @@ async function renderEditor(id) {
     }
     survey.questions = Array.isArray(survey.questions) ? survey.questions : [];
     dirty = false;
-    const markDirty = () => { dirty = true; };
+    let onEdit = () => {};   // 編集のたびに呼ぶ(キーワードが選択肢に入っているかの表示を更新する)
+    const markDirty = () => { dirty = true; onEdit(); };
 
     // --- 基本 ---
     const titleInput = el('input', { class: 'input', value: survey.title, maxlength: '100' });
@@ -310,6 +312,60 @@ async function renderEditor(id) {
             qArea.lastElementChild?.querySelector('.q-head .input')?.focus();
         } }, `+ ${t.label}`)));
 
+    // --- AIが作る口コミ文章の設定(地域名・業種・狙いたいキーワード) ---
+    const ai = buildAiSettings(survey.ai_settings || {});
+    const aiCard = el('div', { class: 'card', id: 'aiSettingsCard' });
+    const kwList = el('div', { id: 'aiKeywordList', style: { display: 'flex', flexDirection: 'column', gap: '6px', margin: '8px 0' } });
+    function drawKeywords() {
+        const free = hasFreeText(survey.questions);
+        kwList.replaceChildren(...(ai.keywords.length ? ai.keywords.map((k, i) => {
+            const hits = keywordOptions(k, survey.questions);
+            return el('div', { class: 'row ai-kw', style: { gap: '8px' } },
+                el('b', { text: k }),
+                el('span', { class: 'badge ' + (hits.length ? 'on' : 'off'), text: hits.length ? '選択肢に入っています' : '選択肢に入っていません' }),
+                el('span', { class: 'muted', style: { fontSize: '12px', flex: '1', minWidth: '200px' },
+                    text: hits.length ? `「${hits.slice(0, 2).join('」「')}」${hits.length > 2 ? ` ほか${hits.length - 2}件` : ''} を選んだお客様の文章に入ります`
+                        : (free ? 'お客様が自由記述に書いたときだけ入ります。' : 'このままでは文章に入りません。') + 'この言葉を含む選択肢を、上の設問に足してください' }),
+                el('button', { class: 'icon-btn', type: 'button', 'aria-label': `キーワード「${k}」を削除`, onclick: () => { ai.keywords.splice(i, 1); markDirty(); } }, el('i', { class: 'fa-solid fa-xmark' }), '削除'));
+        }) : [el('p', { class: 'muted', text: 'キーワードは、まだありません。' })]));
+    }
+    onEdit = drawKeywords;
+    {
+        const placeField = (id, key, label, placeholder) => {
+            const input = el('input', { class: 'input', id, maxlength: '20', placeholder, style: { maxWidth: '260px' } }); input.value = ai[key];
+            const warn = el('p', { class: 'msg ng', role: 'alert', text: placeWordMessage(ai[key]) });
+            input.addEventListener('input', () => { ai[key] = input.value.trim(); warn.textContent = placeWordMessage(input.value); markDirty(); });
+            return el('div', { class: 'field', style: { flex: '1', minWidth: '220px' } }, el('label', { for: id, text: label }), input, warn);
+        };
+        const kwInput = el('input', { class: 'input', id: 'aiKeywordInput', maxlength: '30', placeholder: '例:ヘッドスパ', style: { maxWidth: '260px' } });
+        const kwMsg = el('p', { class: 'msg ng', role: 'alert' });
+        const addKeyword = () => {
+            const value = kwInput.value.replace(/\s+/g, ' ').trim();
+            const problem = keywordMessage(value, ai.keywords);
+            kwMsg.textContent = problem;
+            if (problem) return;
+            ai.keywords.push(value); kwInput.value = ''; markDirty(); kwInput.focus();
+        };
+        kwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addKeyword(); } });
+        aiCard.replaceChildren(
+            el('h2', { text: 'AIが作る口コミ文章の設定' }),
+            el('p', { class: 'muted', style: { lineHeight: '1.7', marginBottom: '12px' },
+                text: 'AIは、お客様の回答の中から2〜3点にしぼって、自然な文章を作ります(すべての回答を並べることはしません)。お客様が「気になった点」を答えたときは、その内容も入ります。' }),
+            el('div', { class: 'row', style: { alignItems: 'flex-start' } },
+                placeField('aiArea', 'area', '地域名(毎回の文章に1回入ります)', '例:渋谷'),
+                placeField('aiCategory', 'category', '業種(毎回の文章に1回入ります)', '例:美容室')),
+            el('p', { class: 'muted', style: { fontSize: '12px', lineHeight: '1.7', marginBottom: '14px' },
+                text: '例:「渋谷の美容室でカットをお願いしました。…」のように入ります。入れられるのは、お店の場所と業種の事実だけです(「人気」「おすすめ」などの評価の言葉は使えません)。空欄にすると入りません。' }),
+            el('div', { class: 'field' }, el('label', { for: 'aiKeywordInput', text: `狙いたいキーワード(${MAX_KEYWORDS}個まで)` }),
+                el('div', { class: 'row' }, kwInput, el('button', { class: 'btn sub', type: 'button', id: 'aiKeywordAdd', onclick: addKeyword }, '+ 追加')),
+                kwMsg, kwList,
+                el('p', { class: 'muted', style: { fontSize: '12px', lineHeight: '1.7' },
+                    text: 'キーワードは、お客様がその言葉を含む選択肢を選んだとき(または自由記述に書いたとき)に、言い換えずにそのまま文章へ入ります。選んでいないお客様の文章には入りません。狙いたい言葉は、設問の選択肢に入れておいてください(例:設問「ご利用のメニュー」に「ヘッドスパ」)。' })),
+            el('div', { class: 'warnbox', style: { marginBottom: 0 },
+                text: 'ご注意:Googleは、お店が口コミに特定の内容を入れるよう求めることを禁じています。「地域名・業種」を毎回入れる設定は、お店が口コミの内容に関わる形になるため、口コミの削除などのリスクがあります。心配な場合は、地域名・業種を空欄にしてください。' }));
+        drawKeywords();
+    }
+
     // --- 保存・公開 ---
     function validate({ forPublish }) {
         const problems = [];
@@ -340,10 +396,18 @@ async function renderEditor(id) {
                 ...(CHOICE_TYPES.has(q.type) ? { options: q.options.map(o => ({ id: o.id, label: o.label.trim() })) } : {}),
             })),
             is_published: willPublish,
+            ai_settings: buildAiSettings(ai),
         };
-        const res = survey.id
-            ? await supabase.from('neo_surveys').update(payload).eq('id', survey.id).select().single()
-            : await supabase.from('neo_surveys').insert(payload).select().single();
+        const write = (body) => survey.id
+            ? supabase.from('neo_surveys').update(body).eq('id', survey.id).select().single()
+            : supabase.from('neo_surveys').insert(body).select().single();
+        let res = await write(payload);
+        // 追加SQL_11 の実行前は、AIの文章の設定を保存する場所がまだ無い。その場合は、ほかの内容だけ保存する
+        if (res.error && String(res.error.message || '').includes('ai_settings')) {
+            const { ai_settings: _skip, ...rest } = payload;
+            res = await write(rest);
+            if (!res.error) alert('アンケートは保存しましたが、「AIが作る口コミ文章の設定」は保存できませんでした。\nデータベースの設定が必要です(Supabase で「追加SQL_11」を実行してください)。');
+        }
         if (res.error) { alert('保存できませんでした: ' + publishErrorText(res.error)); return false; }
         Object.assign(survey, res.data);
         dirty = false;
@@ -382,6 +446,7 @@ async function renderEditor(id) {
         el('div', { class: 'card' }, el('h2', { text: '設問' }),
             questionHint(guideUrl),
             qArea, el('p', { class: 'muted', style: { margin: '10px 0 6px' }, text: '設問を追加:' }), addQ),
+        aiCard,
         el('div', { class: 'sticky-actions' }, previewBtn, qrBtn, publishBtn, saveBtn),
     ].filter(Boolean));
 }

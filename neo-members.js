@@ -43,7 +43,7 @@ export const MEMBERS_CSS = `
 const ERRORS = [
     ['not_allowed', 'この店舗の会員を操作する権限がありません。'],
     ['invalid_card_name', 'カード名を入力してください(30文字まで)。'],
-    ['invalid_goal', 'スタンプの数は、3〜30 の整数で入力してください。'],
+    ['invalid_goal', 'スタンプの数は、3〜100 の整数で入力してください。'],
     ['invalid_expire', 'スタンプの有効期限を選び直してください。'],
     ['invalid_notice', 'お店からの注意書きは、1000文字以内にしてください。'],
     ['invalid_rewards', '特典は5つまでにしてください。'],
@@ -51,7 +51,7 @@ const ERRORS = [
     ['reward_coupon_invalid', '特典に、公開中でないクーポン(下書き・削除済み)が含まれています。'],
     ['expires_in_past', '読み取り期限には、今日以降の日付を選んでください。'],
     ['no_stamps', '取り消せるスタンプがありません。'],
-    ['invalid_delta', '付ける数は、1〜30 の範囲にしてください。'],
+    ['invalid_delta', '付ける数は、1〜100 の範囲にしてください。'],
     ['member_not_found', 'この会員は、すでに削除されています。'],
 ];
 function errorText(error) {
@@ -72,6 +72,7 @@ const jst = (iso, withTime = false) => {
     return new Intl.DateTimeFormat('ja-JP', opt).format(new Date(iso));
 };
 const todayJst = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo' }).format(new Date());   // YYYY-MM-DD
+export const MAX_STAMPS = 100;   // カード1枚のスタンプの数の上限(特典の「スタンプ何個目」も、ここまで)
 export const memberNo = (n) => 'A' + String(n).padStart(4, '0');
 export const cardEntryUrl = (key, origin = location.origin) => `${origin}/card?k=${encodeURIComponent(key)}`;
 export const stampQrUrl = (token, origin = location.origin) => `${origin}/card?q=${encodeURIComponent(token)}`;
@@ -105,12 +106,13 @@ export function buildCardPayload(f) {
     const name = String(f.card_name || '').trim();
     if (!name || name.length > 30) return { error: 'カード名を入力してください(30文字まで)。' };
     const goal = Number(String(f.stamp_goal || '').trim());
-    if (!Number.isInteger(goal) || goal < 3 || goal > 30) return { error: 'スタンプの数は、3〜30 の整数で入力してください。' };
+    if (!Number.isInteger(goal) || goal < 3 || goal > MAX_STAMPS) return { error: `スタンプの数は、3〜${MAX_STAMPS} の整数で入力してください。` };
     const rewards = [];
     for (const r of f.rewards || []) {
         const at = Number(String(r.at || '').trim());
         if (!r.coupon_id) return { error: '特典に、クーポンが選ばれていない行があります。選ぶか、行を削除してください。' };
-        if (!Number.isInteger(at) || at < 1 || at > goal) return { error: `特典の「スタンプ何個目」は、1〜${goal} の整数で入力してください。` };
+        if (!Number.isInteger(at) || at < 1 || at > MAX_STAMPS) return { error: `特典の「スタンプ何個目」は、1〜${MAX_STAMPS} の整数で入力してください。` };
+        if (at > goal) return { error: `スタンプ${at}個目の特典を付けるには、「スタンプの数(カード1枚あたり)」を${at}個以上にしてください(いまは${goal}個です)。` };
         if (rewards.some(x => x.at === at)) return { error: `スタンプ${at}個目の特典が、2つあります。1つにしてください。` };
         rewards.push({ at, coupon_id: r.coupon_id });
     }
@@ -170,7 +172,8 @@ export async function renderMembers({ app, client, openModal }) {
         const name = el('input', { class: 'input', id: 'cardName', maxlength: '30', style: { maxWidth: '320px' } }); name.value = state.card_name;
         name.addEventListener('input', () => { state.card_name = name.value; });
         const goal = el('input', { class: 'input', id: 'cardGoal', inputmode: 'numeric', style: { maxWidth: '120px' } }); goal.value = state.stamp_goal;
-        goal.addEventListener('input', () => { state.stamp_goal = goal.value; });
+        goal.addEventListener('input', () => { state.stamp_goal = goal.value; state.goalNote = ''; goalNote.textContent = ''; });
+        const goalNote = el('p', { id: 'cardGoalNote', role: 'status', style: { fontSize: '12px', marginTop: '6px', color: '#1E7E34', fontWeight: '700' }, text: state.goalNote || '' });
         const expire = el('select', { class: 'select', id: 'cardExpire', style: { maxWidth: '320px' } },
             ...[['', '期限なし'], ['3', '最後のスタンプから3か月'], ['6', '最後のスタンプから6か月'], ['12', '最後のスタンプから1年'], ['24', '最後のスタンプから2年']]
                 .map(([v, t]) => el('option', { value: v, text: t, selected: state.expire_months === v })));
@@ -180,6 +183,14 @@ export async function renderMembers({ app, client, openModal }) {
         const rewardRows = state.rewards.map((r, i) => {
             const at = el('input', { class: 'input', inputmode: 'numeric', 'aria-label': `特典${i + 1}:スタンプ何個目` }); at.value = r.at;
             at.addEventListener('input', () => { r.at = at.value; });
+            // カードのスタンプの数より大きい個数を入れたときは、カードの数を合わせる(例:10個のカードで「50個目」→ カードを50個に)
+            at.addEventListener('change', () => {
+                const n = Number(String(at.value).trim()), g = Number(String(state.stamp_goal).trim());
+                if (Number.isInteger(n) && n > g && n <= MAX_STAMPS) {
+                    state.stamp_goal = String(n); state.goalNote = `特典(スタンプ${n}個目)に合わせて、スタンプの数を${n}個にしました。`;
+                    drawCard();
+                }
+            });
             const sel = el('select', { class: 'select', 'aria-label': `特典${i + 1}のクーポン` }, el('option', { value: '', text: '(クーポンを選ぶ)' }),
                 ...coupons.map(c => el('option', { value: c.id, text: c.name + (c.issue_limit ? '(発行枚数の上限あり)' : ''), selected: c.id === r.coupon_id })));
             sel.addEventListener('change', () => { r.coupon_id = sel.value; });
@@ -207,7 +218,7 @@ export async function renderMembers({ app, client, openModal }) {
                 el('span', { class: 'badge ' + (settings.enabled ? 'on' : 'off'), id: 'cardBadge', text: settings.enabled ? '公開中' : '非公開' })),
             el('div', { class: 'field' }, el('label', { for: 'cardEnabled', text: '状態' }), enabled),
             el('div', { class: 'field' }, el('label', { for: 'cardName', text: 'カード名(お客様に表示されます)' }), name),
-            el('div', { class: 'field' }, el('label', { for: 'cardGoal', text: 'スタンプの数(カード1枚あたり)' }), goal,
+            el('div', { class: 'field' }, el('label', { for: 'cardGoal', text: 'スタンプの数(カード1枚あたり。3〜100個)' }), goal, goalNote,
                 el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '4px' }, text: 'いっぱいになると、次のカードが0個から始まります。付くのは、1回の読み取りで1個・同じ会員は1日1回までです。' })),
             el('div', { class: 'field' }, el('label', { text: '特典(スタンプが決めた数になったときに届くクーポン)' }),
                 ...rewardRows,
@@ -215,7 +226,7 @@ export async function renderMembers({ app, client, openModal }) {
                 el('button', { class: 'btn sub small', type: 'button', id: 'addReward', disabled: state.rewards.length >= 5 || !coupons.length,
                     onclick: () => { state.rewards.push({ at: state.rewards.length ? '' : state.stamp_goal, coupon_id: '' }); drawCard(); } }, el('i', { class: 'fa-solid fa-plus' }), '特典を追加'),
                 el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '6px', lineHeight: '1.7' },
-                    text: '特典は、クーポンとしてお客様の会員証に届きます。使うときは、お客様がスタッフの前で「クーポンを使う」を押します。発行枚数の上限があるクーポンは、上限に達すると届かなくなります。' })),
+                    text: '「スタンプ何個目」は、1〜100 で入力できます。カードのスタンプの数より大きい数を入れると、カードの数がその数に変わります。特典は、クーポンとしてお客様の会員証に届きます。使うときは、お客様がスタッフの前で「クーポンを使う」を押します。発行枚数の上限があるクーポンは、上限に達すると届かなくなります。' })),
             el('div', { class: 'field' }, el('label', { for: 'cardExpire', text: 'スタンプの有効期限' }), expire),
             el('div', { class: 'field' }, el('label', { for: 'cardNotice', text: 'お店からの注意書き(登録の画面の「利用規約」に表示されます)' }), notice),
             el('div', { class: 'row', style: { justifyContent: 'flex-end' } }, saveBtn), msg);
@@ -336,7 +347,7 @@ export async function renderMembers({ app, client, openModal }) {
                 await draw(done(data));
             };
             const out = el('output', { id: 'stampCountOut', text: String(count) });
-            const step = (d) => { count = Math.min(30, Math.max(1, count + d)); out.textContent = String(count); };
+            const step = (d) => { count = Math.min(MAX_STAMPS, Math.max(1, count + d)); out.textContent = String(count); };
             const note = el('input', { class: 'input', id: 'stampNote', maxlength: '100', placeholder: '理由のメモ(例:QRコードが読めなかった)' });
             const phoneNode = el('span', { id: 'memberPhone', text: `***-****-${m.phone_last4}` });
             const phoneBtn = el('button', { class: 'btn sub small', type: 'button', id: 'revealPhone' }, '全部を表示(記録されます)');
