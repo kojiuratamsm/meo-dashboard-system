@@ -352,17 +352,17 @@ async function renderEditor(id) {
             el('p', { class: 'muted', style: { lineHeight: '1.7', marginBottom: '12px' },
                 text: 'AIは、お客様の回答の中から2〜3点にしぼって、自然な文章を作ります(すべての回答を並べることはしません)。お客様が「気になった点」を答えたときは、その内容も入ります。' }),
             el('div', { class: 'row', style: { alignItems: 'flex-start' } },
-                placeField('aiArea', 'area', '地域名(毎回の文章に1回入ります)', '例:渋谷'),
-                placeField('aiCategory', 'category', '業種(毎回の文章に1回入ります)', '例:美容室')),
+                placeField('aiArea', 'area', '地域名(文章に自然に合うときに使われます)', '例:渋谷'),
+                placeField('aiCategory', 'category', '業種(文章に自然に合うときに使われます)', '例:美容室')),
             el('p', { class: 'muted', style: { fontSize: '12px', lineHeight: '1.7', marginBottom: '14px' },
                 text: '例:「渋谷の美容室でカットをお願いしました。…」のように入ります。入れられるのは、お店の場所と業種の事実だけです(「人気」「おすすめ」などの評価の言葉は使えません)。空欄にすると入りません。' }),
             el('div', { class: 'field' }, el('label', { for: 'aiKeywordInput', text: `狙いたいキーワード(${MAX_KEYWORDS}個まで)` }),
                 el('div', { class: 'row' }, kwInput, el('button', { class: 'btn sub', type: 'button', id: 'aiKeywordAdd', onclick: addKeyword }, '+ 追加')),
                 kwMsg, kwList,
                 el('p', { class: 'muted', style: { fontSize: '12px', lineHeight: '1.7' },
-                    text: 'キーワードは、お客様がその言葉を含む選択肢を選んだとき(または自由記述に書いたとき)に、言い換えずにそのまま文章へ入ります。選んでいないお客様の文章には入りません。狙いたい言葉は、設問の選択肢に入れておいてください(例:設問「ご利用のメニュー」に「ヘッドスパ」)。' })),
+                    text: 'キーワードは、お客様がその言葉を含む選択肢を選んだとき(または自由記述に書いたとき)に、文章に自然に合う場合だけ、そのままの言葉で使われます(無理には入れません)。選んでいないお客様の文章には入りません。狙いたい言葉は、設問の選択肢に入れておいてください(例:設問「ご利用のメニュー」に「ヘッドスパ」)。' })),
             el('div', { class: 'warnbox', style: { marginBottom: 0 },
-                text: 'ご注意:Googleは、お店が口コミに特定の内容を入れるよう求めることを禁じています。「地域名・業種」を毎回入れる設定は、お店が口コミの内容に関わる形になるため、口コミの削除などのリスクがあります。心配な場合は、地域名・業種を空欄にしてください。' }));
+                text: 'ご注意:Googleは、お店が口コミに特定の内容を入れるよう求めることを禁じています。「地域名・業種」を文章に入れる設定は、お店が口コミの内容に関わる形になるため、口コミの削除などのリスクがあります。心配な場合は、地域名・業種を空欄にしてください。' }));
         drawKeywords();
     }
 
