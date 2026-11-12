@@ -38,6 +38,9 @@
         .seg button { flex: 1 1 0; min-height: 44px; border: none; border-radius: 9px; background: none; color: #3A4A6B; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; }
         .seg button[aria-pressed="true"] { background: #fff; color: #1F2A44; font-weight: 700; box-shadow: 0 1px 3px rgba(31,42,68,0.15); }
         .seg button:disabled { opacity: 0.5; cursor: default; }
+        .busy-note { font-size: 13px; font-weight: 700; color: #1F5FD1; background: #EAF1FE; border-radius: 10px; padding: 10px 12px; margin: -4px 0 12px; line-height: 1.6; }
+        .card-entry { text-align: center; margin: 0 0 14px; }
+        .card-entry a { display: inline-block; min-height: 44px; line-height: 44px; padding: 0 14px; font-size: 14px; font-weight: 700; color: #1F5FD1; text-decoration: none; background: #fff; border: 1.5px solid #B8C2D3; border-radius: 22px; }
         .draft-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
         .draft-text { width: 100%; min-height: 180px; border: 1.5px solid #B8C2D3; border-radius: 14px; padding: 14px; font-size: 16px; line-height: 1.7; font-family: inherit; resize: vertical; background: #fff; color: #1F2A44; }
         .draft-text:disabled { background: #F4F7FE; }
@@ -87,6 +90,9 @@
             <a class="btn btn-card" id="walletCard" href="#" hidden>会員証・ショップカードを見る</a>
         </section>
 
+        <!-- 会員証・ショップカードへの入口(ショップカードを公開しているお店で、上の枠が出ていないとき) -->
+        <p class="card-entry" id="cardEntry" hidden><a id="cardEntryLink" href="#">会員証・ショップカードはこちら ›</a></p>
+
         <!-- 読み込み中 -->
         <section id="step-loading" class="panel center"><p>読み込み中...</p></section>
 
@@ -115,6 +121,7 @@
                 <button type="button" data-length="normal">ふつう</button>
                 <button type="button" data-length="long">長め</button>
             </div>
+            <p class="busy-note" id="draftBusy" role="status" hidden></p>
             <label class="draft-label" for="draftText">口コミ文章(自由に書き直せます)</label>
             <textarea id="draftText" class="draft-text" maxlength="1000"></textarea>
             <div class="stack">

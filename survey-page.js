@@ -20,7 +20,8 @@ const show = (id) => { steps.forEach(s => { $(s).hidden = s !== id; }); window.s
 
 const slug = new URLSearchParams(location.search).get('s') || '';
 const DRAFT_API = '/api/public/draft';
-const DRAFT_TIMEOUT_MS = 25000;
+const DRAFT_TIMEOUT_MS = 28000;
+const LENGTH_LABELS = { short: '短め', normal: 'ふつう', long: '長め' };
 
 let response = null;   // { response_id, action_token, google_review_url }
 const draft = { available: false, original: '', remaining: 0, length: 'short', busy: false };
@@ -59,6 +60,11 @@ async function loadWallet() {
     $('walletCard').hidden = !showCardLink;
     if (showCardLink) $('walletCard').href = cardUrl(card.key);
     $('walletBox').hidden = coupons.length === 0 && !showCardLink;
+    // クーポンも会員の印も無い端末にも、会員証・ショップカードへの入口を出す
+    // (プライベートブラウズや別のアプリで開いたときは、会員でも印が無い。入口から進めるようにする)
+    const entry = $('cardEntry');
+    entry.hidden = !(card.enabled && card.key) || !$('walletBox').hidden;
+    if (!entry.hidden) $('cardEntryLink').href = cardUrl(card.key);
     // ③の画面の案内(ショップカードを公開しているお店だけ)
     const invite = $('cardInvite');
     invite.hidden = !(card.enabled && card.key);
@@ -249,6 +255,9 @@ function renderDraft(message = '') {
         : draft.remaining > 0 ? `別の文章にする(あと${draft.remaining}回)` : '作り直しは上限に達しました';
     $('draftText').disabled = draft.busy;
     $('btnSend').disabled = draft.busy;
+    // 作っている間は、長さのボタンのすぐ下に知らせる(押したことが、その場で分かるように)
+    $('draftBusy').hidden = !(ok && draft.busy);
+    $('draftBusy').textContent = `「${LENGTH_LABELS[draft.length] || ''}」の文章を作っています…(10秒ほどかかることがあります)`;
     $('draftMsg').textContent = message;
 }
 
@@ -284,9 +293,13 @@ async function regenerate(length) {
     if (draft.busy || draft.remaining <= 0) return;
     const current = $('draftText').value;
     if (current !== draft.original && !confirm('書き直した内容は消えて、新しい文章に置き換わります。よろしいですか?')) return;
+    // 押した長さに、その場で切り替える(作れなかったときは、元の長さに戻す)
+    const before = draft.length;
+    draft.length = length;
     draft.busy = true; renderDraft();
     const ok = await requestDraft(length);
     draft.busy = false;
+    if (!ok) draft.length = before;
     renderDraft(ok ? '' : '新しい文章を作れませんでした。今の文章をそのままお使いください。');
 }
 

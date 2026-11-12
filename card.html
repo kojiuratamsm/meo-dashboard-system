@@ -60,6 +60,10 @@
         details { background: #F4F7FE; border-radius: 12px; padding: 10px 12px; margin-top: 10px; font-size: 12px; line-height: 1.8; color: #3A4A6B; }
         details summary { cursor: pointer; font-weight: 700; font-size: 13px; color: #1F5FD1; min-height: 28px; }
         details p { white-space: pre-wrap; margin-top: 6px; }
+        details.already { background: #fff; border: 1.5px solid #B8C2D3; padding: 12px 14px; margin-top: 0; font-size: 13px; }
+        details.already summary { font-size: 14px; min-height: 32px; line-height: 32px; }
+        details.already p { white-space: normal; margin-top: 8px; }
+        details.already ul { margin: 8px 0 0 18px; display: flex; flex-direction: column; gap: 8px; }
         .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 56px; border: none; border-radius: 14px; padding: 12px 16px; font-size: 17px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: inherit; }
         .btn:disabled { opacity: 0.6; cursor: default; }
         .btn-primary { background: #1F5FD1; color: #fff; }
@@ -84,6 +88,18 @@
                 <div class="tag" id="joinStore"></div>
                 <h1>ショップカードを作成</h1>
             </div>
+            <!-- 登録済みなのに、この画面が出た方への案内 -->
+            <details class="already" id="alreadyBox">
+                <summary>すでに登録済みの方はこちら</summary>
+                <p>会員証は、登録したスマートフォンの、登録したときと同じアプリ(Safari・Chromeなど)で開くと、入力なしで表示されます。</p>
+                <p>登録済みなのにこの画面が出るときは、次のどれかに当てはまります。</p>
+                <ul>
+                    <li><b>プライベートブラウズ(シークレットモード)で開いている</b><br>会員証を覚えておけません。通常のタブで、QRコードを読み取り直してください。</li>
+                    <li><b>登録したときと、ちがうアプリで開いている</b><br>LINEなどのアプリの中の画面と、Safari・Chromeは別々です。登録したときと同じアプリで開いてください。</li>
+                    <li><b>機種変更をした・ブラウザのデータを消した</b><br>お店のスタッフに「カードの再発行」とお伝えください。スタンプとクーポンは、そのまま引き継がれます。</li>
+                </ul>
+                <p>もう一度登録する必要はありません(同じ電話番号では、登録できません)。</p>
+            </details>
             <div class="panel">
                 <p class="note">入力は2つだけです。パスワードやSMS認証はありません。</p>
                 <p class="note" id="joinCardInfo" style="margin-top:6px;"></p>
@@ -151,7 +167,7 @@
             <ul class="history" id="historyList"></ul>
         </section>
 
-        <p class="box" id="homeHint" hidden>このページを「ホーム画面に追加」しておくと、次回からすぐに会員証を開けます。<br>iPhone:共有ボタン →「ホーム画面に追加」 / Android:メニュー →「ホーム画面に追加」</p>
+        <p class="box" id="homeHint" hidden>このページを「ホーム画面に追加」しておくと、次回からすぐに会員証を開けます。<br>iPhone:共有ボタン →「ホーム画面に追加」 / Android:メニュー →「ホーム画面に追加」<br>※プライベートブラウズ(シークレットモード)では、会員証を覚えておけません。通常のタブでお使いください。</p>
     </div>
     <script type="module" src="./card-page.js"></script>
 </body>

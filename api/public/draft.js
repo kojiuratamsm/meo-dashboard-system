@@ -14,6 +14,7 @@
 // 必要な Vercel の環境変数:ANTHROPIC_API_KEY(Claude Console で発行したAPIキー)
 // 任意の環境変数:
 //   ANTHROPIC_MODEL(使うモデル。未設定なら claude-haiku-5-5)
+//   ANTHROPIC_EFFORT(AIが文章の前に「考える」量。low / medium / high / off。未設定なら low)
 //   ANTHROPIC_WORKSPACE_ID(APIキーがワークスペース専用でない場合に必要。wrkspc_ で始まるID)
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jgtcqmdpbgqximqlhiyl.supabase.co';
@@ -22,12 +23,16 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIs
 const DEFAULT_MODEL = 'claude-haiku-5-5';
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 const AI_TIMEOUT_MS = 12000;
+// AIが出せる量の上限。AIが文章の前に「考える」分もこの中に数えられるため、文章の長さより大きく取る。
+// (小さすぎると、考える分で使い切って、文章が途中で切れる)
+const AI_MAX_TOKENS = 4000;
+const EFFORTS = new Set(['low', 'medium', 'high', 'off']);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const LENGTHS = {
-    short: { label: '短め', guide: '50〜90文字くらい(2文ほど)', min: 20, max: 150 },
-    normal: { label: 'ふつう', guide: '110〜170文字くらい(3〜4文)', min: 40, max: 260 },
-    long: { label: '長め', guide: '200〜300文字くらい(5〜6文)', min: 70, max: 450 },
+    short: { label: '短め', guide: '50〜90文字くらい(2文ほど)', min: 15, max: 150 },
+    normal: { label: 'ふつう', guide: '110〜170文字くらい(3〜4文)', min: 15, max: 260 },
+    long: { label: '長め', guide: '200〜300文字くらい(5〜6文)', min: 15, max: 450 },
 };
 // 「選ばれていない選択肢の言葉」の確認から外す、ありふれた語
 const IGNORE_LABELS = new Set(['その他', '特になし', 'なし', 'とくになし']);
@@ -274,13 +279,31 @@ export function buildPrompt({ storeName, material, length, previous = [], ai = {
 // 指示文の「例」にだけ出てくる言葉。お客様の回答・店舗の設定にないのに文章に出てきたら、例の写しとみなす
 const EXAMPLE_ONLY_WORDS = ['縮毛矯正', '髪の広がり', '渋谷'];
 
-/** AIの出力を整える(前後の空白、見出し、確認事項、全体を囲むかぎかっこを外す) */
+// 文の終わりとして自然な記号 / 記号が無くても、文が終わっているとみなせる言い切りの形
+const END_MARK = /[。!?\uFF01\uFF1F…♪)）]$/;
+const FINAL_FORM = /(です|ます|でした|ました|ません|ましょう|たい|ない|よ|ね|た|だ)$/;
+
+/** AIの出力を整える(前後の空白、見出し、確認事項、全体を囲むかぎかっこを外す。言い切りで終わっていれば「。」を補う) */
 export function cleanDraft(text) {
     let t = String(text || '').replace(/\r/g, '').trim();
     t = t.split(/【(?:文章の確認事項|生成時の注意)】/)[0].trim();
     t = t.replace(/^【口コミの下書き】\s*/, '').trim();
     t = t.replace(/^[「『"“]+/, '').replace(/[」』"”]+$/, '').trim();
-    return t.replace(/\n{2,}/g, '\n');
+    t = t.replace(/\n{2,}/g, '\n');
+    if (t && !END_MARK.test(t) && FINAL_FORM.test(t)) t += '。';
+    return t;
+}
+
+/** 文章が、文の途中で終わっていないか */
+export function endsProperly(text) {
+    return END_MARK.test(String(text || '').trim());
+}
+
+/** 途中で切れた文章を、最後まで書けている文のところで切る(1文も無ければ空文字) */
+export function trimToLastSentence(text) {
+    const t = String(text || '').trim();
+    const m = t.match(/^[\s\S]*[。!?\uFF01\uFF1F]/);
+    return m ? m[0].trim() : '';
 }
 
 /** できた文章が、決まりを守っているか確認する。問題があれば理由を返す */
@@ -294,6 +317,8 @@ export function validateDraft(text, { material, length, ai = {}, storeName = '' 
     if (/[★☆#＃]|星\s*[1-5１-５一二三四五]|[1-5１-５]\s*点/.test(t)) return { ok: false, reason: 'mentions_rating' };
     if (/\p{Extended_Pictographic}/u.test(t)) return { ok: false, reason: 'emoji' };
     if (/^\s*[・\-*●■]/m.test(t)) return { ok: false, reason: 'bullets' };
+    // 文の途中で終わっていないこと
+    if (!endsProperly(t)) return { ok: false, reason: 'cut_off' };
     // 選ばれていない選択肢の言葉が、本文に入っていないこと(お客様が選んだ・書いた言葉に含まれる場合は除く)
     const allowed = [...material.selected, ...material.freeTexts, ai.area || '', ai.category || '', storeName || ''].join('\n');
     for (const word of material.unselected) {
@@ -330,9 +355,25 @@ async function rpc(name, args) {
     return { data, error: null };
 }
 
-async function callClaude({ apiKey, model, system, user }) {
+/** AIが文章の前に「考える」量の設定(環境変数 ANTHROPIC_EFFORT。未設定・不明な値は low) */
+export function effortSetting(value = process.env.ANTHROPIC_EFFORT) {
+    const v = String(value || '').trim().toLowerCase();
+    return EFFORTS.has(v) ? v : 'low';
+}
+
+/**
+ * AIに文章を作ってもらう。
+ * ・claude-haiku-5-5 などは、何も指定しないと、文章の前に「考える」(その分も max_tokens に数えられる)。
+ *   考える量は output_config.effort で指定する。off のときは、考えない設定にする。
+ * ・この指定を受け付けないモデルのとき(400エラー)は、指定を外して1回だけやり直す。
+ */
+async function callClaude({ apiKey, model, system, user, effort = 'low', plain = false }) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+    const extra = plain ? {} : effort === 'off'
+        ? { thinking: { type: 'disabled' } }
+        : { output_config: { effort } };
+    let retryPlain = false;
     try {
         const res = await fetch(ANTHROPIC_URL, {
             method: 'POST', signal: controller.signal,
@@ -341,17 +382,25 @@ async function callClaude({ apiKey, model, system, user }) {
                 // ワークスペース専用でないAPIキーの場合は、どのワークスペースで動かすかの指定が必要
                 ...(process.env.ANTHROPIC_WORKSPACE_ID ? { 'anthropic-workspace-id': process.env.ANTHROPIC_WORKSPACE_ID } : {}),
             },
-            body: JSON.stringify({ model, max_tokens: 700, system, messages: [{ role: 'user', content: user }] }),
+            body: JSON.stringify({ model, max_tokens: AI_MAX_TOKENS, system, messages: [{ role: 'user', content: user }], ...extra }),
         });
         const data = await res.json().catch(() => null);
-        if (!res.ok) return { ok: false, status: res.status, error: String(data?.error?.message || `HTTP ${res.status}`) };
-        const text = (data?.content || []).filter(c => c.type === 'text').map(c => c.text).join('');
-        return { ok: true, text, inputTokens: data?.usage?.input_tokens ?? null, outputTokens: data?.usage?.output_tokens ?? null };
+        if (!res.ok) {
+            const message = String(data?.error?.message || `HTTP ${res.status}`);
+            if (res.status === 400 && !plain && /output_config|effort|thinking/i.test(message)) retryPlain = true;
+            else return { ok: false, status: res.status, error: message };
+        } else {
+            // 文章は、種類が text の部分だけ(考えた内容の部分は使わない)
+            const text = (data?.content || []).filter(c => c.type === 'text').map(c => c.text).join('');
+            return { ok: true, text, stopReason: String(data?.stop_reason || ''), inputTokens: data?.usage?.input_tokens ?? null, outputTokens: data?.usage?.output_tokens ?? null };
+        }
     } catch (e) {
         return { ok: false, status: 0, error: e?.name === 'AbortError' ? 'timeout' : String(e?.message || e) };
     } finally {
         clearTimeout(timer);
     }
+    if (retryPlain) return callClaude({ apiKey, model, system, user, effort, plain: true });
+    return { ok: false, status: 0, error: 'unknown' };
 }
 
 export default async function handler(req, res) {
@@ -388,21 +437,34 @@ export default async function handler(req, res) {
 
     // 2. AIに作ってもらう。決まりを守れていなければ、1回だけ作り直す
     //    (地域名・業種・キーワードが入っていなくても、作り直しはしない。文章の自然さを優先する)
-    let result = null, usageIn = 0, usageOut = 0, lastReason = '';
+    let result = null, cutText = '', usageIn = 0, usageOut = 0, lastReason = '';
+    // 上限に当たった・時間切れになったあとの作り直しは、AIが「考える」のをやめて、文章だけを書かせる(同じ失敗をくり返さない)
+    let noThinking = false;
+    const effort = effortSetting();
+    const NOTES = {
+        example_leak: '前回の文章には、指示文の例にだけある言葉(別のお店の例)が入っていました。お客様の回答にある内容だけで、書き直してください',
+        format: '前回の文章には、見出しや【】の表記が入っていました。口コミの本文だけを書いてください',
+        cut_off: '前回の文章は、文の途中で終わっていました。最後の文まで書き切って、「。」で終えてください',
+        too_long: '前回の文章は長すぎました。指定の長さに収めてください',
+    };
     for (let attempt = 0; attempt < 2 && !result; attempt++) {
-        const note = lastReason === 'example_leak'
-            ? '前回の文章には、指示文の例にだけある言葉(別のお店の例)が入っていました。お客様の回答にある内容だけで、書き直してください'
-            : lastReason === 'format'
-                ? '前回の文章には、見出しや【】の表記が入っていました。口コミの本文だけを書いてください'
-                : '前回の文章は決まりを守れていませんでした。回答にない内容・星の数・「アンケート」という言葉・絵文字を入れず、指定の長さで書き直してください';
+        const note = NOTES[lastReason] || '前回の文章は決まりを守れていませんでした。回答にない内容・星の数・「アンケート」という言葉・絵文字を入れず、指定の長さで書き直してください';
         const user = attempt === 0 ? prompt.user : `${prompt.user}\n\n(${note})`;
-        const aiRes = await callClaude({ apiKey, model, system: prompt.system, user });
-        if (!aiRes.ok) { lastReason = `ai_error:${aiRes.status}`; console.error('Claude API failed:', aiRes.status, aiRes.error); if (aiRes.status === 401 || aiRes.status === 403 || aiRes.status === 404) break; continue; }
+        const aiRes = await callClaude({ apiKey, model, system: prompt.system, user, effort: noThinking ? 'off' : effort });
+        if (!aiRes.ok) { lastReason = `ai_error:${aiRes.status}`; if (aiRes.error === 'timeout') noThinking = true; console.error('Claude API failed:', aiRes.status, aiRes.error); if (aiRes.status === 401 || aiRes.status === 403 || aiRes.status === 404) break; continue; }
         usageIn += aiRes.inputTokens || 0; usageOut += aiRes.outputTokens || 0;
+        if (aiRes.stopReason === 'refusal') { lastReason = 'refusal'; continue; }
         const text = cleanDraft(aiRes.text);
+        // 上限に当たって止まった文章は、文の途中で切れている(そのままは使わない)
+        if (aiRes.stopReason === 'max_tokens') { lastReason = 'cut_off'; noThinking = true; cutText = cutText || text; console.error('draft cut off by max_tokens'); continue; }
         const check = validateDraft(text, { material, length, ai, storeName: info.store_name });
-        if (!check.ok) { lastReason = check.reason; continue; }
+        if (!check.ok) { lastReason = check.reason; if (check.reason === 'cut_off') cutText = cutText || text; continue; }
         result = text;
+    }
+    // 2回とも途中で切れたときは、最後まで書けている文のところまでを使う(切れた文は出さない)
+    if (!result && cutText) {
+        const trimmed = trimToLastSentence(cutText);
+        if (trimmed && validateDraft(trimmed, { material, length, ai, storeName: info.store_name }).ok) result = trimmed;
     }
 
     // 3. 結果を記録する(成功した文章、または失敗)

@@ -31,7 +31,7 @@ const JOIN_ERRORS = {
     invalid_name: 'お名前を入力してください(40文字まで)。',
     invalid_phone: '電話番号を、市外局番から入力してください(例:090-1234-5678)。',
     consent_required: '利用規約と個人情報の利用目的を確認して、チェックを入れてください。',
-    phone_exists: 'この電話番号は、すでに登録されています。機種変更などで会員証が表示されないときは、お店のスタッフに「カードの再発行」とお伝えください。',
+    phone_exists: 'この電話番号は、すでに登録されています。プライベートブラウズや、登録したときとちがうアプリで開いていると、会員証が表示されません(上の「すでに登録済みの方はこちら」をご覧ください)。機種変更などのときは、お店のスタッフに「カードの再発行」とお伝えください。',
     busy: 'ただいま登録が混み合っています。しばらくしてから、もう一度お試しください。',
     card_disabled: 'このお店のショップカードは、現在ご利用いただけません。',
 };
@@ -193,6 +193,7 @@ $('joinForm').addEventListener('submit', async (e) => {
     const res = await walletApi({ action: 'join', card_key: cardKey, name, phone, consent: true, qr: stampQr || undefined });
     btn.disabled = false; btn.textContent = '登録してカードを表示';
     if (!res.ok || !res.view) {
+        if (res.status === 'phone_exists') $('alreadyBox').open = true;   // 登録済みの方への案内を開いて見せる
         msg.textContent = JOIN_ERRORS[res.status] || (res.reason === 'database_not_ready' ? 'ただいま登録を受け付けられません。お手数ですが、スタッフにお声がけください。' : NETWORK_ERROR);
         return;
     }
