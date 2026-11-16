@@ -253,6 +253,127 @@ async function issueResetUrl(c) {
     document.body.append(bg);
 }
 
+// ------------------------------------------------------------
+// 店舗アカウントの削除(MSMの管理者だけ。追加SQL_14)
+// 確認の画面で、消えるデータの件数を見せ、店舗名(またはメールアドレス)を入力したときだけ削除できる。
+// 削除の可否・範囲は、DB側の関数(neo_admin_store_preview / neo_admin_store_delete)が決める。画面の表示は案内だけ。
+// ------------------------------------------------------------
+const DELETE_CSS = `
+.del-list { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; margin-bottom: 14px; }
+.del-list dt { color: #4A5568; font-weight: 600; }
+.del-list dd { color: #2D3748; word-break: break-all; }
+.del-counts { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; padding: 0; list-style: none; }
+.del-counts li { font-size: 13px; background: #F8FAFC; border: 1px solid var(--border-color); border-radius: 8px; padding: 4px 10px; }
+.del-counts li b { color: #2D3748; }
+.del-dangerbox { background: #FEECEB; color: #9B1C1C; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.7; margin-bottom: 14px; }
+.btn.danger-solid { background: var(--danger); color: #fff; }
+`;
+const COUNT_LABELS = [['surveys', 'アンケート', '件'], ['responses', '回答', '件'], ['ai_drafts', 'AIの口コミ文章', '件'], ['coupons', 'クーポン', '件'],
+    ['coupon_issues', 'お客様に渡したクーポン', '枚'], ['members', '会員', '人'], ['stamp_events', 'スタンプの記録', '件']];
+const NAME_PENDING = '(店舗名未入力)';
+
+/** DBから返ったエラーを、画面に出す文に直す */
+function deleteErrorText(error) {
+    const m = String(error?.message || '');
+    if (m.includes('Could not find') || m.includes('does not exist') || m.includes('schema cache')) return 'この機能を使うには、Supabase で「追加SQL_14_店舗アカウントの削除.sql」を実行してください。';
+    if (m.includes('not_allowed')) return '店舗の削除は、MSMの管理者だけが行えます。';
+    if (m.includes('not_found')) return 'この店舗は見つかりませんでした。すでに削除されている可能性があります。画面を読み込み直してください。';
+    if (m.includes('not_neo')) return 'MapOn NEO 以外のプランの顧客は、ここからは削除できません。';
+    if (m.includes('is_staff')) return 'MSMスタッフのアカウントにつながっている店舗は、削除できません。';
+    if (m.includes('name_mismatch')) return '入力した店舗名(またはメールアドレス)が一致しません。';
+    if (m.includes('foreign key') || m.includes('violates')) return 'ほかの機能のデータがこの店舗を使っているため、削除できませんでした。何も削除していません。(詳細:' + m + ')';
+    if (m.includes('permission denied')) return 'データベースの権限が足りず、削除できませんでした。何も削除していません。(詳細:' + m + ')';
+    return '削除できませんでした。何も削除していません。' + (m ? '(詳細:' + m + ')' : '');
+}
+
+async function openDeleteDialog(c, onDeleted) {
+    const body = el('div', {}, el('p', { class: 'muted', text: '確認しています…' }));
+    const titleId = 'delTitle';
+    const bg = el('div', { class: 'modal-bg', id: 'deleteModal' });
+    const dialog = el('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': titleId },
+        el('h3', { id: titleId, text: '店舗アカウントの削除' }), body);
+    let busy = false, done = false;
+    const close = () => { if (busy) return; bg.remove(); document.removeEventListener('keydown', onKey); if (done) onDeleted?.(); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
+    document.addEventListener('keydown', onKey);
+    bg.append(dialog);
+    document.body.append(bg);
+    const closeBtn = (label = '閉じる') => el('button', { class: 'btn sub', type: 'button', id: 'delCloseBtn', onclick: close }, label);
+
+    let res;
+    try { res = await supabase.rpc('neo_admin_store_preview', { p_client_id: String(c.id) }); } catch (e) { res = { data: null, error: e }; }
+    if (res.error || !res.data) {
+        body.replaceChildren(el('p', { class: 'msg ng', id: 'delMsg', style: { fontSize: '14px', lineHeight: '1.7' }, text: deleteErrorText(res.error) }),
+            el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '14px' } }, closeBtn()));
+        return;
+    }
+    const p = res.data;
+    const name = String(p.company_name || '').trim();
+    const named = name && name !== NAME_PENDING;
+    const shown = named ? name : '(店舗名が未入力)';
+    const loginText = !p.has_login ? 'なし(すでに削除されています)' : p.login_shared ? 'ほかの顧客と共有のため、残します' : 'あり(一緒に削除します)';
+    const info = el('dl', { class: 'del-list' },
+        el('dt', { text: '店舗名' }), el('dd', { id: 'delName', text: shown }),
+        el('dt', { text: '氏名' }), el('dd', { text: p.owner_name || '-' }),
+        el('dt', { text: 'メールアドレス' }), el('dd', { id: 'delEmail', text: p.email || '-' }),
+        el('dt', { text: '登録日' }), el('dd', { text: fmtDate(p.created_at) }),
+        el('dt', { text: 'ログイン用アカウント' }), el('dd', { id: 'delLogin', text: loginText }));
+    if (!p.deletable) {
+        body.replaceChildren(info,
+            el('p', { class: 'msg ng', id: 'delMsg', style: { fontSize: '14px', lineHeight: '1.7' }, text: deleteErrorText({ message: p.reason }) }),
+            el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '14px' } }, closeBtn()));
+        return;
+    }
+    const counts = p.counts || {};
+    const total = COUNT_LABELS.reduce((a, [k]) => a + (Number(counts[k]) || 0), 0);
+    // 確認の入力:店舗名があれば店舗名、未入力ならメールアドレス(DB側はどちらでも受け付ける)
+    const expect = named ? name : String(p.email || '').trim();
+    const matches = (v) => named ? v.trim() === expect : v.trim().toLowerCase() === expect.toLowerCase();
+    const input = el('input', { class: 'input', id: 'delConfirm', autocomplete: 'off', spellcheck: 'false', 'aria-describedby': 'delConfirmHelp' });
+    const msg = el('p', { class: 'msg', id: 'delMsg', role: 'alert' });
+    const delBtn = el('button', { class: 'btn danger-solid', type: 'button', id: 'delBtn', disabled: true }, el('i', { class: 'fa-solid fa-trash' }), '削除する');
+    const cancelBtn = closeBtn('やめる');
+    input.addEventListener('input', () => { delBtn.disabled = !matches(input.value); msg.textContent = ''; });
+    // Enterキーでも削除できる。キーの既定の動きは止める(完了画面の「閉じる」ボタンまで押されて、すぐ閉じないように)
+    input.addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; e.preventDefault(); if (!delBtn.disabled) delBtn.click(); });
+    delBtn.addEventListener('click', async () => {
+        if (!matches(input.value) || busy) return;
+        busy = true; delBtn.disabled = true; cancelBtn.disabled = true; input.disabled = true;
+        msg.className = 'msg'; msg.textContent = '削除しています…';
+        let r;
+        try { r = await supabase.rpc('neo_admin_store_delete', { p_client_id: String(c.id), p_confirm_name: input.value.trim() }); } catch (e) { r = { data: null, error: e }; }
+        busy = false;
+        if (r.error || !r.data?.ok) {
+            msg.className = 'msg ng'; msg.textContent = deleteErrorText(r.error);
+            cancelBtn.disabled = false; input.disabled = false; delBtn.disabled = !matches(input.value);
+            return;
+        }
+        done = true;
+        body.replaceChildren(
+            el('p', { class: 'msg ok', id: 'delDone', style: { fontSize: '15px', fontWeight: '700' }, text: `「${shown}」を削除しました。` }),
+            el('p', { class: 'muted', style: { lineHeight: '1.8', marginTop: '6px' }, text: r.data.auth_deleted
+                ? 'ログイン用アカウントも削除しました。このメールアドレスで、もう一度申し込むこともできます。'
+                : 'ログイン用アカウントは、削除していません(すでにないか、ほかの顧客と共有のため)。' }),
+            el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '14px' } }, closeBtn()));
+        dialog.querySelector('#delCloseBtn')?.focus();
+    });
+    body.replaceChildren(info,
+        el('div', { class: 'muted', style: { fontWeight: '700', color: '#2D3748' }, text: total ? '一緒に削除されるデータ' : '一緒に削除されるデータ(まだありません)' }),
+        el('ul', { class: 'del-counts', id: 'delCounts' }, ...COUNT_LABELS.map(([k, label, unit]) =>
+            el('li', { 'data-count': k }, `${label} `, el('b', { text: String(Number(counts[k]) || 0) }), unit))),
+        el('div', { class: 'del-dangerbox' },
+            el('div', { text: '・削除すると、元に戻せません。店舗の管理画面に入れなくなり、お客様のアンケート・会員証・クーポンも使えなくなります。' }),
+            el('div', { text: '・実際に使っていた店舗の場合は、必要なデータ(回答のCSVなど)を先に保存してください。' })),
+        el('div', { class: 'field' },
+            el('label', { for: 'delConfirm', text: named ? '確認のため、店舗名を入力してください' : '確認のため、登録のメールアドレスを入力してください' }),
+            el('p', { class: 'muted', id: 'delConfirmHelp', style: { margin: '0 0 6px', fontSize: '12px' } }, '入力するもの:', el('b', { text: expect })),
+            input),
+        msg,
+        el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '10px' } }, cancelBtn, delBtn));
+    input.focus();
+}
+
 async function render() {
     app.replaceChildren(el('p', { class: 'muted', text: '読み込み中...' }));
     // 氏名(owner_name)の列は「追加SQL_7」で追加される。まだ実行されていない場合は、氏名なしで一覧を表示する。
@@ -263,12 +384,17 @@ async function render() {
         const plain = await supabase.from('clients').select(base).eq('plan', NEO_PLAN).order('created_at', { ascending: false });
         return { ...plain, hasOwnerName: false };
     };
-    const [overview, clientsRes, surveysRes, statsRes, settingRes] = await Promise.all([
+    // 削除ボタンは、MSMの管理者にだけ出す(確かめられないときは出さない。実際の可否はDB側の関数が決める)
+    const loadIsAdmin = async () => {
+        try { const r = await supabase.rpc('is_msm_admin'); return !r.error && r.data === true; } catch { return false; }
+    };
+    const [overview, clientsRes, surveysRes, statsRes, settingRes, isAdmin] = await Promise.all([
         overviewCard(),
         loadClients(),
         supabase.from('neo_surveys').select('id, client_id').is('deleted_at', null),
         supabase.from('neo_survey_stats').select('survey_id, response_count'),
         supabase.from('neo_settings').select('value').eq('key', 'question_guide_url').maybeSingle(),
+        loadIsAdmin(),
     ]);
     const error = clientsRes.error || surveysRes.error || statsRes.error;
     if (error) {
@@ -314,7 +440,10 @@ async function render() {
                     el('a', { href: `/neo?client=${encodeURIComponent(c.id)}`, class: 'btn small' },
                         el('i', { class: 'fa-solid fa-right-to-bracket' }), '管理画面に入る'),
                     c.auth_id ? el('button', { class: 'btn small sub', type: 'button', title: 'パスワードを忘れた方に送るURLを発行します', onclick: () => issueResetUrl(c) },
-                        el('i', { class: 'fa-solid fa-key' }), 'PW再設定URL') : null)));
+                        el('i', { class: 'fa-solid fa-key' }), 'PW再設定URL') : null,
+                    isAdmin ? el('button', { class: 'btn small danger', type: 'button', 'data-delete': String(c.id), title: 'この店舗アカウントを削除します(管理者だけ)',
+                        'aria-label': `${namePending(c) ? (c.email || '店舗') : c.company_name}を削除`, onclick: () => openDeleteDialog(c, render) },
+                        el('i', { class: 'fa-solid fa-trash' }), '削除') : null)));
         }));
     };
     search.addEventListener('input', draw);
@@ -342,6 +471,6 @@ async function render() {
 (async () => {
     const session = await requireStaff();
     if (!session) return;
-    document.head.append(el('style', { text: OVERVIEW_CSS }));
+    document.head.append(el('style', { text: OVERVIEW_CSS + DELETE_CSS }));
     render();
 })();
