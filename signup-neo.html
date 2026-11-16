@@ -132,6 +132,20 @@
             animation: fadeIn 0.4s ease forwards;
         }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        /* パスワード欄の「目のマーク」(押すと、入力した文字が見える) */
+        .pw-wrap { position: relative; }
+        .pw-wrap .form-control { padding-right: 52px; }
+        .pw-toggle {
+            position: absolute; top: 50%; right: 6px; transform: translateY(-50%);
+            width: 42px; height: 42px; border: none; background: transparent;
+            border-radius: 10px; color: #64748b; font-size: 17px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .pw-toggle:hover { color: var(--primary); background: rgba(79, 70, 229, 0.08); }
+        .pw-toggle svg[hidden] { display: none; }
+        .pw-toggle:focus-visible { outline: 3px solid rgba(139, 92, 246, 0.4); outline-offset: 1px; }
+        .mail-note { font-size: 13px; line-height: 1.7; color: #475569; background: #f1f5f9; border-radius: 12px; padding: 12px 16px; margin: -10px 20px 24px; max-width: 420px; }
+        .mail-note.ok { background: #ecfdf5; color: #047857; }
         
         .success-icon {
             width: 80px; height: 80px;
@@ -163,7 +177,12 @@
                 <label for="ownerName">氏名</label>
                 <input type="text" id="ownerName" class="form-control" placeholder="例: 山田 太郎" autocomplete="name" maxlength="100">
             </div>
-            
+
+            <div class="form-group">
+                <label for="storeName">店舗名</label>
+                <input type="text" id="storeName" class="form-control" placeholder="例: 焼肉 新宿本店" autocomplete="organization" maxlength="100">
+            </div>
+
             <div class="form-group">
                 <label for="emailUrl">メールアドレス(ログインのときに使います)</label>
                 <input type="email" id="emailUrl" class="form-control" placeholder="example@shop.com" autocomplete="username">
@@ -171,12 +190,18 @@
             
             <div class="form-group">
                 <label for="passwordVal">パスワード(8文字以上・半角英数字)</label>
-                <input type="password" id="passwordVal" class="form-control" placeholder="••••••••" autocomplete="new-password" minlength="8">
+                <div class="pw-wrap">
+                    <input type="password" id="passwordVal" class="form-control" placeholder="••••••••" autocomplete="new-password" minlength="8">
+                    <button type="button" class="pw-toggle" data-target="passwordVal" aria-label="パスワードを表示する" aria-pressed="false"><svg class="eye-open" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-closed" hidden viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.2"/><path d="M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.9 0 3.6-.6 5-1.5"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
+                </div>
             </div>
 
             <div class="form-group">
                 <label for="passwordConfirm">確認パスワード(同じパスワードをもう一度)</label>
-                <input type="password" id="passwordConfirm" class="form-control" placeholder="••••••••" autocomplete="new-password" minlength="8">
+                <div class="pw-wrap">
+                    <input type="password" id="passwordConfirm" class="form-control" placeholder="••••••••" autocomplete="new-password" minlength="8">
+                    <button type="button" class="pw-toggle" data-target="passwordConfirm" aria-label="確認パスワードを表示する" aria-pressed="false"><svg class="eye-open" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-closed" hidden viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.2"/><path d="M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.9 0 3.6-.6 5-1.5"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
+                </div>
             </div>
 
             <p id="formError" role="alert" style="display:none; background:#FEECEB; color:#C5221F; border-radius:10px; padding:12px; font-size:13px; line-height:1.6; margin-bottom:16px;"></p>
@@ -195,14 +220,64 @@
 店舗管理画面を発行しました。<br>
             登録したメールアドレスとパスワードで<br>ログインすると、店舗管理画面が開きます。
         </p>
+        <p class="mail-note" id="mailNote" role="status" style="display:none;"></p>
         <button class="btn-submit" style="width:auto; padding:12px 30px;" onclick="window.location.href='/login'">ログイン画面へ進む</button>
     </div>
 
     <script type="module">
         import { supabase } from './supabase-config.js';
 
+        // パスワード欄の「目のマーク」:押すたびに、入力した文字を表示する/隠すを切り替える
+        document.querySelectorAll('.pw-toggle').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const input = document.getElementById(btn.dataset.target);
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+                const label = btn.dataset.target === 'passwordConfirm' ? '確認パスワード' : 'パスワード';
+                btn.setAttribute('aria-label', label + (show ? 'を隠す' : 'を表示する'));
+                // 見えている間は「斜線の入った目」、隠れている間は「ふつうの目」(アイコンは画面に直接書いた図形。外部の読み込みに頼らない)
+                // (SVGの図形には hidden の指定が効かないため、属性として付け外しする)
+                btn.querySelector('.eye-open').toggleAttribute('hidden', show);
+                btn.querySelector('.eye-closed').toggleAttribute('hidden', !show);
+            });
+        });
+
+        // 申し込み直後の「お迎えメール」(ログインURLの案内)を、サーバーに頼む。
+        // 送れなくても、申し込み自体は完了している(メールは補助)。待つのは最大10秒。
+        async function requestWelcomeMail(accessToken) {
+            const note = document.getElementById('mailNote');
+            note.className = 'mail-note';
+            note.textContent = 'ご登録のメールアドレスに、ログインURLのご案内をお送りしています…';
+            note.style.display = 'block';
+            let sent = false;
+            try {
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 10000);
+                const res = await fetch('/api/public/welcome', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+                    body: '{}',
+                    keepalive: true,   // すぐに「ログイン画面へ進む」を押されても、送信の依頼は届くようにする
+                    signal: ctrl.signal
+                });
+                clearTimeout(timer);
+                const body = await res.json().catch(() => ({}));
+                sent = res.ok && body && body.sent === true;
+            } catch (e) {
+                console.warn('お迎えメールの送信に失敗:', e);
+            }
+            if (sent) {
+                note.className = 'mail-note ok';
+                note.textContent = 'ご登録のメールアドレスに、ログインURLのご案内をお送りしました。届かない場合は、迷惑メールのフォルダもご確認ください。';
+            } else {
+                note.textContent = 'ログインURLは https://www.mapon-meo.com/login です。下のボタンからも、ログイン画面に進めます。';
+            }
+        }
+
         window.registerClient = async function() {
             const ownerNode = document.getElementById('ownerName');
+            const storeNode = document.getElementById('storeName');
             const emailNode = document.getElementById('emailUrl');
             const passNode = document.getElementById('passwordVal');
             const confirmNode = document.getElementById('passwordConfirm');
@@ -211,6 +286,7 @@
             if (btn.disabled) return;   // 二重送信を防ぐ
 
             const owner_name = ownerNode.value.trim();
+            const company_name = storeNode.value.trim();
             const email = emailNode.value.trim();
             const password = passNode.value.trim();
             const passwordConfirm = confirmNode.value.trim();
@@ -224,8 +300,12 @@
             };
             errorBox.style.display = 'none';
 
-            if(!owner_name || !email || !password || !passwordConfirm) {
-                showError("全ての項目を入力してください。", !owner_name ? ownerNode : !email ? emailNode : !password ? passNode : confirmNode);
+            if(!owner_name || !company_name || !email || !password || !passwordConfirm) {
+                showError("全ての項目を入力してください。", !owner_name ? ownerNode : !company_name ? storeNode : !email ? emailNode : !password ? passNode : confirmNode);
+                return;
+            }
+            if(company_name === '(店舗名未入力)') {
+                showError("店舗名を入力してください。", storeNode);
                 return;
             }
             if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -251,9 +331,9 @@
                 email: email,
                 password: password,
                 options: {
-                    // 店舗名は申し込み時には聞かない(初回ログインのときに入力してもらう)。
-                    // company_name を渡さないと、トリガーが「(店舗名未入力)」で登録する。
-                    data: { signup_source: 'mapon_signup', owner_name: owner_name, plan: plan }
+                    // 氏名と店舗名は、DBのトリガー(handle_mapon_signup)が clients に保存する(どちらも100文字まで)。
+                    // 店舗名が入っているので、初回ログインの「店舗名の入力」は出ない。
+                    data: { signup_source: 'mapon_signup', owner_name: owner_name, company_name: company_name, plan: plan }
                 }
             });
 
@@ -276,6 +356,11 @@
 
             // 登録完了の画面を表示し、「ログイン画面へ進む」からログインしてもらう
             document.getElementById('successView').style.display = 'flex';
+
+            // 登録してすぐログインできる設定(Confirm email がオフ)では、ログインの情報が返ってくる。
+            // その情報で本人だと確かめてから、サーバーがお迎えメールを送る。
+            const accessToken = authData && authData.session && authData.session.access_token;
+            if (accessToken) await requestWelcomeMail(accessToken);
         }
     </script>
 </body>
