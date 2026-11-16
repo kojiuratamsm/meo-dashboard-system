@@ -147,9 +147,10 @@ export default async function handler(req, res) {
         const done = status === 'joined' || status === 'already_member';
         if (!done) { if (existing) keep(); return res.status(200).json({ ok: false, status }); }
         keep();
-        // スタンプ用QRコードから登録に進んだ場合は、登録のあとにスタンプを付ける
-        let stamp = null;
-        if (qr) { const s = await rpc('neo_stamp_by_qr', { p_device: device, p_qr: qr }); stamp = s.error ? null : s.data; }
+        // 登録と同時に付いたスタンプ(追加SQL_15)。付いていれば、それを画面に出す
+        let stamp = r.data?.stamp && typeof r.data.stamp === 'object' ? r.data.stamp : null;
+        // 登録で付かなかった場合(すでに会員だった・追加SQL_15 が未実行)で、スタンプ用QRコードから進んだときは、ここで付ける
+        if (!stamp && qr) { const s = await rpc('neo_stamp_by_qr', { p_device: device, p_qr: qr }); stamp = s.error ? null : s.data; }
         const v = await view({ p_card_key: cardKey });
         if (v.error) return dbError(v.error);
         return res.status(200).json({ ok: true, status, stamp, view: v.data });

@@ -114,8 +114,8 @@
 
         <!-- ② AIが作った文章(星の数にかかわらず、全員に同じ画面を表示する) -->
         <section id="step-draft" class="panel" hidden>
-            <h2 id="draftTitle">文章ができました</h2>
-            <p id="draftNote"></p>
+            <h2 id="draftTitle">アンケートへのご回答ありがとうございます！</h2>
+            <p id="draftNote" style="white-space:pre-line;"></p>
             <div class="seg" id="lengthSeg" role="group" aria-label="文章の長さ">
                 <button type="button" data-length="short">短め</button>
                 <button type="button" data-length="normal">ふつう</button>
@@ -128,7 +128,7 @@
                 <button type="button" class="btn btn-outline" id="btnRegen" style="align-self:flex-start;">別の文章にする</button>
                 <p class="note" id="draftMsg" role="status"></p>
                 <button type="button" class="btn btn-primary" id="btnSend">文章を送信する</button>
-                <p class="note" style="text-align:center;">ボタンを押すと文章がコピーされ、Googleの口コミ画面が開きます。<br>入力欄を長押しして貼り付け、ご自身で投稿してください。</p>
+                <p class="note" style="text-align:center; font-size:12px;">ボタンを押すと文章がコピーされ<br>Googleの口コミ画面が開きます。<br><span style="display:inline-block;">入力欄を長押しして貼り付け、</span><span style="display:inline-block;">ご自身で投稿してください。</span></p>
                 <button type="button" class="btn btn-link" id="btnSkip">投稿せずに次へ進む</button>
             </div>
         </section>

@@ -239,9 +239,9 @@ function copyText(text, field) {
 // ---- ② AIが作った文章 ----
 function renderDraft(message = '') {
     const ok = draft.available;
-    $('draftTitle').textContent = ok ? '文章ができました' : '口コミの文章';
+    $('draftTitle').textContent = ok ? 'アンケートへのご回答ありがとうございます！' : '口コミの文章';
     $('draftNote').textContent = ok
-        ? 'アンケートの回答をもとにAIが作った文章です。ご自身の体験と合っているか、確認してください。'
+        ? '今回のアンケート内容をもとに、AIがクチコミの文章を作成しました。\n実際の体験や感想と合っているか、文章の内容をご確認ください。\n「文章を送信する」ボタンを押すと、Googleのクチコミ画面が開きます。\nよろしければ、クチコミへのご協力をお願いします！'
         : '文章を自動で作れませんでした。お手数ですが、ご自身の言葉でお書きください。空欄のまま進むこともできます。';
     $('lengthSeg').hidden = !ok;
     $('btnRegen').hidden = !ok;
@@ -386,7 +386,7 @@ async function init() {
 
     // 追加SQL_8 の実行前は review_enabled が返らない。その場合は、回答後に返るURLで判断する。
     const reviewEnabled = survey.review_enabled !== false;
-    const submitLabel = reviewEnabled ? '文章を生成する' : '回答を送信する';
+    const submitLabel = reviewEnabled ? '送信する' : '回答を送信する';
     const questions = survey.questions || [];
 
     const { form, collect } = renderSurveyForm($('formArea'), questions, {

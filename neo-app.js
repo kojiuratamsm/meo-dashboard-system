@@ -476,7 +476,7 @@ function openPreview(survey) {
             el('div', { style: { fontWeight: '700', fontSize: '18px' }, text: clientName() }),
             el('p', { style: { fontSize: '13px', color: '#4A5568', whiteSpace: 'pre-wrap', marginTop: '8px' }, text: survey.intro_text || '' })),
         area), { wide: true });
-    renderSurveyForm(area, survey.questions, { onSubmit: () => alert('プレビューのため、送信はされません。'), submitLabel: (hasReviewUrl() ? '文章を生成する' : '回答を送信する') + '(プレビュー)' });
+    renderSurveyForm(area, survey.questions, { onSubmit: () => alert('プレビューのため、送信はされません。'), submitLabel: (hasReviewUrl() ? '送信する' : '回答を送信する') + '(プレビュー)' });
 }
 
 async function openQrModal(survey) {
