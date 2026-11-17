@@ -7,6 +7,7 @@
 // ・②は、お店にGoogle口コミURLが設定されているときだけ表示する(未設定なら ①→③)。
 // ・星の数や回答の内容によって、②の表示を変えない(全員に同じ画面を出す)。
 // ・「文章を送信する」は、文章をコピーしてGoogleの口コミ画面を開くだけ。貼り付けと投稿は、お客様自身が行う。
+// ・AIの文章があるときは、「文章を確認しました」にチェックを入れるまで「文章を送信する」は押せない(2026/11/17)。
 
 import { supabase } from './supabase-config.js';
 import { renderSurveyForm, SURVEY_FORM_CSS } from './survey-lib.js';
@@ -24,7 +25,8 @@ const DRAFT_TIMEOUT_MS = 28000;
 const LENGTH_LABELS = { short: '短め', normal: 'ふつう', long: '長め' };
 
 let response = null;   // { response_id, action_token, google_review_url }
-const draft = { available: false, original: '', remaining: 0, length: 'short', busy: false };
+// confirmed:お客様が「文章を確認しました」にチェックを入れたか(文章が変わると外れる)
+const draft = { available: false, original: '', remaining: 0, length: 'short', busy: false, confirmed: false };
 
 // ---- この端末での進み具合(再読み込みや「戻る」で、同じ回答を二重に送らないため) ----
 const STORE_KEY = `neo_survey_${slug}`;
@@ -241,7 +243,7 @@ function renderDraft(message = '') {
     const ok = draft.available;
     $('draftTitle').textContent = ok ? 'アンケートへのご回答ありがとうございます！' : '口コミの文章';
     $('draftNote').textContent = ok
-        ? '今回のアンケート内容をもとに、AIがクチコミの文章を作成しました。\n実際の体験や感想と合っているか、文章の内容をご確認ください。\n「文章を送信する」ボタンを押すと、Googleのクチコミ画面が開きます。\nよろしければ、クチコミへのご協力をお願いします！'
+        ? '今回のアンケート内容をもとに、AIがクチコミの文章を作成しました。\n実際の体験や感想と合っているか、文章の内容をご確認ください。\nご確認後、「文章を確認しました」にチェックを入れると、「文章を送信する」ボタンが押せるようになります。\n「文章を送信する」ボタンを押すと、Googleのクチコミ画面が開きます。\nよろしければ、クチコミへのご協力をお願いします！'
         : '文章を自動で作れませんでした。お手数ですが、ご自身の言葉でお書きください。空欄のまま進むこともできます。';
     $('lengthSeg').hidden = !ok;
     $('btnRegen').hidden = !ok;
@@ -254,11 +256,22 @@ function renderDraft(message = '') {
     $('btnRegen').textContent = draft.busy ? '文章を作っています…'
         : draft.remaining > 0 ? `別の文章にする(あと${draft.remaining}回)` : '作り直しは上限に達しました';
     $('draftText').disabled = draft.busy;
-    $('btnSend').disabled = draft.busy;
+    updateSendState();
     // 作っている間は、長さのボタンのすぐ下に知らせる(押したことが、その場で分かるように)
     $('draftBusy').hidden = !(ok && draft.busy);
     $('draftBusy').textContent = `「${LENGTH_LABELS[draft.length] || ''}」の文章を作っています…(10秒ほどかかることがあります)`;
     $('draftMsg').textContent = message;
+}
+
+// 「文章を確認しました」のチェックと、「文章を送信する」ボタン。
+// AIの文章があるときは、チェックを入れるまで送信できない(自分で書く画面では、チェックは出さない)。
+function updateSendState() {
+    const needCheck = draft.available;
+    $('confirmRow').hidden = !needCheck;
+    $('draftConfirm').checked = needCheck && draft.confirmed;
+    $('draftConfirm').disabled = draft.busy;
+    $('confirmHint').hidden = !needCheck || draft.confirmed;
+    $('btnSend').disabled = draft.busy || (needCheck && !draft.confirmed);
 }
 
 // サーバーに文章の生成を頼む。成功したら true
@@ -280,6 +293,7 @@ async function requestDraft(length) {
         draft.original = data.text;
         draft.length = length;
         draft.remaining = Number(data.remaining) || 0;
+        draft.confirmed = false;   // 新しい文章は、もう一度確認してもらう
         $('draftText').value = data.text;
         return true;
     } catch {
@@ -309,8 +323,13 @@ function bindDraftStep() {
     }));
     $('btnRegen').addEventListener('click', () => regenerate(draft.length));
 
+    // 「文章を確認しました」:チェックを入れると送信できる。文章を書き直したら、チェックは外れる
+    $('draftConfirm').addEventListener('change', () => { draft.confirmed = $('draftConfirm').checked; updateSendState(); });
+    $('draftText').addEventListener('input', () => { if (draft.confirmed) { draft.confirmed = false; updateSendState(); } });
+
     // 「文章を送信する」:コピーして、Googleの口コミ画面を開く(貼り付けと投稿は、お客様自身が行う)
     $('btnSend').addEventListener('click', async () => {
+        if (draft.available && !draft.confirmed) { updateSendState(); return; }
         const url = response?.google_review_url;
         if (!url) { showDone(); return; }
         const field = $('draftText');

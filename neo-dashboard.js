@@ -115,8 +115,8 @@ export function buildTodos(d) {
         '特典のクーポンが、公開中でない・有効期限切れ・発行枚数の上限のどれかになっています。', 'クーポンを確認する', '#/coupons');
     if (card.enabled && t.qr_expires_on) {
         const left = daysBetween(todayJst(), t.qr_expires_on);
-        if (left < 0) add(true, 'スタンプ用QRコードの読み取り期限が、切れています', 'いまは、お客様が読み取ってもスタンプが付きません。期限を変えるか、作り直してください。', '期限を直す', '#/members');
-        else if (left <= 7) add(true, left === 0 ? 'スタンプ用QRコードの読み取り期限は、今日までです' : `スタンプ用QRコードの読み取り期限が、あと${left}日で切れます`,
+        if (left < 0) add(true, '会員証・スタンプ用QRコードの読み取り期限が、切れています', 'いまは、お客様が読み取ってもスタンプが付きません。期限を変えるか、作り直してください。', '期限を直す', '#/members');
+        else if (left <= 7) add(true, left === 0 ? '会員証・スタンプ用QRコードの読み取り期限は、今日までです' : `会員証・スタンプ用QRコードの読み取り期限が、あと${left}日で切れます`,
             '期限を過ぎると、スタンプが付かなくなります。', '期限を変える', '#/members');
     }
     if (Number(ai.limit) > 0 && Number(ai.month) >= Number(ai.limit) * 0.8) add(true, `今月のAIの文章が、上限に近づいています(${ai.month} / ${ai.limit}回)`,
@@ -125,7 +125,7 @@ export function buildTodos(d) {
         '地域名・業種・キーワードを入れると、お客様の文章が整いやすくなります。', '設定する', `#/edit/${s.id}`);
     if (card.enabled && Number(t.rewards) === 0) add(false, 'ショップカードに、特典がありません', 'スタンプが貯まったときに届くクーポンを決められます。', '特典を決める', '#/members');
     if (!card.enabled) add(false, 'ショップカードは、いま非公開です', '公開すると、お客様が会員登録して、スタンプを貯められます。', 'ショップカードを開く', '#/members');
-    if (t.reward_mode === 'none') add(false, 'アンケートのお礼(クーポン)を出していません', '出す場合は「クーポン・抽選」で決められます。出さないお店は、そのままで問題ありません。', 'クーポン・抽選を開く', '#/coupons');
+    if (t.reward_mode === 'none') add(false, 'アンケートのお礼(クーポン)を出していません', '出す場合は「クーポン」で決められます。出さないお店は、そのままで問題ありません。', 'クーポンを開く', '#/coupons');
     return list;
 }
 

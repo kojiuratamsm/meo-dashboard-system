@@ -1,7 +1,9 @@
 // neo-members.js
 // MapOn NEO 管理画面の「会員・ショップカード」
 //   ・ショップカードの内容(スタンプの数・特典・有効期限・公開/非公開)
-//   ・会員証の入口のQRコード、スタンプ用QRコード(印刷・読み取り期限・作り直し)
+//   ・会員証・スタンプ用QRコード(印刷・読み取り期限・作り直し)
+//     ※2026/11/17:QRコードは「アンケート用」と「会員証・スタンプ用」の2つにした。会員証の入口のQR(/card?k=)は画面から外した
+//       (スタンプ用QRを会員でない方が読み取ると登録の画面が出て、登録するとスタンプが1個付くため。印刷済みの入口のQRは、そのまま使える)。
 //   ・会員一覧、手でスタンプを付ける・取り消す(修正用)、カードの再発行、電話番号の表示、会員の削除
 // 見られる・書けるデータの範囲は、DB側の権限(RLS)と関数(追加SQL_10)で制限している。
 // スタッフがお客様のQRコードを読み取る機能・クーポン番号で利用済みにする機能は、ない(お客様が自分で操作する)。
@@ -338,7 +340,7 @@ export async function renderMembers({ app, client, openModal }) {
                 el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '4px' }, text: 'いっぱいになると、次のカードが0個から始まります。付くのは、1回の読み取りで1個・同じ会員は1日1回までです。' })),
             el('div', { class: 'field' }, el('label', { text: '特典(スタンプが決めた数になったときに届くクーポン)' }),
                 ...rewardRows,
-                coupons.length ? null : el('p', { class: 'warnbox', text: '特典に使うクーポンがありません。先に「クーポン・抽選」でクーポンを作って、公開してください。' }),
+                coupons.length ? null : el('p', { class: 'warnbox', text: '特典に使うクーポンがありません。先に「クーポン」でクーポンを作って、公開してください。' }),
                 el('button', { class: 'btn sub small', type: 'button', id: 'addReward', disabled: state.rewards.length >= 5 || !coupons.length,
                     onclick: () => { state.rewards.push({ at: state.rewards.length ? '' : state.stamp_goal, coupon_id: '' }); drawCard(); } }, el('i', { class: 'fa-solid fa-plus' }), '特典を追加'),
                 el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '6px', lineHeight: '1.7' },
@@ -349,22 +351,7 @@ export async function renderMembers({ app, client, openModal }) {
             el('div', { class: 'row', style: { justifyContent: 'flex-end' } }, saveBtn), msg);
     }
 
-    // ---------- 会員証の入口・スタンプ用QRコード ----------
-    const entryCard = el('div', { class: 'card', id: 'entryCard' });
-    async function drawEntry() {
-        const url = cardEntryUrl(settings.card_key);
-        entryCard.replaceChildren(
-            el('h2', { text: '会員証の入口(登録・会員証の表示用)' }),
-            el('div', { class: 'mb-qr' }, await qrImage(url),
-                el('div', { class: 'info' },
-                    el('div', { text: 'お客様がこのQRコードを読み取ると、未登録の方には登録の画面、登録済みの方には会員証が出ます。' }),
-                    el('div', { class: 'mb-url', id: 'entryUrl', text: url }),
-                    el('div', { class: 'row' },
-                        el('button', { class: 'btn sub small', type: 'button', onclick: () => printQr({ storeName, title: settings.card_name, url, lines: ['スマートフォンのカメラで読み取ると、ショップカードを作れます。', '登録はお名前と電話番号だけです。'] }) }, '印刷する'),
-                        el('button', { class: 'btn sub small', type: 'button', onclick: () => downloadQr(url, `会員証の入口QR_${storeName}.png`) }, 'PNGをダウンロード')),
-                    el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '8px', lineHeight: '1.7' }, text: 'アンケートのQRコードを読み取った画面にも、ショップカードへの入口と、お客様が持っているクーポンが出ます。' }))));
-    }
-
+    // ---------- 会員証・スタンプ用QRコード ----------
     const qrCard = el('div', { class: 'card', id: 'stampQrCard' });
     async function drawQr(message = '') {
         const url = stampQrUrl(qr.token);
@@ -380,8 +367,8 @@ export async function renderMembers({ app, client, openModal }) {
                 qr = data; modal.close(); drawQr(value ? '読み取り期限を変更しました。' : '読み取り期限をなくしました。');
             };
             const modal = openModal(el('div', {},
-                el('h3', { text: 'スタンプ用QRコードの読み取り期限' }),
-                el('p', { class: 'muted', style: { lineHeight: '1.7', marginBottom: '10px' }, text: '選んだ日の終わりまで読み取れます。期限を過ぎると、お客様が読み取ってもスタンプは付きません。QRコードの絵は変わりません。' }),
+                el('h3', { text: '会員証・スタンプ用QRコードの読み取り期限' }),
+                el('p', { class: 'muted', style: { lineHeight: '1.7', marginBottom: '10px' }, text: '選んだ日の終わりまで読み取れます。期限を過ぎると、会員の方が読み取ってもスタンプは付きません(はじめての方には、登録の画面と一緒に「読み取り期限が過ぎています」と表示されます)。QRコードの絵は変わりません。' }),
                 el('div', { class: 'field' }, el('label', { for: 'qrExpiryDate', text: 'この日まで' }), input), m,
                 el('div', { class: 'row', style: { justifyContent: 'space-between' } },
                     el('button', { class: 'btn sub', type: 'button', id: 'qrExpiryNone', onclick: () => save('') }, '期限なしにする'),
@@ -390,7 +377,7 @@ export async function renderMembers({ app, client, openModal }) {
         });
         const renewBtn = el('button', { class: 'btn danger small', type: 'button', id: 'qrRenew' }, '作り直す');
         renewBtn.addEventListener('click', async () => {
-            if (!confirm('スタンプ用QRコードを作り直しますか?\n古いQRコードは、すぐに使えなくなります。印刷して置いているものは、新しいものに取り替えてください。')) return;
+            if (!confirm('会員証・スタンプ用QRコードを作り直しますか?\n古いQRコードは、すぐに使えなくなります。印刷して置いているものは、新しいものに取り替えてください。')) return;
             renewBtn.disabled = true;
             const { data, error } = await call('neo_stamp_qr_update', { p_client_id: clientId, p_action: 'renew', p_expires_on: null });
             renewBtn.disabled = false;
@@ -398,20 +385,21 @@ export async function renderMembers({ app, client, openModal }) {
             qr = data; drawQr('新しいQRコードを作りました。古いQRコードは使えません。印刷して取り替えてください。');
         });
         qrCard.replaceChildren(
-            el('h2', { text: 'スタンプ用QRコード' }),
+            el('h2', { text: '会員証・スタンプ用QRコード' }),
             el('div', { class: 'mb-qr' }, await qrImage(url),
                 el('div', { class: 'info' },
-                    el('div', { text: 'レジ横に置いて、お客様が自分のスマートフォンで読み取ります。' }),
+                    el('div', { text: 'お客様がこのQRコードを読み取ると、はじめての方には登録の画面(登録するとスタンプが1個付きます)、登録済みの方にはスタンプが付いた会員証が出ます。レジ横などに置いてください。' }),
                     el('div', {}, el('b', { text: '付く数:' }), '1回の読み取りで1個'),
                     el('div', {}, el('b', { text: '制限:' }), '同じ会員は1日1回まで'),
                     el('div', { id: 'qrExpiryText' }, el('b', { text: '読み取り期限:' }), qr.expires_on ? qr.expires_on.replaceAll('-', '/') + ' まで' : '期限なし',
                         expired ? el('span', { class: 'badge off', style: { marginLeft: '8px', color: 'var(--danger)' }, text: '期限切れ(いまは読み取れません)' }) : null),
                     el('div', { class: 'row', style: { marginTop: '8px' } },
-                        el('button', { class: 'btn small', type: 'button', id: 'qrPrint', onclick: () => printQr({ storeName, title: 'スタンプはこちら', url, lines: ['お会計のときに、スマートフォンのカメラで読み取ってください。', 'スタンプが1個付きます(お一人さま1日1回)。'] }) }, '印刷する'),
+                        el('button', { class: 'btn small', type: 'button', id: 'qrPrint', onclick: () => printQr({ storeName, title: 'スタンプはこちら', url, lines: ['お会計のときに、スマートフォンのカメラで読み取ってください。', 'はじめての方は、お名前と電話番号を登録すると、スタンプが1個付きます。', '2回目からは、読み取るだけでスタンプが付きます(お一人さま1日1回)。'] }) }, '印刷する'),
+                        el('button', { class: 'btn sub small', type: 'button', onclick: () => downloadQr(url, `会員証・スタンプ用QR_${storeName}.png`) }, 'PNGをダウンロード'),
                         expiryBtn, renewBtn),
                     msg,
                     el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '8px', lineHeight: '1.7' },
-                        text: '作り直すと、古いQRコードは使えなくなります。写真に撮られて、来店していないのに読み取られている疑いがあるときに使います。会員でない方が読み取ると、登録の画面が出ます。' }))));
+                        text: '読み取り期限は、ふだんは「期限なし」のままにしてください(期限を過ぎると、スタンプが付かなくなります)。写真に撮られて、来店していないのに読み取られている疑いがあるときは「作り直す」を使います。作り直すと、古いQRコードは使えなくなります。QRコードは、この「会員証・スタンプ用」と、アンケートのQRコードの2つです。アンケートのQRコードを読み取った画面にも、ショップカードへの入口と、お客様が持っているクーポンが出ます。' }))));
     }
 
     // ---------- 会員一覧 ----------
@@ -432,7 +420,7 @@ export async function renderMembers({ app, client, openModal }) {
                 el('td', { text: jst(m.last_stamp_at) }),
                 el('td', { text: jst(m.created_at) }),
                 el('td', {}, el('button', { class: 'btn small sub', type: 'button', onclick: () => openMember(m.id) }, 'くわしく'))))
-                : [el('tr', {}, el('td', { colspan: '7', class: 'muted', style: { textAlign: 'center', padding: '26px' }, text: members.length ? '当てはまる会員がいません。' : '会員はまだいません。お客様が「会員証の入口」か「スタンプ用QRコード」を読み取って登録すると、ここに出ます。' }))]));
+                : [el('tr', {}, el('td', { colspan: '7', class: 'muted', style: { textAlign: 'center', padding: '26px' }, text: members.length ? '当てはまる会員がいません。' : '会員はまだいません。お客様が「会員証・スタンプ用QRコード」を読み取って登録すると、ここに出ます。' }))]));
         };
         search.addEventListener('input', () => { keyword = search.value; fill(); });
         listCard.replaceChildren(
@@ -510,7 +498,7 @@ export async function renderMembers({ app, client, openModal }) {
                             (d) => `スタンプを${count}個付けました。` + (d?.rank_up?.name ? `ランクが「${d.rank_up.name}」に上がりました。` : '') + ((d?.rewards || []).length ? `特典「${d.rewards.map(r => r.label).join('」「')}」のクーポンが、お客様の会員証に届きました。` : '') + (d?.reward_missed ? '※特典のクーポンは発行できませんでした(公開中でない、または発行枚数の上限に達しています)。' : '')) }, 'スタンプを付ける'),
                         el('button', { class: 'btn sub', type: 'button', id: 'stampCancel', onclick: () => { if (confirm(`スタンプを${count}個取り消しますか?\n取り消すスタンプで届いた特典のクーポンが未使用なら、そのクーポンも取り消されます。`)) run('neo_member_stamp_manual', { p_member_id: id, p_delta: -count, p_note: note.value.trim() || null }, () => `スタンプを${count}個取り消しました。`); } }, '取り消す')),
                     el('div', { class: 'field', style: { marginTop: '10px', marginBottom: 0 } }, note),
-                    el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '6px' }, text: 'ふだんは、お客様がスタンプ用QRコードを読み取ります。ここは、読み取れなかったときや付け間違いの修正に使います。だれが操作したかは、履歴に残ります。' })),
+                    el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '6px' }, text: 'ふだんは、お客様が会員証・スタンプ用QRコードを読み取ります。ここは、読み取れなかったときや付け間違いの修正に使います。だれが操作したかは、履歴に残ります。' })),
                 el('div', { class: 'mb-section' }, reissueBtn, reissueBox),
                 el('div', { class: 'mb-section' }, el('h4', { text: 'スタンプの履歴(新しい順・20件まで)' }),
                     el('div', { class: 'mb-hist', id: 'memberHistory' }, ...((events || []).length
@@ -522,7 +510,7 @@ export async function renderMembers({ app, client, openModal }) {
         await draw();
     }
 
-    app.replaceChildren(el('div', { class: 'page-title' }, '会員・ショップカード'), statsRow, cardCard, entryCard, qrCard, listCard);
+    app.replaceChildren(el('div', { class: 'page-title' }, '会員・ショップカード'), statsRow, cardCard, qrCard, listCard);
     drawStats(); drawCard(); drawList();
-    await drawEntry(); await drawQr();
+    await drawQr();
 }

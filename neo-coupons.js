@@ -1,8 +1,11 @@
 // neo-coupons.js
-// MapOn NEO 管理画面の「クーポン・抽選」
+// MapOn NEO 管理画面の「クーポン」(ルーレットを使える間は「クーポン・抽選」)
 //   ・アンケート回答のお礼の設定(決まったクーポン/ルーレット/出さない)
 //   ・クーポンの作成・編集
 //   ・ルーレットの景品と当選確率(合計100%)、景品表示法の目安
+// ※2026/11/17:ルーレットは、景品表示法の「懸賞」に当たる可能性があるため止めている(追加SQL_18)。
+//   neo_settings の lottery_enabled が 'true' のときだけ、ルーレットの選択肢と設定欄を出す(読めない・無いときは出さない)。
+//   止めている間も、作った仕組みと保存済みの景品の設定は、そのまま残す。
 // 見られる・書けるデータの範囲は、DB側の権限(RLS)と関数(neo_save_reward_settings)で制限している。
 
 import { supabase } from './supabase-config.js';
@@ -25,6 +28,7 @@ export const COUPON_CSS = `
 `;
 
 const SAVE_ERRORS = [
+    ['lottery_disabled', 'ルーレットは、現在ご利用いただけません。お礼の設定を選び直してください。'],
     ['coupon_required', '「決まったクーポンを出す」を選んだときは、公開中のクーポンを1つ選んでください。'],
     ['percent_total_not_100', 'ルーレットの当選確率の合計を、100%にしてください。'],
     ['fallback_required', 'ルーレットの景品のうち1つを「参加賞」に選んでください(上限に達した景品の代わりに出します)。'],
@@ -85,14 +89,18 @@ export function buildCouponPayload(f) {
 export async function renderCoupons({ app, client, openModal }) {
     app.replaceChildren(el('p', { class: 'muted', text: '読み込み中...' }));
     const clientId = String(client.id);
-    const [couponsRes, statsRes, settingsRes] = await Promise.all([
+    const [couponsRes, statsRes, settingsRes, lotteryRes] = await Promise.all([
         supabase.from('neo_coupons').select('*').eq('client_id', clientId).is('deleted_at', null).order('created_at', { ascending: true }),
         supabase.from('neo_coupon_stats').select('*'),
         supabase.from('neo_reward_settings').select('*').eq('client_id', clientId).maybeSingle(),
+        supabase.from('neo_settings').select('value').eq('key', 'lottery_enabled').maybeSingle(),
     ]);
+    // ルーレットを使えるか(MSMが決める。読めない・設定が無いときは、使えない扱い)
+    const lotteryOn = !lotteryRes?.error && lotteryRes?.data?.value === 'true';
+    const pageTitle = lotteryOn ? 'クーポン・抽選' : 'クーポン';
     if (couponsRes.error) {
         const m = String(couponsRes.error.message || '');
-        app.replaceChildren(el('div', { class: 'page-title' }, 'クーポン・抽選'), el('div', { class: 'card' }, el('p', { style: { lineHeight: '1.8' },
+        app.replaceChildren(el('div', { class: 'page-title' }, pageTitle), el('div', { class: 'card' }, el('p', { style: { lineHeight: '1.8' },
             text: (m.includes('does not exist') || m.includes('Could not find') || m.includes('schema cache'))
                 ? 'この画面を使うには、データベースの設定が必要です。Supabase で「追加SQL_9_クーポンとルーレット.sql」を実行してください。'
                 : '読み込みに失敗しました: ' + m })));
@@ -101,8 +109,10 @@ export async function renderCoupons({ app, client, openModal }) {
     let coupons = couponsRes.data || [];
     const stats = Object.fromEntries((statsRes.data || []).map(s => [s.coupon_id, s]));
     const saved = settingsRes.data || {};
+    // ルーレットを止めている間に、ルーレットを選んだままの店舗は、お客様の画面にクーポンが出ていない(=出さない と同じ)
+    const lotteryStopped = !lotteryOn && saved.mode === 'lottery';
     const state = {
-        mode: saved.mode || 'none',
+        mode: lotteryStopped ? 'none' : (saved.mode || 'none'),
         coupon_id: saved.coupon_id || '',
         claim_limit: saved.claim_limit || 'once',
         avg_spend: saved.avg_spend || '',
@@ -121,13 +131,14 @@ export async function renderCoupons({ app, client, openModal }) {
         const total = state.prizes.reduce((s, p) => s + Math.round((num(p.percent) || 0) * 10), 0);
         const show = (ok, text) => { saveMsgs.forEach(n => { n.textContent = ''; }); msgNode.className = 'msg ' + (ok ? 'ok' : 'ng'); msgNode.textContent = text; };
         if (state.mode === 'coupon' && !state.coupon_id) return show(false, '「決まったクーポンを出す」を選んだときは、出すクーポンを選んでください。');
-        if (state.prizes.some(p => !p.coupon_id)) return show(false, 'ルーレットの景品に、クーポンが選ばれていない行があります。選ぶか、行を削除してください。');
+        if (lotteryOn && state.prizes.some(p => !p.coupon_id)) return show(false, 'ルーレットの景品に、クーポンが選ばれていない行があります。選ぶか、行を削除してください。');
         if (state.mode === 'lottery' && total !== 1000) return show(false, `ルーレットの当選確率の合計が ${total / 10}% です。100% にしてください。`);
         button.disabled = true;
         const { data, error } = await supabase.rpc('neo_save_reward_settings', { p_client_id: clientId, p_settings: {
             mode: state.mode, coupon_id: state.mode === 'coupon' ? state.coupon_id : (state.coupon_id || null), claim_limit: state.claim_limit,
             avg_spend: String(state.avg_spend || '').trim() ? num(state.avg_spend) : null,
-            prizes: state.prizes.map(p => ({ id: p.id, coupon_id: p.coupon_id, percent: num(p.percent), fallback: p.fallback })),
+            // ルーレットを止めている間は、景品を送らない(保存済みの景品の設定は、DB側でそのまま残す)
+            prizes: lotteryOn ? state.prizes.map(p => ({ id: p.id, coupon_id: p.coupon_id, percent: num(p.percent), fallback: p.fallback })) : [],
         } });
         button.disabled = false;
         if (error) return show(false, saveErrorText(error));
@@ -141,7 +152,7 @@ export async function renderCoupons({ app, client, openModal }) {
     function drawReward() {
         const radio = (value, title, extra) => {
             const input = el('input', { type: 'radio', name: 'rewardMode', value, checked: state.mode === value });
-            input.addEventListener('change', () => { state.mode = value; drawLottery(); });
+            input.addEventListener('change', () => { state.mode = value; if (lotteryOn) drawLottery(); });
             return el('label', { class: 'cp-radio' }, input, el('b', { text: title }), extra || null);
         };
         const couponSelect = el('select', { class: 'select', id: 'rewardCoupon', style: { flex: '1 1 220px', maxWidth: '340px' }, 'aria-label': '出すクーポン' }, ...couponOptions(state.coupon_id, '(クーポンを選んでください)'));
@@ -156,8 +167,10 @@ export async function renderCoupons({ app, client, openModal }) {
             el('h2', { text: 'アンケート回答のお礼に出すクーポン' }),
             el('p', { class: 'muted', style: { marginBottom: '12px', lineHeight: '1.7' },
                 text: 'お客様の画面の「アンケート回答によるクーポン取得」ボタンを押したあとに表示されます。口コミを投稿したかどうかには関係なく、アンケートに回答した方全員が対象です。' }),
+            ...(lotteryStopped ? [el('p', { class: 'warnbox', id: 'lotteryStoppedNote', style: { marginBottom: '10px' },
+                text: 'ルーレットは、現在ご利用いただけません。お客様の画面には、クーポンのボタンが出ていません。お礼に出すクーポンを選び直して、保存してください。' })] : []),
             radio('coupon', '決まったクーポンを出す', couponSelect),
-            radio('lottery', 'ルーレットで抽選する', el('span', { class: 'muted', text: '景品と確率は、下の「ルーレット(抽選)の設定」で決めます' })),
+            ...(lotteryOn ? [radio('lottery', 'ルーレットで抽選する', el('span', { class: 'muted', text: '景品と確率は、下の「ルーレット(抽選)の設定」で決めます' }))] : []),
             radio('none', 'クーポンを出さない'),
             el('div', { class: 'field', style: { marginTop: '12px' } }, el('label', { for: 'claimLimit', text: '受け取れる回数' }), limitSelect,
                 el('p', { class: 'muted', style: { marginTop: '4px', fontSize: '12px', lineHeight: '1.7' },
@@ -321,7 +334,7 @@ export async function renderCoupons({ app, client, openModal }) {
         refresh();
     }
 
-    function drawAll() { saveMsgs.length = 0; drawReward(); drawList(); drawLottery(); }
-    app.replaceChildren(el('div', { class: 'page-title' }, 'クーポン・抽選'), rewardCard, listCard, lotteryCard);
+    function drawAll() { saveMsgs.length = 0; drawReward(); drawList(); if (lotteryOn) drawLottery(); }
+    app.replaceChildren(el('div', { class: 'page-title' }, pageTitle), rewardCard, listCard, ...(lotteryOn ? [lotteryCard] : []));
     drawAll();
 }

@@ -44,6 +44,10 @@
         .draft-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
         .draft-text { width: 100%; min-height: 180px; border: 1.5px solid #B8C2D3; border-radius: 14px; padding: 14px; font-size: 16px; line-height: 1.7; font-family: inherit; resize: vertical; background: #fff; color: #1F2A44; }
         .draft-text:disabled { background: #F4F7FE; }
+        .confirm { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 14px; border: 1.5px solid #B8C2D3; border-radius: 12px; background: #fff; font-size: 15px; font-weight: 700; color: #1F2A44; cursor: pointer; }
+        .confirm input { width: 22px; height: 22px; margin: 0; flex: none; accent-color: #1F5FD1; }
+        .confirm:has(input:checked) { border-color: #1F5FD1; background: #EEF4FF; }
+        .confirm-hint { text-align: center; font-size: 12px; margin-top: -4px; }
         .stack { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
         .info { background: #F4F7FE; border-radius: 12px; padding: 14px; text-align: left; margin-top: 14px; }
         .info h3 { font-size: 15px; margin-bottom: 4px; }
@@ -127,6 +131,8 @@
             <div class="stack">
                 <button type="button" class="btn btn-outline" id="btnRegen" style="align-self:flex-start;">別の文章にする</button>
                 <p class="note" id="draftMsg" role="status"></p>
+                <label class="confirm" id="confirmRow" hidden><input type="checkbox" id="draftConfirm"><span>文章を確認しました</span></label>
+                <p class="note confirm-hint" id="confirmHint" hidden>チェックを入れると「文章を送信する」ボタンが押せるようになります。</p>
                 <button type="button" class="btn btn-primary" id="btnSend">文章を送信する</button>
                 <p class="note" style="text-align:center; font-size:12px;">ボタンを押すと文章がコピーされ<br>Googleの口コミ画面が開きます。<br><span style="display:inline-block;">入力欄を長押しして貼り付け、</span><span style="display:inline-block;">ご自身で投稿してください。</span></p>
                 <button type="button" class="btn btn-link" id="btnSkip">投稿せずに次へ進む</button>

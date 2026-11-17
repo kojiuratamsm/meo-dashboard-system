@@ -5,7 +5,7 @@
 //   #/new              新規作成
 //   #/edit/<id>        作成・編集
 //   #/responses/<id>   回答一覧・集計
-//   #/coupons          クーポン・抽選
+//   #/coupons          クーポン(ルーレットを使える間は「クーポン・抽選」)
 //   #/members          会員・ショップカード
 //   #/settings         設定
 
