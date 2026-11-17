@@ -40,6 +40,11 @@ export default async function handler(req, res) {
         .from('clients').select('id, company_name, auth_id').eq('id', clientId).maybeSingle();
     if (clientError || !client) return res.status(404).json({ error: '店舗が見つかりません。' });
     if (!client.auth_id) return res.status(400).json({ error: 'この店舗にはログイン用のアカウントがありません。' });
+    // MSMスタッフ・管理者のアカウントにつながった店舗には発行しない(スタッフが管理者のアカウントに入れないように)
+    const { data: staffTarget, error: staffTargetError } = await admin
+        .from('staff_members').select('auth_user_id').eq('auth_user_id', client.auth_id).maybeSingle();
+    if (staffTargetError) return res.status(500).json({ error: '権限の確認に失敗しました。' });
+    if (staffTarget) return res.status(403).json({ error: 'MSMスタッフ・管理者のアカウントには、再設定リンクを発行できません。ご本人が「パスワードをお忘れの方」から再設定してください。' });
 
     const { data: authUser, error: authUserError } = await admin.auth.admin.getUserById(client.auth_id);
     if (authUserError || !authUser?.user?.email) return res.status(404).json({ error: 'ログイン用のアカウントが見つかりません。' });

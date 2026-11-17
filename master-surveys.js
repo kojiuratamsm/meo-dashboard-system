@@ -227,6 +227,7 @@ async function issueResetUrl(c) {
     if (error || !data?.token) {
         const m = String(error?.message || '');
         alert('URLを発行できませんでした: ' + (m.includes('no_login_account') ? 'この契約者にはログイン用のアカウントがありません。'
+            : m.includes('is_staff') ? 'MSMスタッフ・管理者のアカウントにつながっているため、発行できません。ご本人がログイン画面の「パスワードをお忘れの方」から再設定してください。'
             : (m.includes('Could not find') || m.includes('does not exist')) ? 'データベースの設定(追加SQL_6)が必要です。' : (m || '不明なエラー')));
         return;
     }
