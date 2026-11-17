@@ -238,9 +238,6 @@
 
         <div style="margin-top:20px; padding:0 15px;">
             <p style="font-size:11px; color:#A0AEC0; margin-bottom:10px; font-weight:bold;">申し込みフォームURL取得</p>
-            <button class="btn-action" style="background:#4A5568; margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('/signup-a')">運用代行プラン</button>
-            <button class="btn-action" style="background:var(--primary-blue); margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('/signup-b')">MapOn</button>
-            <button class="btn-action" style="background:#34A853; margin-bottom:8px; width:100%; font-size:11px;" onclick="copySignupUrl('/signup-c')">MapOn(モニター)</button>
             <button class="btn-action" style="background:linear-gradient(135deg, #a855f7, #6366f1); width:100%; font-size:11px;" onclick="copySignupUrl('/signup-neo')">MapOn NEO</button>
         </div>
 
@@ -954,10 +951,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
                 <div style="margin-bottom:15px;">
                     <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">プラン</label>
                     <select id="newPlan" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
-                        <option value="A" selected>運用代行プラン</option>
-                        <option value="B">MapOn</option>
-                        <option value="C">MapOn(モニター)</option>
-                        <option value="D">MapOn NEO</option>
+                        <option value="D" selected>MapOn NEO</option>
                     </select>
                 </div>
                 <div style="margin-bottom:25px; background:#F8FAFC; border-radius:8px; padding:12px; font-size:12px; color:#64748B; line-height:1.7;">
@@ -1232,10 +1226,8 @@ Googleの評価システム上、成果には一定期間を要しますが、
                 window.location.href = '/neo?client=' + encodeURIComponent(client.id);
                 return;
             }
-            // 本人としてログイン済みのフラグ立て（localStorageのcurrentUserを書き換え）
-            localStorage.setItem('currentUser', JSON.stringify(client));
-            // ダッシュボードへリダイレクト
-            window.location.href = '/';
+            // 運用代行プラン・MapOn・MapOn(モニター)は廃止したため、管理画面はありません(2026/11/17)
+            alert('このクライアントのプランは提供を終了したため、管理画面はありません。');
         };
 
         // 現在扱っているクライアントのブログ一覧（編集中のみ保持）

@@ -115,15 +115,19 @@
                 return;
             }
 
-            // 認証成功！ブラウザにこの顧客の情報を記憶させる
-            localStorage.setItem('currentUser', JSON.stringify(clientData));
-            // MapOn NEO の契約者は、アンケート管理画面へ
-            if (clientData.plan === 'D') {
-                window.location.href = '/neo';
+            // 提供しているのは MapOn NEO だけ(運用代行プラン・MapOn・MapOn(モニター)は 2026/11/17 に廃止)
+            if (clientData.plan !== 'D') {
+                localStorage.removeItem('currentUser');
+                await supabase.auth.signOut();
+                alert("このアカウントのサービスは、提供を終了しました。\nご不明な点は、株式会社MSMまでお問い合わせください。");
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> ログイン';
+                btn.disabled = false;
                 return;
             }
-            // 本番ダッシュボードへ遷移
-            window.location.href = '/';
+            // 認証成功！ブラウザにこの顧客の情報を記憶させる
+            localStorage.setItem('currentUser', JSON.stringify(clientData));
+            // MapOn NEO の管理画面へ
+            window.location.href = '/neo';
         };
     </script>
 </body>

@@ -2,11 +2,12 @@ import { resolve } from 'path'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  // Multi-Page App: 全HTMLファイルをエントリーポイントとして登録
+  // Multi-Page App: 公開するHTMLファイルをエントリーポイントとして登録
+  // ※2026/11/17:提供しないサービス(運用代行プラン・MapOn・MapOn(モニター))の画面は、公開しない(本番に置かない)。
+  //   旧ダッシュボード(index.html)・予約ページ(reserve.html)・申し込みフォーム(signup-a/b/c.html)・旧アンケート見本(survey-mockup.html)
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
         landing: resolve(__dirname, 'landing.html'),
         login: resolve(__dirname, 'login.html'),
         masterLogin: resolve(__dirname, 'master-login.html'),
@@ -18,11 +19,6 @@ export default defineConfig({
         card: resolve(__dirname, 'card.html'),
         neo: resolve(__dirname, 'neo.html'),
         signupNeo: resolve(__dirname, 'signup-neo.html'),
-        signupA: resolve(__dirname, 'signup-a.html'),
-        signupB: resolve(__dirname, 'signup-b.html'),
-        signupC: resolve(__dirname, 'signup-c.html'),
-        reserve: resolve(__dirname, 'reserve.html'),
-        surveyMockup: resolve(__dirname, 'survey-mockup.html'),
         media: resolve(__dirname, 'media.html'),
         mediaLogin: resolve(__dirname, 'media-login.html'),
         mediaAdmin: resolve(__dirname, 'media-admin.html')
