@@ -1,5 +1,5 @@
 // neo-app.js
-// MapOn NEO の管理画面(アンケートの作成・編集・公開・QR・回答一覧)
+// MapOn の管理画面(アンケートの作成・編集・公開・QR・回答一覧)
 // 1つの店舗(契約者)の中だけで動く。契約者本人も、マスター(MSMスタッフ)も同じ画面を使う。
 //   #/                 アンケート一覧
 //   #/new              新規作成
@@ -709,7 +709,7 @@ function renderSettings() {
 
 // ------------------------------------------------------------
 /**
- * MapOn NEO の管理画面を起動する
+ * MapOn の管理画面を起動する
  * @param {{ root: HTMLElement, client: {id, company_name} }} options
  */
 export function startNeoApp({ root, client: targetClient, isMasterView: master = false, onStoreNameChange: onName }) {

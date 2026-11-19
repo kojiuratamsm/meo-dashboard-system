@@ -1,6 +1,6 @@
 // master-surveys.js
-// マスター管理画面「MapOn NEO」:契約者(申し込みフォームから登録した人)の一覧
-// 「管理画面に入る」で、その契約者の MapOn NEO 管理画面(neo.html)をマスターとして開く。
+// マスター管理画面「MapOn」:契約者(申し込みフォームから登録した人)の一覧
+// 「管理画面に入る」で、その契約者の MapOn 管理画面(neo.html)をマスターとして開く。
 
 import { supabase } from './supabase-config.js';
 import { requireStaff, staffLogout, authHeaders } from './staff-guard.js';
@@ -279,7 +279,7 @@ function deleteErrorText(error) {
     if (m.includes('Could not find') || m.includes('does not exist') || m.includes('schema cache')) return 'この機能を使うには、Supabase で「追加SQL_14_店舗アカウントの削除.sql」を実行してください。';
     if (m.includes('not_allowed')) return '店舗の削除は、MSMの管理者だけが行えます。';
     if (m.includes('not_found')) return 'この店舗は見つかりませんでした。すでに削除されている可能性があります。画面を読み込み直してください。';
-    if (m.includes('not_neo')) return 'MapOn NEO 以外のプランの顧客は、ここからは削除できません。';
+    if (m.includes('not_neo')) return '提供を終了した旧プランの顧客は、ここからは削除できません。';
     if (m.includes('is_staff')) return 'MSMスタッフのアカウントにつながっている店舗は、削除できません。';
     if (m.includes('name_mismatch')) return '入力した店舗名(またはメールアドレス)が一致しません。';
     if (m.includes('foreign key') || m.includes('violates')) return 'ほかの機能のデータがこの店舗を使っているため、削除できませんでした。何も削除していません。(詳細:' + m + ')';
@@ -450,7 +450,7 @@ async function render() {
     search.addEventListener('input', draw);
 
     app.replaceChildren(
-        el('div', { class: 'page-title' }, 'MapOn NEO'),
+        el('div', { class: 'page-title' }, 'MapOn 契約者一覧'),
         overview,
         urlCard(),
         aiCheckCard(),

@@ -1,17 +1,17 @@
 // api/public/welcome.js
-// MapOn NEO の申し込み直後に、登録したメールアドレスへ「お迎えメール」(ログインURLの案内)を送るサーバー処理。
+// MapOn の申し込み直後に、登録したメールアドレスへ「お迎えメール」(ログインURLの案内)を送るサーバー処理。
 // 呼び出すのは、申し込みフォーム(signup-neo.html)だけ。
 //
 // 安全のための決まり
 // ・送り先は、ログインの情報(申し込み直後に Supabase が返すもの)で確かめた「本人のメールアドレス」だけ。
 //   画面から送り先を指定することはできない(他人にメールを送らせない)。
-// ・1人に1回だけ。登録から15分以内だけ。MapOn NEO(plan='D')の申し込みだけ。(追加SQL_13 の関数が判定する)
+// ・1人に1回だけ。登録から15分以内だけ。MapOn(plan='D')の申し込みだけ。(追加SQL_13 の関数が判定する)
 // ・氏名と店舗名は、申し込みのときにDBに保存された値(clients)を使い、HTMLとして書き換えられない形に直してから入れる。
 // ・パスワードは、メールに入れない。
 // ・送れなくても、申し込み自体は完了している(画面は「ログインURL」を表示する)。
 //
 // 必要な Vercel の環境変数:RESEND_API_KEY(Resend の API Keys で作った、送信専用のキー)
-//   任意:WELCOME_FROM(差出人。初期値は MapOn NEO <contact@msm-fund.com>)、SITE_URL(初期値は https://www.mapon-meo.com)
+//   任意:WELCOME_FROM(差出人。初期値は MapOn <contact@msm-fund.com>)、SITE_URL(初期値は https://www.mapon-meo.com)
 // 秘密のキーは、この環境変数だけ。Supabase は、ブラウザにも配っている公開用のキー+本人のログインの情報で呼ぶ。
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://jgtcqmdpbgqximqlhiyl.supabase.co';
@@ -19,7 +19,7 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIs
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 const NAME_PENDING = '(店舗名未入力)';
 
-export const SUBJECT = '【MapOn NEO】お申し込みありがとうございます(ログインURLのご案内)';
+export const SUBJECT = '【MapOn】お申し込みありがとうございます(ログインURLのご案内)';
 
 /** 呼び出し元が、このサイト自身であること(ほかのサイトのページから呼ばせない) */
 export function sameOrigin(req) {
@@ -53,7 +53,7 @@ export function buildWelcomeMail({ ownerName, storeName, email, siteUrl }) {
     const text = [
         greet,
         '',
-        'このたびは、MapOn NEO にお申し込みいただき、ありがとうございます。',
+        'このたびは、MapOn にお申し込みいただき、ありがとうございます。',
         '店舗管理画面のアカウントを発行しました。',
         '',
         '■ ご登録内容',
@@ -77,14 +77,14 @@ export function buildWelcomeMail({ ownerName, storeName, email, siteUrl }) {
         'このメールに心当たりがない場合は、何もせず、このメールを破棄してください。',
         'ご不明な点は、このメールへの返信(contact@msm-fund.com)でお問い合わせください。',
         '',
-        '株式会社MSM / MapOn NEO'
+        '株式会社MSM / MapOn'
     ].join('\n');
 
     const e = escapeHtml;
     const row = (k, v) => `<tr><td style="padding:6px 12px 6px 0;color:#64748b;white-space:nowrap;vertical-align:top;">${k}</td><td style="padding:6px 0;color:#1e293b;font-weight:bold;">${v}</td></tr>`;
     const html = `<div style="font-family:'Hiragino Sans','Noto Sans JP',Meiryo,sans-serif;font-size:15px;line-height:1.8;color:#1e293b;max-width:560px;">
 <p>${e(greet)}</p>
-<p>このたびは、MapOn NEO にお申し込みいただき、ありがとうございます。<br>店舗管理画面のアカウントを発行しました。</p>
+<p>このたびは、MapOn にお申し込みいただき、ありがとうございます。<br>店舗管理画面のアカウントを発行しました。</p>
 <h3 style="font-size:16px;margin:24px 0 8px;">ご登録内容</h3>
 <table style="border-collapse:collapse;font-size:15px;">
 ${row('お名前', e(owner || '(未入力)'))}
@@ -100,7 +100,7 @@ ${row('メールアドレス', e(mail))}
 <p style="margin:0;">ログイン画面の「パスワードをお忘れの方」から、メールで再設定できます。</p>
 <p style="margin:24px 0 0;">店舗名は、ログイン後の「設定」で変更できます。</p>
 <p style="margin:24px 0 0;color:#64748b;font-size:13px;">このメールに心当たりがない場合は、何もせず、このメールを破棄してください。<br>ご不明な点は、このメールへの返信(contact@msm-fund.com)でお問い合わせください。</p>
-<p style="margin:16px 0 0;">株式会社MSM / MapOn NEO</p>
+<p style="margin:16px 0 0;">株式会社MSM / MapOn</p>
 </div>`;
     return { subject: SUBJECT, text, html };
 }
@@ -133,7 +133,7 @@ export default async function handler(req, res) {
         const email = me.ok && me.body && typeof me.body.email === 'string' ? me.body.email : '';
         if (!email || !me.body.id) return res.status(401).json({ sent: false, error: 'no_login' });
 
-        // 2. 送ってよいかをDBで判定し、「これから送る」と記録する(1人に1回・15分以内・NEOだけ)
+        // 2. 送ってよいかをDBで判定し、「これから送る」と記録する(1人に1回・15分以内・MapOnだけ)
         const claim = await supa('/rest/v1/rpc/neo_welcome_claim', token, { method: 'POST', body: '{}' });
         if (!claim.ok) return res.status(500).json({ sent: false, error: 'not_ready' });   // 追加SQL_13 が未実行など
         const c = claim.body || {};
@@ -146,7 +146,7 @@ export default async function handler(req, res) {
             method: 'POST',
             headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Idempotency-Key': `mapon-welcome-${me.body.id}` },
             body: JSON.stringify({
-                from: process.env.WELCOME_FROM || 'MapOn NEO <contact@msm-fund.com>',
+                from: process.env.WELCOME_FROM || 'MapOn <contact@msm-fund.com>',
                 to: [email],
                 subject: mail.subject,
                 html: mail.html,

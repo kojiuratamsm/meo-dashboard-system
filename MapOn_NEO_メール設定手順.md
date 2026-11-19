@@ -1,8 +1,47 @@
-# MapOn NEO メール送信の設定手順(パスワード再設定を、お店だけで完結させる)
+# MapOn メール送信の設定手順(パスワード再設定を、お店だけで完結させる)
 
 contact@msm-fund.com から、パスワード再設定のメールを自動で送るための設定です。
 作業は 4 か所です。**A. Resend(メール送信サービス)→ B. DNS(お名前.comレンタルサーバー)→ C. Supabase → D. 動作確認** の順に進めます。
 所要時間の目安は、DNSの反映待ちを除いて 30〜40 分です(反映は、多くの場合 15 分以内。最大 72 時間かかることがあります:Resend公式)。
+
+## 【2026/11/19 追加】名前を「MapOn NEO」から「MapOn」に変えたときの直し方(すでに設定済みの方は、ここだけ)
+
+コードを直しただけでは変わらない、**画面で設定した3か所**があります。次の順に直してください。どれも、数分で終わります。
+
+### ① Supabase:送信者名(Sender name)
+1. Supabase のダッシュボード → 対象のプロジェクト(MEO-Dashboard)を開く。
+2. 左メニュー **Authentication** → **Notifications** → **Email** → **SMTP Settings**。
+3. **Sender name** の欄が `MapOn NEO` になっているので、`MapOn` に書き換える。
+4. **Save**。
+5. **Password の欄は、空のまま保存して大丈夫か** を、画面で確認してください。「保存済みの値は表示されません」という趣旨の表示なら、空欄のままで、いまのパスワードが残ります。もし「必須」と出て保存できない場合は、Resend の API Keys で新しいキーを作り直し、**Resend の画面から Supabase の Password 欄に直接貼って**ください(チャットには貼らない)。
+
+### ② Supabase:パスワード再設定メールの文面
+1. **Authentication** → **Emails**(NOTIFICATIONS の下)→ **Templates** → **Reset Password**。
+2. **Subject(件名)** を、次に書き換える。
+```
+【MapOn】パスワード再設定のご案内
+```
+3. **Body** の中の、次の2行を直す(全部を貼り直してもよい。下の C-3 に新しい全文があります)。
+   - `<p>MapOn NEO のパスワード再設定のご依頼を受け付けました。</p>` → `<p>MapOn のパスワード再設定のご依頼を受け付けました。</p>`
+   - `<p>株式会社MSM / MapOn NEO</p>` → `<p>株式会社MSM / MapOn</p>`
+4. **Save changes**。
+
+### ③ Vercel:環境変数 `WELCOME_FROM`(設定している場合だけ)
+1. Vercel → 対象のプロジェクト → **Settings** → **Environment Variables**。
+2. **`WELCOME_FROM`** という名前があるか探す。
+   - **ない場合:何もしません。** コードの初期値が、新しい名前(`MapOn <contact@msm-fund.com>`)になっています。
+   - **ある場合**:値が `MapOn NEO <contact@msm-fund.com>` なら、`MapOn <contact@msm-fund.com>` に書き換えて保存。そのあと、**Deployments から再デプロイ**(環境変数は、再デプロイ後の動作から反映されます)。
+
+### 直したあとの確認
+1. `https://www.mapon-meo.com/login` → **パスワードをお忘れの方** → ご自身の店舗アカウントのメールアドレスで送る。届いたメールの、**差出人の表示名が「MapOn」**、件名が **【MapOn】パスワード再設定のご案内** になっているか。
+2. 申し込み後のお迎えメールは、新しい申し込みを1件試して(テスト用のメールアドレスで)、件名が **【MapOn】お申し込みありがとうございます(ログインURLのご案内)** で届くか確認する。
+
+### 変えなくてよいもの
+- **Resend のドメイン・DNSレコード・APIキー**:名前とは関係がないので、触りません。
+- **送信元のメールアドレス(contact@msm-fund.com)**:そのままです。
+- すでに届いてしまった古いメール(「MapOn NEO」表記)は、書き換えられません。
+
+---
 
 ## 先に知っておくこと
 
@@ -84,7 +123,7 @@ Supabase のダッシュボード → 対象のプロジェクト → **Authenti
 | 項目 | 入れる値 |
 |---|---|
 | Sender email | `contact@msm-fund.com` |
-| Sender name | `MapOn NEO` |
+| Sender name | `MapOn` |
 | Host | `smtp.resend.com` |
 | Port | `465` |
 | Username | `resend` |
@@ -103,19 +142,19 @@ Supabase のダッシュボード → 対象のプロジェクト → **Authenti
 
 **Subject(件名)**
 ```
-【MapOn NEO】パスワード再設定のご案内
+【MapOn】パスワード再設定のご案内
 ```
 
 **Body(本文。HTMLのまま貼る)**
 ```html
 <h2>パスワード再設定のご案内</h2>
-<p>MapOn NEO のパスワード再設定のご依頼を受け付けました。</p>
+<p>MapOn のパスワード再設定のご依頼を受け付けました。</p>
 <p>下のボタンを押して、新しいパスワードを設定してください。</p>
 <p><a href="{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&amp;type=recovery" style="display:inline-block;padding:12px 24px;background:#4285F4;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:bold;">新しいパスワードを設定する</a></p>
 <p>ボタンが押せない場合は、次のURLをブラウザに貼り付けて開いてください。<br>{{ .SiteURL }}/reset-password?token_hash={{ .TokenHash }}&amp;type=recovery</p>
 <p>このメールに心当たりがない場合は、何もせず、このメールを破棄してください。パスワードは変わりません。</p>
 <p>ご不明な点は、このメールへの返信(contact@msm-fund.com)でお問い合わせください。</p>
-<p>株式会社MSM / MapOn NEO</p>
+<p>株式会社MSM / MapOn</p>
 ```
 
 **なぜ、標準のリンク(`{{ .ConfirmationURL }}`)を使わないのか**

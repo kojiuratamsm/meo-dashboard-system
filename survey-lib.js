@@ -55,7 +55,7 @@ export function newQuestion(type = 'single') {
 
 function opts(labels) { return labels.map(label => ({ id: newId('o'), label })); }
 
-// MapOn NEO で新しくアンケートを作ったときの初期内容(業種を問わない共通の形)
+// MapOn で新しくアンケートを作ったときの初期内容(業種を問わない共通の形)
 export const DEFAULT_INTRO = '本日はご来店ありがとうございました！\nよろしければ、簡単なアンケートにご協力ください(1分ほどで終わります)';
 export function defaultQuestions() {
     return [

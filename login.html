@@ -115,7 +115,7 @@
                 return;
             }
 
-            // 提供しているのは MapOn NEO だけ(運用代行プラン・MapOn・MapOn(モニター)は 2026/11/17 に廃止)
+            // 提供しているのは MapOn だけ(運用代行プラン・MapOn・MapOn(モニター)は 2026/11/17 に廃止)
             if (clientData.plan !== 'D') {
                 localStorage.removeItem('currentUser');
                 await supabase.auth.signOut();
@@ -126,7 +126,7 @@
             }
             // 認証成功！ブラウザにこの顧客の情報を記憶させる
             localStorage.setItem('currentUser', JSON.stringify(clientData));
-            // MapOn NEO の管理画面へ
+            // MapOn の管理画面へ
             window.location.href = '/neo';
         };
     </script>

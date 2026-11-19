@@ -1,5 +1,5 @@
 // neo-page.js
-// MapOn NEO 管理画面(neo.html)の入口
+// MapOn 管理画面(neo.html)の入口
 // ・契約者本人:ログインすると、自分の店舗のアンケート管理画面が開く
 // ・マスター(MSMスタッフ):neo.html?client=<店舗ID> で、どの契約者の画面にも入れる
 // 見られるデータの範囲は、DB側の権限(RLS)で制限されている。
@@ -92,7 +92,7 @@ function showMessage(text) {
         // マスター:指定された契約者の画面を開く
         if (!requestedId) { location.replace('/master-surveys'); return; }
         const { data, error } = await loadClient((q) => q.eq('id', requestedId));
-        if (error || !data) { showMessage('契約者が見つかりません。マスター画面の「MapOn NEO」から開き直してください。'); return; }
+        if (error || !data) { showMessage('契約者が見つかりません。マスター画面の「MapOn」から開き直してください。'); return; }
         client = data;
         const banner = $('masterBanner');
         banner.hidden = false;
@@ -110,7 +110,7 @@ function showMessage(text) {
         $('storeName').textContent = name === NAME_PENDING ? '店舗名 未設定' : `${name} 様`;
         const b = document.getElementById('bannerStoreName');
         if (b) b.textContent = name;
-        document.title = `MapOn NEO 管理画面 - ${name}`;
+        document.title = `MapOn 管理画面 - ${name}`;
     };
     showStoreName(client.company_name || NAME_PENDING);
     document.documentElement.classList.remove('auth-pending');

@@ -220,7 +220,7 @@
             <div style="font-size:11px; color:#A0AEC0; margin-top:5px;">MASTER DASHBOARD</div>
         </div>
         <a href="#" class="nav-item active" onclick="switchMasterView('view-clients', this)"><i class="fa-solid fa-users"></i> 全クライアント一覧</a>
-        <a href="/master-surveys" class="nav-item"><i class="fa-solid fa-clipboard-list"></i> MapOn NEO</a>
+        <a href="/master-surveys" class="nav-item"><i class="fa-solid fa-clipboard-list"></i> MapOn</a>
         
         <!-- 目立つキーワード分析ボタン -->
         <a href="#" class="nav-item" onclick="switchMasterView('view-keyword-analysis', this)" style="background: linear-gradient(135deg, #4285F4, #3b82f6); color: white; display:flex; justify-content:center; gap:8px; font-weight: bold; margin-top: 15px; box-shadow: 0 5px 15px rgba(66,133,244,0.4); border:none; transition: all 0.3s;">
@@ -238,7 +238,7 @@
 
         <div style="margin-top:20px; padding:0 15px;">
             <p style="font-size:11px; color:#A0AEC0; margin-bottom:10px; font-weight:bold;">申し込みフォームURL取得</p>
-            <button class="btn-action" style="background:linear-gradient(135deg, #a855f7, #6366f1); width:100%; font-size:11px;" onclick="copySignupUrl('/signup-neo')">MapOn NEO</button>
+            <button class="btn-action" style="background:linear-gradient(135deg, #a855f7, #6366f1); width:100%; font-size:11px;" onclick="copySignupUrl('/signup-neo')">MapOn</button>
         </div>
 
         <a href="#" onclick="staffLogout(); return false;" class="nav-item" style="margin-top:auto;"><i class="fa-solid fa-arrow-right-from-bracket"></i> ログアウト</a>
@@ -275,10 +275,10 @@
                     <!-- 絞り込みタブ -->
                     <select id="planFilterSelect" style="padding:10px; border-radius:8px; border:1px solid var(--border-color); font-weight:bold; color:var(--primary-blue); outline:none; cursor:pointer;" onchange="filterClients()">
                         <option value="all">すべてのクライアント</option>
-                        <option value="A">運用代行プラン</option>
-                        <option value="B">MapOn</option>
-                        <option value="C">MapOnモニター</option>
-                        <option value="D">MapOn NEO</option>
+                        <option value="A">旧・運用代行プラン(提供終了)</option>
+                        <option value="B">旧・MapOn(提供終了)</option>
+                        <option value="C">旧・MapOnモニター(提供終了)</option>
+                        <option value="D">MapOn</option>
                     </select>
                     <!-- 検索バー -->
                     <div style="position:relative;">
@@ -951,7 +951,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
                 <div style="margin-bottom:15px;">
                     <label style="display:block; font-size:13px; font-weight:bold; margin-bottom:5px;">プラン</label>
                     <select id="newPlan" style="width:100%; padding:10px; border:1px solid #E2E8F0; border-radius:8px; outline:none;">
-                        <option value="D" selected>MapOn NEO</option>
+                        <option value="D" selected>MapOn</option>
                     </select>
                 </div>
                 <div style="margin-bottom:25px; background:#F8FAFC; border-radius:8px; padding:12px; font-size:12px; color:#64748B; line-height:1.7;">
@@ -1221,7 +1221,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
         // --- ブログ登録ロジック ---
         window.masterLoginAs = function(clientEncoded) {
             const client = JSON.parse(decodeURIComponent(clientEncoded));
-            // MapOn NEO の契約者は、アンケート管理画面をマスターとして開く
+            // MapOn の契約者は、アンケート管理画面をマスターとして開く
             if (client.plan === 'D') {
                 window.location.href = '/neo?client=' + encodeURIComponent(client.id);
                 return;

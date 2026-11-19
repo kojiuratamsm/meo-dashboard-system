@@ -33,7 +33,7 @@ const browser = (addr) => `
   <circle cx="24" cy="23" r="4" fill="#FC8181"/><circle cx="36" cy="23" r="4" fill="#F6E05E"/><circle cx="48" cy="23" r="4" fill="#68D391"/>
   <rect x="62" y="16" width="236" height="14" rx="7" fill="#fff"/>
   <text x="72" y="26.5" font-size="8.5" fill="#718096">${addr}</text>`;
-// 1・2 は実際の Google の画面(店舗名・ロゴ・数値・URL・QRは差し替え済み)、3 は MapOn NEO の画面のイメージ
+// 1・2 は実際の Google の画面(店舗名・ロゴ・数値・URL・QRは差し替え済み)、3 は MapOn の画面のイメージ
 const STEPS = [
     {
         img: '/guide/gbp-step1.png', alt: 'Googleの管理画面。「レビューを依頼」ボタンが赤枠で囲まれている',
@@ -44,7 +44,7 @@ const STEPS = [
         text: ['「クチコミを増やす」画面が開きます。赤枠の', '「クチコミのリンク」', 'の右端にあるコピーのマークを押して、リンクをコピーします。'],
     },
     {
-        svg: frame(`${browser('MapOn NEO の管理画面')}
+        svg: frame(`${browser('MapOn の管理画面')}
       <text x="24" y="58" font-size="10.5" font-weight="700" fill="#2B3674">GoogleクチコミURL(公開の条件)</text>
       <rect x="24" y="70" width="186" height="30" rx="8" fill="#fff" stroke="#4285F4" stroke-width="2"/>
       <text x="32" y="89" font-size="9" fill="#2D3748">https://g.page/r/XXXX/review</text>
