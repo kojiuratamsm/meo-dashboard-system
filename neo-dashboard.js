@@ -5,6 +5,7 @@
 //   ・お客様の流れ(開いた → 回答 → AIの文章 → クーポン → 使った)
 //   ・会員・リピート、やることリスト
 // 数字はすべて、DB側の関数 neo_dashboard(追加SQL_12)が、日本時間で数えて返す。
+// やることリストの警告の理由(どのクーポンが、なぜ使えないか)は、neo_dashboard_alerts(追加SQL_19)が返す。
 // 画面では一覧を読み込んで数えない(1回に読み込める件数の上限に左右されないようにするため)。
 // Googleに口コミが投稿されたかどうかは、このシステムからは分からないので、出していない。
 
@@ -72,6 +73,9 @@ export const DASHBOARD_CSS = `
 .db-todo .tag { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 8px; margin-right: 6px; vertical-align: 1px; }
 .db-todo .tag.must { background: #FDEBDD; color: #7A2B0C; }
 .db-todo .tag.opt { background: #EDF2F7; color: #4A5568; }
+.db-todo .acts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.db-todo .db-dismiss { background: transparent; border: 1px solid var(--border-color); color: #4A5568; }
+.linkbtn { background: none; border: none; padding: 0 4px; color: var(--primary, #2B6CB0); text-decoration: underline; cursor: pointer; font-size: 12px; }
 `;
 
 const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
@@ -103,30 +107,93 @@ export function compareText(n, prev, days) {
     return `前の${days}日より ${diff > 0 ? '+' : diff < 0 ? '−' : '±'}${Math.abs(diff)}%(前は${prev}件)`;
 }
 
-/** やることリスト(設定の抜けなど)。大事なものから並べる */
-export function buildTodos(d) {
+/** クーポンが使えない理由の文(neo_dashboard_alerts の reason) */
+export function couponReasonText(a) {
+    const r = a && a.reason;
+    if (r === 'inactive') return '「下書き」になっていて、公開中ではありません';
+    if (r === 'deleted') return '削除されています';
+    if (r === 'expired') return a.valid_until ? `有効期限が、${String(a.valid_until).replaceAll('-', '/')}で切れています` : '有効期限が切れています';
+    if (r === 'limit') return a.issue_limit ? `発行枚数の上限(${a.issue_limit}枚)に達しています` : '発行枚数の上限に達しています';
+    return '使えない状態です';
+}
+
+/**
+ * やることリスト(設定の抜けなど)。大事なものから並べる。
+ *   1. 警告(お客様にすでに影響が出ているもの):スタンプの特典 → アンケートのお礼のクーポン → QRコードの読み取り期限 → AIの上限
+ *   2. はじめの設定:Google口コミのURL → アンケート → アンケートのお礼のクーポン → ショップカード
+ *   3. おすすめ:AIの文章の設定
+ * key がある項目(警告)は、「あえて、このままにする」で消せる。原因が変わると、key も変わるので、また出る。
+ * @param {object} d neo_dashboard の結果
+ * @param {object|null} alerts neo_dashboard_alerts の結果(追加SQL_19 の前は null)
+ */
+export function buildTodos(d, alerts = null) {
     const t = d.todo || {}, card = d.card || {}, ai = d.ai || {};
     const list = [];
-    const add = (must, title, body, action, href) => list.push({ must, title, body, action, href });
-    if (!t.surveys) add(true, 'アンケートを作りましょう', 'アンケートを作って公開すると、お客様に読み取ってもらうQRコードが出ます。', 'アンケートを作る', '#/new');
-    else if (!t.published) add(true, '公開中のアンケートがありません', 'アンケートを公開すると、お客様が回答できるようになります。', 'アンケートを開く', '#/');
-    if (!t.review_url) add(true, 'Google口コミのURLが入っていません', 'URLがないと、お客様をGoogleの口コミ画面へご案内できません。', '設定する', '#/settings');
-    if (Number(t.rewards_unavailable) > 0) add(true, `ショップカードの特典のうち、${t.rewards_unavailable}つが届かない状態です`,
-        '特典のクーポンが、公開中でない・有効期限切れ・発行枚数の上限のどれかになっています。', 'クーポンを確認する', '#/coupons');
+    const add = (must, title, body, action, href, key = null) => list.push({ must, title, body, action, href, key });
+
+    // ---- 1. 警告 ----
+    if (alerts && Array.isArray(alerts.stamp_rewards)) {
+        for (const a of alerts.stamp_rewards) {
+            const fix = a.reason === 'deleted'
+                ? 'お客様がこのスタンプの数になっても、特典が届きません。ショップカードで、特典のクーポンを選び直してください。'
+                : 'お客様がこのスタンプの数になっても、特典が届きません。クーポンを直すと、この表示は自動で消えます。';
+            add(true, `ショップカードの特典「${a.name || '(削除されたクーポン)'}」が、届かない状態です`,
+                `${a.place}のクーポンが、${couponReasonText(a)}。${fix}`,
+                a.reason === 'deleted' ? 'ショップカードを開く' : 'クーポンを確認する', a.reason === 'deleted' ? '#/members' : '#/coupons',
+                `stamp:${a.coupon_id}:${a.place}:${a.reason}`);
+        }
+    } else if (Number(t.rewards_unavailable) > 0) {
+        add(true, `ショップカードの特典のうち、${t.rewards_unavailable}つが届かない状態です`,
+            '特典のクーポンが、公開中でない・有効期限切れ・発行枚数の上限のどれかになっています。', 'クーポンを確認する', '#/coupons');
+    }
+    if (alerts && alerts.lottery_stopped) {
+        add(true, 'アンケートのお礼(ルーレット)が、お客様に出ていません',
+            'ルーレットは、現在お休み中です。お礼を出す場合は、「クーポン」で、決まったクーポンを選び直してください。', 'クーポンを開く', '#/coupons',
+            'lottery_stopped');
+    }
+    if (alerts && Array.isArray(alerts.survey_rewards)) {
+        for (const a of alerts.survey_rewards) {
+            add(true, `アンケートのお礼のクーポン「${a.name || '(削除されたクーポン)'}」が、届かない状態です`,
+                `${a.place}のクーポンが、${couponReasonText(a)}。` + (a.place === 'アンケートのお礼'
+                    ? 'いまは、お客様にお礼が出ていません。クーポンを直すか、選び直すと、この表示は自動で消えます。'
+                    : 'クーポンを直すか、選び直すと、この表示は自動で消えます。'),
+                'クーポンを確認する', '#/coupons', `survey:${a.coupon_id}:${a.place}:${a.reason}`);
+        }
+    }
     if (card.enabled && t.qr_expires_on) {
         const left = daysBetween(todayJst(), t.qr_expires_on);
-        if (left < 0) add(true, '会員証・スタンプ用QRコードの読み取り期限が、切れています', 'いまは、お客様が読み取ってもスタンプが付きません。期限を変えるか、作り直してください。', '期限を直す', '#/members');
+        if (left < 0) add(true, '会員証・スタンプ用QRコードの読み取り期限が、切れています',
+            '会員の方が読み取っても、スタンプが付きません(はじめての方は、登録でスタンプが1個付きます)。期限を変えるか、作り直してください。', '期限を直す', '#/members',
+            `qr:${t.qr_expires_on}:expired`);
         else if (left <= 7) add(true, left === 0 ? '会員証・スタンプ用QRコードの読み取り期限は、今日までです' : `会員証・スタンプ用QRコードの読み取り期限が、あと${left}日で切れます`,
-            '期限を過ぎると、スタンプが付かなくなります。', '期限を変える', '#/members');
+            '期限を過ぎると、会員の方が読み取っても、スタンプが付かなくなります(はじめての方は、登録でスタンプが1個付きます)。', '期限を変える', '#/members',
+            `qr:${t.qr_expires_on}:soon`);
     }
     if (Number(ai.limit) > 0 && Number(ai.month) >= Number(ai.limit) * 0.8) add(true, `今月のAIの文章が、上限に近づいています(${ai.month} / ${ai.limit}回)`,
-        '上限に達すると、今月はAIの文章を作れなくなります。担当者にご連絡ください。', '', '');
-    for (const s of (t.no_ai || []).slice(0, 3)) add(false, `「${s.title}」に、AIの文章の設定がありません`,
-        '地域名・業種・キーワードを入れると、お客様の文章が整いやすくなります。', '設定する', `#/edit/${s.id}`);
+        '上限に達すると、今月はAIの文章を作れなくなります。担当者にご連絡ください。', '', '',
+        `ai:${String(d.to || todayJst()).slice(0, 7)}:${ai.limit}`);
+
+    // ---- 2. はじめの設定 ----
+    if (!t.review_url) add(true, 'Google口コミのURLが入っていません', 'URLがないと、お客様をGoogleの口コミ画面へご案内できません。', '設定する', '#/settings');
+    if (!t.surveys) add(true, 'アンケートを作りましょう', 'アンケートを作って公開すると、お客様に読み取ってもらうQRコードが出ます。', 'アンケートを作る', '#/new');
+    else if (!t.published) add(true, '公開中のアンケートがありません', 'アンケートを公開すると、お客様が回答できるようになります。', 'アンケートを開く', '#/');
+    if (t.reward_mode === 'none') add(false, 'アンケートのお礼(クーポン)を出していません', '出す場合は「クーポン」で決められます。出さないお店は、そのままで問題ありません。', 'クーポンを開く', '#/coupons');
     if (card.enabled && Number(t.rewards) === 0) add(false, 'ショップカードに、特典がありません', 'スタンプが貯まったときに届くクーポンを決められます。', '特典を決める', '#/members');
     if (!card.enabled) add(false, 'ショップカードは、いま非公開です', '公開すると、お客様が会員登録して、スタンプを貯められます。', 'ショップカードを開く', '#/members');
-    if (t.reward_mode === 'none') add(false, 'アンケートのお礼(クーポン)を出していません', '出す場合は「クーポン」で決められます。出さないお店は、そのままで問題ありません。', 'クーポンを開く', '#/coupons');
+
+    // ---- 3. おすすめ ----
+    for (const s of (t.no_ai || []).slice(0, 3)) add(false, `「${s.title}」に、AIの文章の設定がありません`,
+        '地域名・業種・キーワードを入れると、お客様の文章が整いやすくなります。', '設定する', `#/edit/${s.id}`);
     return list;
+}
+
+// 「あえて、このままにする」で消した警告(このブラウザに保存。店舗ごと)
+const dismissKey = (clientId) => `mapon_todo_dismissed_${clientId}`;
+export function readDismissed(clientId) {
+    try { const v = JSON.parse(localStorage.getItem(dismissKey(clientId)) || '[]'); return Array.isArray(v) ? v.filter(x => typeof x === 'string') : []; } catch { return []; }
+}
+export function writeDismissed(clientId, keys) {
+    try { localStorage.setItem(dismissKey(clientId), JSON.stringify([...new Set(keys)].slice(-200))); } catch { /* 保存できないブラウザでは、消した状態を覚えない */ }
 }
 
 function isNotReady(error) {
@@ -154,6 +221,12 @@ export async function renderDashboard({ app, client }) {
         return true;
     }
     data = first.data;
+    // 警告の理由(追加SQL_19)。まだSQLを実行していないときは null(これまでの件数だけの警告を出す)
+    let alerts = null;
+    try {
+        const a = await supabase.rpc('neo_dashboard_alerts', { p_client_id: clientId });
+        if (!a.error && a.data) alerts = a.data;
+    } catch { alerts = null; }
 
     const body = el('div', { class: 'db-body', id: 'dbBody' });
     const periodText = el('p', { class: 'muted', id: 'dbPeriod' });
@@ -274,13 +347,28 @@ export async function renderDashboard({ app, client }) {
     }
 
     function todoCard() {
-        const todos = buildTodos(data);
-        return el('div', { class: 'card', id: 'dbTodo' }, el('h2', { text: 'やることリスト' }),
-            ...(todos.length ? todos.map(t => el('div', { class: 'db-todo' },
+        const all = buildTodos(data, alerts);
+        // 原因が直った(いまは出ていない)警告は、消した記録からも外す(同じ原因が、またあとで起きたときは出す)
+        const activeKeys = all.filter(t => t.key).map(t => t.key);
+        const dismissed = readDismissed(clientId).filter(k => activeKeys.includes(k));
+        writeDismissed(clientId, dismissed);
+        const todos = all.filter(t => !t.key || !dismissed.includes(t.key));
+        const box = el('div', { class: 'card', id: 'dbTodo' });
+        const redraw = () => box.replaceWith(todoCard());
+        box.append(...[el('h2', { text: 'やることリスト' }),
+            ...(todos.length ? todos.map(t => el('div', { class: 'db-todo', 'data-key': t.key || '' },
                 el('div', { class: 'tx' }, el('div', { class: 'tt' }, el('span', { class: 'tag ' + (t.must ? 'must' : 'opt'), text: t.must ? '要対応' : 'おすすめ' }), t.title),
                     el('div', { class: 'tb', text: t.body })),
-                t.href ? el('a', { class: 'btn sub small', href: t.href }, t.action) : null))
-                : [el('p', { class: 'muted', id: 'dbTodoNone', style: { lineHeight: '1.8' }, text: 'いま、対応が必要なことはありません。' })]));
+                el('div', { class: 'acts' },
+                    t.href ? el('a', { class: 'btn sub small', href: t.href }, t.action) : null,
+                    t.key ? el('button', { class: 'btn small db-dismiss', type: 'button', title: 'この警告を、リストから消します。原因が変わると、また表示されます。',
+                        onclick: () => { writeDismissed(clientId, [...readDismissed(clientId), t.key]); redraw(); } }, 'あえて、このままにする') : null)))
+                : [el('p', { class: 'muted', id: 'dbTodoNone', style: { lineHeight: '1.8' }, text: 'いま、対応が必要なことはありません。' })]),
+            dismissed.length ? el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '6px', marginBottom: 0 } },
+                `「あえて、このままにする」で消した警告が${dismissed.length}件あります。`,
+                el('button', { class: 'linkbtn', type: 'button', id: 'dbTodoRestore', onclick: () => { writeDismissed(clientId, []); redraw(); } }, 'もう一度表示する')) : null]
+            .filter(Boolean));   // 何も無い所(null)は入れない
+        return box;
     }
 
     function draw() {

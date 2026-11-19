@@ -73,6 +73,7 @@ const ERRORS = [
     ['reward_at_invalid', '特典の「スタンプ何個目」は、1からスタンプの数までで、同じ数が重ならないようにしてください。'],
     ['reward_coupon_invalid', '特典に、公開中でないクーポン(下書き・削除済み)が含まれています。'],
     ['expires_in_past', '読み取り期限には、今日以降の日付を選んでください。'],
+    ['invalid_reset_hour', 'スタンプの切り替え時刻を選び直してください。'],
     ['no_stamps', '取り消せるスタンプがありません。'],
     ['invalid_delta', '付ける数は、1〜100 の範囲にしてください。'],
     ['member_not_found', 'この会員は、すでに削除されています。'],
@@ -96,6 +97,8 @@ const jst = (iso, withTime = false) => {
 };
 const todayJst = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo' }).format(new Date());   // YYYY-MM-DD
 export const MAX_STAMPS = 100;   // カード1枚のスタンプの数の上限(特典の「スタンプ何個目」も、ここまで)
+/** スタンプの切り替え時刻の表示(0〜23時) */
+export const resetHourText = (h) => `${Number(h) || 0}時`;
 export const memberNo = (n) => 'A' + String(n).padStart(4, '0');
 export const cardEntryUrl = (key, origin = location.origin) => `${origin}/card?k=${encodeURIComponent(key)}`;
 export const stampQrUrl = (token, origin = location.origin) => `${origin}/card?q=${encodeURIComponent(token)}`;
@@ -217,6 +220,8 @@ export async function renderMembers({ app, client, openModal }) {
     const state = {
         enabled: !!settings.enabled, card_name: settings.card_name || 'ショップカード', stamp_goal: String(settings.stamp_goal || 10),
         expire_months: settings.expire_months ? String(settings.expire_months) : '', join_notice: settings.join_notice || '',
+        // スタンプの切り替え時刻。追加SQL_19 がまだのとき(列がないとき)は undefined のままにして、設定欄を出さない
+        reset_hour: settings.reset_hour === undefined || settings.reset_hour === null ? undefined : String(settings.reset_hour),
         rewards: (settings.rewards || []).map(r => ({ at: String(r.at), coupon_id: r.coupon_id })),
         // 「スタンプがすべて貯まったあと」。追加SQL_12 がまだのとき(列がないとき)は undefined のままにして、送らない
         full_mode: settings.full_mode === undefined ? undefined : (settings.full_mode === 'rank' ? 'rank' : 'repeat'),
@@ -242,6 +247,9 @@ export async function renderMembers({ app, client, openModal }) {
         expire.addEventListener('change', () => { state.expire_months = expire.value; });
         const notice = el('textarea', { class: 'textarea', id: 'cardNotice', maxlength: '1000', placeholder: '例:スタンプは、1回のご来店(お会計)につき1個です。' }); notice.value = state.join_notice;
         notice.addEventListener('input', () => { state.join_notice = notice.value; });
+        const resetSel = state.reset_hour === undefined ? null : el('select', { class: 'select', id: 'cardResetHour', style: { maxWidth: '320px' } },
+            ...Array.from({ length: 24 }, (_, h) => el('option', { value: String(h), text: h === 0 ? '0時(日付が変わるとき。初期値)' : `${h}時`, selected: state.reset_hour === String(h) })));
+        if (resetSel) resetSel.addEventListener('change', () => { state.reset_hour = resetSel.value; });
         // 特典の行(基本の特典と、ランク専用の特典で共用)。name は、読み上げ用の呼び名
         const rewardRowsOf = (list, name) => list.map((r, i) => {
             const at = el('input', { class: 'input', inputmode: 'numeric', 'aria-label': `${name}${i + 1}:スタンプ何個目` }); at.value = r.at;
@@ -325,6 +333,13 @@ export async function renderMembers({ app, client, openModal }) {
             saveBtn.disabled = false;
             if (error || !data) { msg.className = 'msg ng'; msg.textContent = errorText(error); return; }
             settings = data;
+            // スタンプの切り替え時刻(変えたときだけ保存する)
+            if (state.reset_hour !== undefined && String(settings.reset_hour ?? 0) !== state.reset_hour) {
+                const r = await call('neo_save_card_reset_hour', { p_client_id: clientId, p_hour: Number(state.reset_hour) });
+                if (r.error || !r.data) { msg.className = 'msg ng'; msg.textContent = 'ショップカードの内容は保存しましたが、スタンプの切り替え時刻を保存できませんでした。' + errorText(r.error); drawStats(); drawList(); return; }
+                settings = r.data;
+                drawQr();   // 「制限:」の切り替え時刻の表示を直す
+            }
             msg.className = 'msg ok';
             msg.textContent = settings.enabled ? '保存しました。お客様がショップカードを登録できます。' : '保存しました。いまは非公開です(登録もスタンプも止まっています)。';
             const badge = document.getElementById('cardBadge');
@@ -346,6 +361,9 @@ export async function renderMembers({ app, client, openModal }) {
                 el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '6px', lineHeight: '1.7' },
                     text: '「スタンプ何個目」は、1〜100 で入力できます。カードのスタンプの数より大きい数を入れると、カードの数がその数に変わります。特典は、クーポンとしてお客様の会員証に届きます。使うときは、お客様がスタッフの前で「クーポンを使う」を押します。発行枚数の上限があるクーポンは、上限に達すると届かなくなります。' })),
             fullField,
+            ...(resetSel ? [el('div', { class: 'field' }, el('label', { for: 'cardResetHour', text: 'スタンプの切り替え時刻(「1日1回」の区切り)' }), resetSel,
+                el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '4px', lineHeight: '1.7', maxWidth: '760px' },
+                    text: '同じ会員がスタンプを付けられるのは、この時刻から次の日のこの時刻までに1回です。深夜も営業するお店は、閉店後の時刻(例:5時)にすると、0時をまたいだ1回の来店で、スタンプが2個付きません。変えるときは、営業時間外に行ってください(変えた直後に、一度だけ判定がずれることがあります)。' }))] : []),
             el('div', { class: 'field' }, el('label', { for: 'cardExpire', text: 'スタンプの有効期限' }), expire),
             el('div', { class: 'field' }, el('label', { for: 'cardNotice', text: 'お店からの注意書き(登録の画面の「利用規約」に表示されます)' }), notice),
             el('div', { class: 'row', style: { justifyContent: 'flex-end' } }, saveBtn), msg);
@@ -368,7 +386,7 @@ export async function renderMembers({ app, client, openModal }) {
             };
             const modal = openModal(el('div', {},
                 el('h3', { text: '会員証・スタンプ用QRコードの読み取り期限' }),
-                el('p', { class: 'muted', style: { lineHeight: '1.7', marginBottom: '10px' }, text: '選んだ日の終わりまで読み取れます。期限を過ぎると、会員の方が読み取ってもスタンプは付きません(はじめての方には、登録の画面と一緒に「読み取り期限が過ぎています」と表示されます)。QRコードの絵は変わりません。' }),
+                el('p', { class: 'muted', style: { lineHeight: '1.7', marginBottom: '10px' }, text: '選んだ日の終わりまで読み取れます。期限を過ぎると、会員の方が読み取ってもスタンプは付きません(はじめての方には、登録の案内が出ます。登録すると、スタンプが1個付きます)。QRコードの絵は変わりません。' }),
                 el('div', { class: 'field' }, el('label', { for: 'qrExpiryDate', text: 'この日まで' }), input), m,
                 el('div', { class: 'row', style: { justifyContent: 'space-between' } },
                     el('button', { class: 'btn sub', type: 'button', id: 'qrExpiryNone', onclick: () => save('') }, '期限なしにする'),
@@ -390,7 +408,8 @@ export async function renderMembers({ app, client, openModal }) {
                 el('div', { class: 'info' },
                     el('div', { text: 'お客様がこのQRコードを読み取ると、はじめての方には登録の画面(登録するとスタンプが1個付きます)、登録済みの方にはスタンプが付いた会員証が出ます。レジ横などに置いてください。' }),
                     el('div', {}, el('b', { text: '付く数:' }), '1回の読み取りで1個'),
-                    el('div', {}, el('b', { text: '制限:' }), '同じ会員は1日1回まで'),
+                    el('div', { id: 'qrLimitText' }, el('b', { text: '制限:' }), settings.reset_hour === undefined || settings.reset_hour === null
+                        ? '同じ会員は1日1回まで' : `同じ会員は1日1回まで(毎日 ${resetHourText(settings.reset_hour)}に切り替わります)`),
                     el('div', { id: 'qrExpiryText' }, el('b', { text: '読み取り期限:' }), qr.expires_on ? qr.expires_on.replaceAll('-', '/') + ' まで' : '期限なし',
                         expired ? el('span', { class: 'badge off', style: { marginLeft: '8px', color: 'var(--danger)' }, text: '期限切れ(いまは読み取れません)' }) : null),
                     el('div', { class: 'row', style: { marginTop: '8px' } },
@@ -399,7 +418,7 @@ export async function renderMembers({ app, client, openModal }) {
                         expiryBtn, renewBtn),
                     msg,
                     el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '8px', lineHeight: '1.7' },
-                        text: '読み取り期限は、ふだんは「期限なし」のままにしてください(期限を過ぎると、スタンプが付かなくなります)。写真に撮られて、来店していないのに読み取られている疑いがあるときは「作り直す」を使います。作り直すと、古いQRコードは使えなくなります。QRコードは、この「会員証・スタンプ用」と、アンケートのQRコードの2つです。アンケートのQRコードを読み取った画面にも、ショップカードへの入口と、お客様が持っているクーポンが出ます。' }))));
+                        text: '読み取り期限は、ふだんは「期限なし」のままにしてください(期限を過ぎると、会員の方が読み取ってもスタンプが付かなくなります)。写真に撮られて、来店していないのに読み取られている疑いがあるときは「作り直す」を使います。作り直すと、古いQRコードは使えなくなります。QRコードは、この「会員証・スタンプ用」と、アンケートのQRコードの2つです。アンケートのQRコードを読み取った画面にも、ショップカードへの入口と、お客様が持っているクーポンが出ます。' }))));
     }
 
     // ---------- 会員一覧 ----------

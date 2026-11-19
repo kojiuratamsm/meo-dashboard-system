@@ -21,10 +21,13 @@ const stampQr = params.get('q') || '';
 const reissueCode = params.get('r') || '';
 const memberKeyInUrl = (location.hash.match(/m=([0-9a-f]{64})/) || [])[1] || '';
 let current = null;   // いま表示している内容(サーバーの返事)
+// スタンプの切り替え時刻(0〜23時。追加SQL_19)。0時(または不明)のときは、これまでの文のまま
+const resetHourOf = (view) => { const h = Number(view?.card?.reset_hour); return Number.isInteger(h) && h > 0 && h < 24 ? h : 0; };
 
 const STAMP_MESSAGES = {
     already_today: ['info', '本日のスタンプは、すでに付いています', 'スタンプは1日1回までです。またのご来店をお待ちしております。'],
-    qr_expired: ['warn', 'このQRコードは、読み取り期限が過ぎています', 'お手数ですが、スタッフにお声がけください。'],
+    // 登録済みの方が、読み取り期限の過ぎたQRコードを読み取ったとき(はじめての方には、登録の案内を出す。showJoinPrompt)
+    qr_expired: ['warn', 'QRコードの受付期限が過ぎているため、今回はスタンプが付きませんでした。', 'スタッフにお声がけください。'],
     qr_invalid: ['warn', 'このQRコードは使えません', '古いQRコードの可能性があります。お手数ですが、スタッフにお声がけください。'],
     card_disabled: ['warn', 'ショップカードは、現在お休み中です', ''],
 };
@@ -55,7 +58,8 @@ function showError(title, text) {
 // 登録画面に出す文面(お店が書いた注意書きがあれば、あとに続ける)
 function termsText(card) {
     return [
-        '・スタンプは、ご来店のときにお店のQRコードを読み取ると付きます(同じ会員は1日1回まで)。',
+        '・スタンプは、ご来店のときにお店のQRコードを読み取ると付きます(同じ会員は1日1回まで)。'
+            + (Number(card.reset_hour) > 0 && Number(card.reset_hour) < 24 ? `1日は、毎日${Number(card.reset_hour)}時に切り替わります。` : ''),
         '・特典は、スタンプが決められた数になったときに、クーポンとしてお渡しします。クーポンには有効期限があります。',
         card.expire_months ? `・スタンプは、最後に付いた日から${card.expire_months}か月で消えます。` : null,
         ranksOf(card).length ? '・カードがいっぱいになると、ランクが上がります。ランクによって、特典が変わることがあります。' : null,
@@ -147,9 +151,10 @@ function renderCard(view) {
         exp.textContent = m.stamps_expire_on
             ? `いまのスタンプの有効期限:${formatDateJa(m.stamps_expire_on + 'T00:00:00+09:00')}(最後のスタンプから${card.expire_months}か月)`
             : `スタンプの有効期限:最後のスタンプから${card.expire_months}か月`;
+        const once = resetHourOf(view) ? `1日1回。毎日${resetHourOf(view)}時に切り替わります` : '1日1回';
         $('howTo').textContent = m.stamped_today
-            ? '本日のスタンプは付いています。次回のご来店でも、QRコードを読み取ってください(1日1回)。'
-            : 'QRコードを、このスマートフォンのカメラで読み取ると、スタンプが付きます(1日1回)。';
+            ? `本日のスタンプは付いています。次回のご来店でも、QRコードを読み取ってください(${once})。`
+            : `QRコードを、このスマートフォンのカメラで読み取ると、スタンプが付きます(${once})。`;
     }
     const history = m.history || [];
     $('historyBox').hidden = history.length === 0;
@@ -191,6 +196,18 @@ function render(view) {
     }
 }
 
+// はじめての方(この端末が未登録)が、読み取り期限の過ぎたQRコードを読み取ったとき:登録の案内と、登録画面へのボタン
+function showJoinPrompt() {
+    const b = $('banner');
+    b.className = 'banner info';
+    const link = Object.assign(document.createElement('a'), {
+        className: 'btn btn-primary', id: 'joinPromptBtn', href: `/card?k=${encodeURIComponent(cardKey)}`, textContent: '会員登録はこちら' });
+    link.style.marginTop = '10px';
+    b.replaceChildren('まだ会員登録がされていません。こちらから登録してください。',
+        Object.assign(document.createElement('small'), { textContent: '登録すると、スタンプが1個付きます。' }), link);
+    b.hidden = false;
+}
+
 function showStampResult(stamp) {
     if (!stamp) return;
     if (stamp.status === 'stamped') {
@@ -200,6 +217,8 @@ function showStampResult(stamp) {
         else if (Number(stamp.completed) > 0) lines.push('カードがいっぱいになりました。新しいカードが始まります。');
         if (rewards) lines.push(`特典のクーポン${rewards}が届きました。下の「使えるクーポン」からご利用ください。`);
         banner('ok', 'スタンプが1個付きました', lines.join(' '));
+    } else if (stamp.status === 'already_today' && resetHourOf(current)) {
+        banner('info', STAMP_MESSAGES.already_today[1], `スタンプは1日1回までです。次は、${resetHourOf(current)}時以降のご来店で付きます。`);
     } else if (STAMP_MESSAGES[stamp.status]) {
         banner(...STAMP_MESSAGES[stamp.status]);
     }
@@ -225,6 +244,7 @@ $('joinForm').addEventListener('submit', async (e) => {
     $('banner').hidden = true;
     render(res.view);
     if (res.stamp && res.stamp.status === 'stamped') showStampResult(res.stamp);
+    else if (res.stamp && res.stamp.status === 'qr_expired' && res.status !== 'already_member') banner('warn', '登録が完了しました', STAMP_MESSAGES.qr_expired[1] + STAMP_MESSAGES.qr_expired[2]);
     else banner('ok', res.status === 'already_member' ? 'すでに登録されています' : '登録が完了しました', res.status === 'already_member' ? '' : 'この画面が会員証です。次回からは、お店のQRコードを読み取ると表示されます。');
     window.scrollTo(0, 0);
 });
@@ -251,6 +271,7 @@ async function init() {
         if (res.view && res.view.ok !== false) {
             render(res.view);
             if (status === 'need_join') banner('info', 'スタンプをためるには、ショップカードの登録が必要です', '登録すると、このあとスタンプが1個付きます。');
+            else if (status === 'qr_expired' && !res.view.member && res.view.card?.enabled) showJoinPrompt();
             else showStampResult(res.stamp);
             return;
         }
