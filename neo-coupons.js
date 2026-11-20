@@ -11,6 +11,7 @@
 import { supabase } from './supabase-config.js';
 import { el, newId } from './survey-lib.js';
 import { couponSummary, couponValidity, lotteryEstimate } from './coupon-lib.js';
+import { isLight, showLockPopup, lightLimitKind } from './neo-plan.js';
 
 export const COUPON_CSS = `
 .cp-radio { border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; cursor: pointer; }
@@ -87,6 +88,7 @@ export function buildCouponPayload(f) {
 }
 
 export async function renderCoupons({ app, client, openModal }) {
+    const light = isLight(client);   // MapOn Light:クーポンは1つまで(実際の制限はデータベースが行う)
     app.replaceChildren(el('p', { class: 'muted', text: '読み込み中...' }));
     const clientId = String(client.id);
     const [couponsRes, statsRes, settingsRes, lotteryRes] = await Promise.all([
@@ -195,7 +197,8 @@ export async function renderCoupons({ app, client, openModal }) {
         listCard.replaceChildren(
             el('div', { class: 'row', style: { justifyContent: 'space-between', marginBottom: '12px' } },
                 el('h2', { text: 'クーポン一覧', style: { margin: 0 } }),
-                el('button', { class: 'btn', type: 'button', id: 'newCoupon', onclick: () => openCouponForm(null) }, el('i', { class: 'fa-solid fa-plus' }), 'クーポンを作成')),
+                el('button', { class: 'btn', type: 'button', id: 'newCoupon', onclick: () => (light && coupons.length >= 1) ? showLockPopup('coupon') : openCouponForm(null) }, el('i', { class: 'fa-solid fa-plus' }), 'クーポンを作成')),
+            ...(light ? [el('p', { class: 'plan-note', id: 'planCouponNote', text: 'MapOn Lightでは、クーポンは1つまで作れます。' })] : []),
             el('div', { class: 'table-wrap' }, el('table', { class: 'table' },
                 el('thead', {}, el('tr', {}, ...['クーポン名', '内容', '発行 / 上限', '利用', '有効期限', '状態', ''].map(h => el('th', { text: h })))),
                 el('tbody', {}, ...(rows.length ? rows : [el('tr', {}, el('td', { colspan: '7', class: 'muted', style: { textAlign: 'center', padding: '26px' }, text: 'クーポンはまだありません。「クーポンを作成」から作ってください。' }))])))));
@@ -258,6 +261,7 @@ export async function renderCoupons({ app, client, openModal }) {
                 ? await supabase.from('neo_coupons').update(built.payload).eq('id', coupon.id).select().single()
                 : await supabase.from('neo_coupons').insert({ ...built.payload, client_id: clientId }).select().single();
             saveBtn.disabled = false;
+            if (lightLimitKind(res.error)) { modal.close(); showLockPopup(lightLimitKind(res.error)); return; }
             if (res.error) { msg.textContent = '保存できませんでした: ' + (res.error.message || ''); return; }
             if (coupon) coupons = coupons.map(x => x.id === coupon.id ? res.data : x); else coupons = [...coupons, res.data];
             modal.close(); drawAll();

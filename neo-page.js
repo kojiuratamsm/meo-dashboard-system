@@ -7,6 +7,7 @@
 import { supabase } from './supabase-config.js';
 import { el } from './survey-lib.js';
 import { startNeoApp } from './neo-app.js';
+import { decorateSidebar } from './neo-plan.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -56,10 +57,12 @@ function askStoreName(client) {
     });
 }
 
-// 店舗の情報を読み込む。Google口コミURLの列は「追加SQL_8」で追加されるため、
-// まだ実行されていない場合は、URLなしで読み込む(ログインできなくならないようにする)。
+// 店舗の情報を読み込む。Google口コミURLの列は「追加SQL_8」、プラン(tier)の列は「追加SQL_21」で追加されるため、
+// まだ実行されていない場合は、その列なしで読み込む(ログインできなくならないようにする)。
 async function loadClient(filter) {
     const base = 'id, company_name, email, plan';
+    const withTier = await filter(supabase.from('clients').select(base + ', google_review_url, tier')).maybeSingle();
+    if (!withTier.error) return withTier;
     const full = await filter(supabase.from('clients').select(base + ', google_review_url')).maybeSingle();
     if (!full.error) return full;
     return await filter(supabase.from('clients').select(base)).maybeSingle();
@@ -120,4 +123,6 @@ function showMessage(text) {
         showStoreName(client.company_name);
     }
     startNeoApp({ root: $('app'), client, isMasterView: isStaff, onStoreNameChange: showStoreName });
+    // MapOn Light の店舗だけ:左のメニューに「Light」の表示・会員証の鍵・今月のAIの回数を出す
+    decorateSidebar(client);
 })();

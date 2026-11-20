@@ -147,6 +147,15 @@
         .mail-note { font-size: 13px; line-height: 1.7; color: #475569; background: #f1f5f9; border-radius: 12px; padding: 12px 16px; margin: -10px 20px 24px; max-width: 420px; }
         .mail-note.ok { background: #ecfdf5; color: #047857; }
         
+        /* リンクの状態(使用済み・期限切れ・使えない)の表示 */
+        .link-state { padding: 40px 30px; text-align: center; }
+        .link-state[hidden], .form-body[hidden] { display: none; }
+        .link-state .state-icon { width: 64px; height: 64px; border-radius: 50%; background: #f1f5f9; color: #475569; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 18px; }
+        .link-state h2 { font-size: 19px; font-weight: 800; line-height: 1.6; color: #1e293b; margin-bottom: 18px; }
+        .link-state .login-url { font-size: 13px; color: #64748b; margin-top: 12px; word-break: break-all; }
+        .checking { padding: 40px 30px; text-align: center; color: #64748b; font-size: 14px; }
+        .checking[hidden] { display: none; }
+
         .success-icon {
             width: 80px; height: 80px;
             background: #10b981;
@@ -167,7 +176,19 @@
             <h1>店舗管理画面のお申し込み</h1>
         </div>
         
-        <div class="form-body" id="signupForm">
+        <div class="checking" id="linkChecking" role="status">お申し込みのURLを確認しています…</div>
+
+        <!-- リンクが使えないときの表示(使用済み/期限切れ・取り消し済み/存在しない) -->
+        <div class="link-state" id="linkState" hidden>
+            <div class="state-icon"><i class="fa-solid fa-link-slash"></i></div>
+            <h2 id="linkStateText"></h2>
+            <div id="linkStateLogin" hidden>
+                <button class="btn-submit" type="button" id="linkStateLoginBtn" style="width:auto; padding:12px 30px; margin:0 auto;" onclick="window.location.href='/login'">ログインはこちら</button>
+                <p class="login-url">https://www.mapon-meo.com/login</p>
+            </div>
+        </div>
+
+        <div class="form-body" id="signupForm" hidden>
             <p style="font-size:13px; color:var(--text-sub); margin-bottom:25px; line-height:1.6;">
                 アカウントを発行いたします。以下の項目を入力して登録を完了させてください。<br>ご登録後、すぐに管理画面へログインいただけます。
             </p>
@@ -241,6 +262,43 @@
                 btn.querySelector('.eye-closed').toggleAttribute('hidden', !show);
             });
         });
+
+        // ------------------------------------------------------------
+        // ワンタイムリンク:このページは、MSMが発行した「1回だけ使えるURL」(末尾の ?t=…)で開いたときだけ使える。
+        // 使えるかどうかの最終の判断は、データベース(申し込みの処理)が行う。ここでの確認は、表示を分けるためだけ。
+        // ------------------------------------------------------------
+        const inviteToken = (new URLSearchParams(location.search).get('t') || '').trim().toLowerCase();
+        const LINK_TEXT = {
+            used: '既に有効期限が切れております。',
+            expired: 'このURLの有効期限が切れています。<br>担当にご連絡ください。',
+            revoked: 'このURLの有効期限が切れています。<br>担当にご連絡ください。',
+            invalid: 'このURLは使えません。',
+        };
+        function showLinkState(state) {
+            document.getElementById('linkChecking').hidden = true;
+            document.getElementById('signupForm').hidden = true;
+            document.getElementById('linkStateText').innerHTML = LINK_TEXT[state] || LINK_TEXT.invalid;
+            document.getElementById('linkStateLogin').hidden = state !== 'used';   // 使用済み(申し込みが済んでいる)のときだけ、ログインを案内する
+            document.getElementById('linkState').hidden = false;
+        }
+        function showForm() {
+            document.getElementById('linkChecking').hidden = true;
+            document.getElementById('linkState').hidden = true;
+            document.getElementById('signupForm').hidden = false;
+        }
+        // リンクの状態:ok / used / expired / revoked / invalid。確かめられないとき(通信の失敗など)は null
+        async function checkLink() {
+            if (!/^[0-9a-f]{32,64}$/.test(inviteToken)) return 'invalid';
+            try {
+                const { data, error } = await supabase.rpc('neo_invite_status', { p_token: inviteToken });
+                if (error) return null;
+                return typeof data === 'string' ? data : null;
+            } catch { return null; }
+        }
+        (async () => {
+            const state = await checkLink();
+            if (state && state !== 'ok') showLinkState(state); else showForm();
+        })();
 
         // 申し込み直後の「お迎えメール」(ログインURLの案内)を、サーバーに頼む。
         // 送れなくても、申し込み自体は完了している(メールは補助)。待つのは最大10秒。
@@ -332,12 +390,18 @@
                 options: {
                     // 氏名と店舗名は、DBのトリガー(handle_mapon_signup)が clients に保存する(どちらも100文字まで)。
                     // 店舗名が入っているので、初回ログインの「店舗名の入力」は出ない。
-                    data: { signup_source: 'mapon_signup', owner_name: owner_name, company_name: company_name, plan: plan }
+                    // invite は、ワンタイムリンクの文字。データベースが確かめ、申し込みが完了したときに「使用済み」にする。
+                    data: { signup_source: 'mapon_signup', owner_name: owner_name, company_name: company_name, plan: plan, invite: inviteToken }
                 }
             });
 
             if (authError) {
                 console.error("Auth登録エラー:", authError);
+                // リンクが、入力している間に使えなくなった(ほかの人が先に使った・期限が切れた・取り消された)ときは、その表示に切り替える
+                if (/Database error saving new user/i.test(authError.message || '')) {
+                    const state = await checkLink();
+                    if (state && state !== 'ok') { showLinkState(state); return; }
+                }
                 // よくある原因を、分かる言葉で表示する
                 let reason = authError.message || '';
                 if (/already registered|already exists/i.test(reason)) {

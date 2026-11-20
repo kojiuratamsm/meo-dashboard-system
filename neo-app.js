@@ -20,6 +20,7 @@ import { renderCoupons, COUPON_CSS } from './neo-coupons.js';
 import { renderMembers, MEMBERS_CSS } from './neo-members.js';
 import { renderDashboard, DASHBOARD_CSS } from './neo-dashboard.js';
 import { placeWordMessage, keywordMessage, buildAiSettings, keywordOptions, hasFreeText, MAX_KEYWORDS } from './ai-settings-lib.js';
+import { isLight, showLockPopup, lightLimitKind, lockedMembersPage, PLAN_CSS } from './neo-plan.js';
 
 let app = null;               // 描画先
 let client = null;            // 対象の店舗(契約者)の clients 行
@@ -95,8 +96,15 @@ async function route() {
         }
         if (view === 'settings') return renderSettings();
         if (view === 'coupons') return await renderCoupons({ app, client, openModal });
-        if (view === 'members') return await renderMembers({ app, client, openModal });
-        if (view === 'new') return await renderEditor(null);
+        if (view === 'members') {
+            if (isLight(client)) return lockedMembersPage(app);   // MapOn Light では使えない(データベースでも断る)
+            return await renderMembers({ app, client, openModal });
+        }
+        if (view === 'new') {
+            // MapOn Light:アンケートは1つまで。すでにあるときは、一覧に戻してポップアップを出す
+            if (isLight(client) && await activeSurveyCount() >= 1) { markNav('surveys'); await renderList(); showLockPopup('survey'); return; }
+            return await renderEditor(null);
+        }
         if (view === 'edit' && id) return await renderEditor(id);
         if (view === 'responses' && id) return await renderResponsesPage(id);
         return await renderList();
@@ -119,6 +127,12 @@ window.addEventListener('hashchange', () => {
     route();
 });
 function go(hash) { dirty = false; location.hash = hash; }
+
+// 削除していないアンケートの数(MapOn Light の「1つまで」の案内用。実際の制限はデータベースが行う)
+async function activeSurveyCount() {
+    const { data } = await supabase.from('neo_surveys').select('id').eq('client_id', client.id).is('deleted_at', null);
+    return (data || []).length;
+}
 
 // ------------------------------------------------------------
 // 一覧
@@ -159,8 +173,13 @@ async function renderList() {
         }));
     };
 
+    // MapOn Light:アンケートは1つまで。2つ目の「新規作成」「複製」は、ポップアップで知らせる
+    const lightFull = () => isLight(client) && (surveys || []).length >= 1;
+    const newBtn = el('a', { href: '#/new', class: 'btn', id: 'newSurveyBtn', onclick: (e) => { if (lightFull()) { e.preventDefault(); showLockPopup('survey'); } } },
+        el('i', { class: 'fa-solid fa-plus' }), '新規作成');
     app.replaceChildren(...[
-        el('div', { class: 'page-title' }, 'アンケート', el('a', { href: '#/new', class: 'btn' }, el('i', { class: 'fa-solid fa-plus' }), '新規作成')),
+        el('div', { class: 'page-title' }, 'アンケート', newBtn),
+        isLight(client) ? el('p', { class: 'plan-note', id: 'planSurveyNote', text: 'MapOn Lightでは、アンケートは1つまで作れます。' }) : null,
         reviewUrlNotice(),
         el('div', { class: 'card' },
             el('div', { class: 'table-wrap' }, el('table', { class: 'table' },
@@ -170,7 +189,9 @@ async function renderList() {
     draw();
 
     async function duplicate(s) {
+        if (lightFull()) return showLockPopup('survey');
         const { data, error } = await supabase.rpc('neo_duplicate_survey', { p_survey_id: s.id });
+        if (lightLimitKind(error)) return showLockPopup(lightLimitKind(error));
         if (error) return alert('複製できませんでした: ' + error.message);
         go(`#/edit/${data}`);
     }
@@ -423,6 +444,7 @@ async function renderEditor(id) {
             res = await write(rest);
             if (!res.error) alert('アンケートは保存しましたが、「AIが作る口コミ文章の設定」は保存できませんでした。\nデータベースの設定が必要です(Supabase で「追加SQL_11」を実行してください)。');
         }
+        if (lightLimitKind(res.error)) { showLockPopup(lightLimitKind(res.error)); return false; }   // MapOn Light の「1つまで」
         if (res.error) { alert('保存できませんでした: ' + publishErrorText(res.error)); return false; }
         Object.assign(survey, res.data);
         dirty = false;
@@ -717,7 +739,7 @@ export function startNeoApp({ root, client: targetClient, isMasterView: master =
     client = targetClient;
     isMasterView = master;
     if (onName) onStoreNameChange = onName;
-    document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS + COUPON_CSS + MEMBERS_CSS + DASHBOARD_CSS }));
+    document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS + COUPON_CSS + MEMBERS_CSS + DASHBOARD_CSS + PLAN_CSS }));
     lastHash = location.hash;
     route();
 }

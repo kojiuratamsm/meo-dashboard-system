@@ -1,6 +1,6 @@
 // api/public/welcome.js
 // MapOn の申し込み直後に、登録したメールアドレスへ「お迎えメール」(ログインURLの案内)を送るサーバー処理。
-// 呼び出すのは、申し込みフォーム(signup-neo.html)だけ。
+// 呼び出すのは、申し込みフォーム(signup-neo.html と、MapOn Light の signup-light.html)だけ。
 //
 // 安全のための決まり
 // ・送り先は、ログインの情報(申し込み直後に Supabase が返すもの)で確かめた「本人のメールアドレス」だけ。
@@ -20,6 +20,8 @@ const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 const NAME_PENDING = '(店舗名未入力)';
 
 export const SUBJECT = '【MapOn】お申し込みありがとうございます(ログインURLのご案内)';
+/** MapOn Light のお迎えメールに足す1文 */
+export const LIGHT_NOTE = 'ご登録いただいたのは、無料の「MapOn Light」です。アンケート(1つ)・Google口コミへのご案内・AIの口コミ文章(月50回)・クーポン(1つ)をお使いいただけます。会員証・ショップカードは、有料のMapOnでお使いいただけます。';
 
 /** 呼び出し元が、このサイト自身であること(ほかのサイトのページから呼ばせない) */
 export function sameOrigin(req) {
@@ -41,7 +43,8 @@ export function cleanText(v, max = 100) {
 }
 
 /** お迎えメールの本文(HTML と テキスト) */
-export function buildWelcomeMail({ ownerName, storeName, email, siteUrl }) {
+export function buildWelcomeMail({ ownerName, storeName, email, siteUrl, tier }) {
+    const light = tier === 'light';   // MapOn Light(無料プラン)のときだけ、使える範囲の案内を1つ足す
     const owner = cleanText(ownerName);
     const storeRaw = cleanText(storeName);
     const store = storeRaw && storeRaw !== NAME_PENDING ? storeRaw : '';
@@ -74,6 +77,7 @@ export function buildWelcomeMail({ ownerName, storeName, email, siteUrl }) {
         '',
         '店舗名は、ログイン後の「設定」で変更できます。',
         '',
+        ...(light ? [LIGHT_NOTE, ''] : []),
         'このメールに心当たりがない場合は、何もせず、このメールを破棄してください。',
         'ご不明な点は、このメールへの返信(contact@msm-fund.com)でお問い合わせください。',
         '',
@@ -99,7 +103,8 @@ ${row('メールアドレス', e(mail))}
 <h3 style="font-size:16px;margin:24px 0 8px;">パスワードを忘れたとき</h3>
 <p style="margin:0;">ログイン画面の「パスワードをお忘れの方」から、メールで再設定できます。</p>
 <p style="margin:24px 0 0;">店舗名は、ログイン後の「設定」で変更できます。</p>
-<p style="margin:24px 0 0;color:#64748b;font-size:13px;">このメールに心当たりがない場合は、何もせず、このメールを破棄してください。<br>ご不明な点は、このメールへの返信(contact@msm-fund.com)でお問い合わせください。</p>
+${light ? `<p style="margin:24px 0 0;padding:12px 14px;background:#f0fdfa;border-radius:8px;color:#134e4a;">${e(LIGHT_NOTE)}</p>
+` : ''}<p style="margin:24px 0 0;color:#64748b;font-size:13px;">このメールに心当たりがない場合は、何もせず、このメールを破棄してください。<br>ご不明な点は、このメールへの返信(contact@msm-fund.com)でお問い合わせください。</p>
 <p style="margin:16px 0 0;">株式会社MSM / MapOn</p>
 </div>`;
     return { subject: SUBJECT, text, html };
@@ -141,7 +146,7 @@ export default async function handler(req, res) {
         claimed = true;
 
         // 3. メールを送る(Idempotency-Key で、同じ人に二重に送らない。Resend は24時間保持)
-        const mail = buildWelcomeMail({ ownerName: c.owner_name, storeName: c.company_name, email, siteUrl: process.env.SITE_URL });
+        const mail = buildWelcomeMail({ ownerName: c.owner_name, storeName: c.company_name, email, siteUrl: process.env.SITE_URL, tier: c.tier });
         const sent = await fetch(RESEND_ENDPOINT, {
             method: 'POST',
             headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'Idempotency-Key': `mapon-welcome-${me.body.id}` },

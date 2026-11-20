@@ -42,7 +42,7 @@ const OVERVIEW_CSS = `
 .ov-st.setup { color: #8A4B00; background: #FFF0CC; }
 .ov-st.stopped { color: #9B1C1C; background: #FBE4E2; }
 .ov-h3 { font-size: 15px; margin: 6px 0 10px; }
-#overviewCard .table td { white-space: nowrap; }
+#overviewCard .table td { white-space: nowrap; position: relative; }   /* 読み上げ用の隠れた文字が、スマホで画面の横にはみ出さないように */
 #overviewCard .table td:first-child { white-space: normal; min-width: 170px; }
 `;
 const STATUS_LABEL = { active: '稼働中', setup: '設定の途中', stopped: '止まっている' };
@@ -162,11 +162,264 @@ function urlRow(label, path, note) {
         el('p', { class: 'muted', style: { marginTop: '4px', fontSize: '12px' }, text: note }));
 }
 
-function urlCard() {
-    return el('div', { class: 'card' },
+function urlCard(onIssued) {
+    const issueBtn = el('button', { class: 'btn', type: 'button', id: 'issueInviteBtn', onclick: () => openIssueDialog(onIssued) },
+        el('i', { class: 'fa-solid fa-link' }), 'リンクを発行');
+    return el('div', { class: 'card', id: 'invite' },
         el('h2', { text: '契約者に送るURL' }),
-        urlRow('申し込みフォーム', '/signup-neo', '契約者に送ってください。氏名・店舗名・メールアドレス・パスワード・確認パスワードを入力すると、店舗管理画面が発行され、下の契約者一覧に自動で追加されます。登録したメールアドレスには、ログインURLの案内メールが自動で届きます。'),
+        el('div', { class: 'field', style: { marginBottom: '12px' } },
+            el('label', { text: 'MapOn(運用代行の方に、1回だけ使えるリンク)' }),
+            el('div', { class: 'row' }, el('div', { class: 'inv-placeholder grow', text: 'リンクは、発行するたびに、新しく作られます' }), issueBtn),
+            el('p', { class: 'muted', style: { marginTop: '4px', fontSize: '12px', lineHeight: '1.7' },
+                text: '運用代行のプランに入った店舗に、1件ずつ発行して、メールかLINEで送ってください。申し込みが完了すると、そのリンクは使えなくなります(開いただけでは、使用済みになりません)。登録したメールアドレスには、ログインURLの案内メールが自動で届きます。' })),
+        urlRow('MapOn Light(誰でも使える公開のURL)', '/signup-light', 'AIの文章は月50回、アンケートとクーポンは1つまで、会員証は使えません。悪用対策(ボット判定)ができて、受付を開くまでは、このURLで申し込んでもアカウントは作られません。'),
         urlRow('ログインページ', '/login', '申し込み後は、このページから登録したメールアドレスとパスワードでログインすると、店舗管理画面が開きます。(店舗名がない登録だけ、初回に店舗名の入力があります)'));
+}
+
+// ------------------------------------------------------------
+// ワンタイムリンク(追加SQL_21):発行・一覧・取り消し(MSMスタッフ)
+// リンクが使えるかの判断と「使用済み」にする処理は、DB側(申し込みの処理)が行う。
+// ------------------------------------------------------------
+const INVITE_CSS = `
+.inv-placeholder { padding: 10px 12px; border: 1px dashed #A5B4FC; border-radius: 10px; background: #EEF2FF; color: #3730A3; font-size: 13px; }
+.inv-st { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.inv-st.ok { color: #3730A3; background: #E0E7FF; }
+.inv-st.used { color: #1E6B3A; background: #E3F3E8; }
+.inv-st.expired { color: #8A4B00; background: #FFF0CC; }
+.inv-st.revoked { color: #4A5568; background: #EDF2F7; }
+.inv-used { display: block; font-size: 12px; color: #4A5568; margin-top: 4px; line-height: 1.6; word-break: break-all; }
+.inv-exp { display: flex; flex-direction: column; gap: 8px; }
+.inv-exp label { display: flex; gap: 8px; align-items: center; font-size: 14px; color: #2D3748; flex-wrap: wrap; }
+.inv-exp input[type=number] { width: 90px; }
+.inv-exp input[type=date] { width: 170px; }
+.inv-done { background: #E6F4EA; color: #1E7E34; border-radius: 10px; padding: 12px 14px; font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+#inviteCard .table td { vertical-align: top; }
+`;
+const INVITE_STATE = { ok: '未使用', used: '使用済み', expired: '期限切れ', revoked: '取り消し済み' };
+const inviteUrl = (token) => `${location.origin}/signup-neo?t=${token}`;
+function fmtDateTime(iso) {
+    if (!iso) return '-';
+    const d = new Date(iso); const z = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}/${z(d.getMonth() + 1)}/${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
+}
+function inviteErrorText(error) {
+    const m = String(error?.message || '');
+    if (m.includes('Could not find') || m.includes('does not exist') || m.includes('schema cache')) return 'この機能を使うには、Supabase で「追加SQL_21_ワンタイムリンクとMapOn_Light.sql」を実行してください。';
+    if (m.includes('not_allowed')) return 'リンクの発行・取り消しは、MSMスタッフだけが行えます。';
+    if (m.includes('bad_expiry')) return '有効期限は、1〜365日、または今日から1年以内の日付で指定してください。';
+    if (m.includes('memo_too_long')) return '宛先のメモは、100文字以内で入力してください。';
+    if (m.includes('already_used')) return 'このリンクは、すでに使われているため、取り消せません。';
+    if (m.includes('not_found')) return 'このリンクは見つかりませんでした。画面を読み込み直してください。';
+    return 'うまくいきませんでした。時間をおいて、もう一度お試しください。' + (m ? '(詳細:' + m + ')' : '');
+}
+async function copyToClipboard(text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
+}
+function jstToday() { return new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Tokyo' }).format(new Date()); }
+
+/** [リンクを発行] で開く、発行の画面 */
+function openIssueDialog(onIssued) {
+    const bg = el('div', { class: 'modal-bg', id: 'issueModal' });
+    const close = () => { bg.remove(); document.removeEventListener('keydown', onKey); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    const memo = el('input', { class: 'input', id: 'invMemo', maxlength: '100', placeholder: '例:サンプル店A 山田さん(運用代行)', autocomplete: 'off' });
+    const radio = (value, checked) => el('input', { type: 'radio', name: 'invExp', value, checked });
+    const rNone = radio('none', true), rDays = radio('days', false), rDate = radio('date', false);
+    const days = el('input', { class: 'input', id: 'invDays', type: 'number', min: '1', max: '365', value: '14', inputmode: 'numeric', 'aria-label': '日数' });
+    const date = el('input', { class: 'input', id: 'invDate', type: 'date', min: jstToday(), 'aria-label': '日付' });
+    const msg = el('p', { class: 'msg ng', id: 'invMsg', role: 'alert' });
+    const issueBtn = el('button', { class: 'btn', type: 'button', id: 'invIssue' }, '発行してコピー');
+    const cancelBtn = el('button', { class: 'btn sub', type: 'button', id: 'invCancel', onclick: close }, 'やめる');
+    const body = el('div', {},
+        el('div', { class: 'field' }, el('label', { for: 'invMemo', text: '宛先のメモ(任意)' }), memo,
+            el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '4px' }, text: 'どのリンクを誰に送ったか分かるように、店舗名やお名前を書いておけます。お客様には表示されません。' })),
+        el('div', { class: 'field' }, el('label', { text: '有効期限(任意)' }),
+            el('div', { class: 'inv-exp' },
+                el('label', {}, rNone, el('b', { text: '期限なし' }), '(申し込みが完了するまで使える)'),
+                el('label', {}, rDays, '日数を指定:発行から', days, '日間'),
+                el('label', {}, rDate, '日付を指定:', date, 'まで'))),
+        el('p', { class: 'muted', style: { fontSize: '12px', lineHeight: '1.7' }, text: '何も入れずに「発行してコピー」を押すと、メモなし・期限なしのリンクができます。' }),
+        msg,
+        el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '10px' } }, cancelBtn, issueBtn));
+    const dialog = el('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'invTitle' }, el('h3', { id: 'invTitle', text: 'リンクの発行' }), body);
+    bg.append(dialog);
+    bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
+    document.addEventListener('keydown', onKey);
+    document.body.append(bg);
+    days.addEventListener('focus', () => { rDays.checked = true; });
+    date.addEventListener('focus', () => { rDate.checked = true; });
+    memo.focus();
+
+    issueBtn.addEventListener('click', async () => {
+        msg.textContent = '';
+        const args = { p_memo: memo.value.trim() || null, p_days: null, p_until: null };
+        if (rDays.checked) {
+            const n = Number(days.value);
+            if (!Number.isInteger(n) || n < 1 || n > 365) { msg.textContent = '日数は、1〜365の数字で入力してください。'; days.focus(); return; }
+            args.p_days = n;
+        } else if (rDate.checked) {
+            if (!date.value) { msg.textContent = '日付を選んでください。'; date.focus(); return; }
+            if (date.value < jstToday()) { msg.textContent = '今日より前の日付は選べません。'; date.focus(); return; }
+            args.p_until = date.value;
+        }
+        issueBtn.disabled = true; cancelBtn.disabled = true;
+        let res;
+        try { res = await supabase.rpc('neo_invite_issue', args); } catch (e) { res = { data: null, error: e }; }
+        issueBtn.disabled = false; cancelBtn.disabled = false;
+        if (res.error || !res.data?.token) { msg.textContent = inviteErrorText(res.error); return; }
+        const url = inviteUrl(res.data.token);
+        const copied = await copyToClipboard(url);
+        const urlInput = el('input', { class: 'input', id: 'invUrl', value: url, readonly: true, style: { fontSize: '12px', fontFamily: 'monospace' } });
+        body.replaceChildren(
+            el('p', { class: 'inv-done', id: 'invDone', text: copied ? 'リンクをコピーしました!' : 'リンクを発行しました。下のURLをコピーしてください。' }),
+            urlInput,
+            el('div', { class: 'warnbox', style: { marginTop: '12px' } },
+                el('div', { text: '・このURLを、メールかLINEで、運用代行の店舗に送ってください。' }),
+                el('div', { text: `・${res.data.expires_at ? `有効期限は ${fmtDateTime(res.data.expires_at)} までです。` : '有効期限はありません。'}申し込みが完了すると、使えなくなります。` }),
+                el('div', { text: '・URLを知っている人は、1回だけ申し込めます。送る相手を間違えたときは、一覧から取り消してください。' })),
+            el('div', { class: 'row', style: { justifyContent: 'flex-end' } },
+                el('button', { class: 'btn sub', type: 'button', id: 'invCopyAgain', onclick: async (e) => { if (await copyToClipboard(url)) e.target.textContent = 'コピーしました'; else urlInput.select(); } }, 'もう一度コピー'),
+                el('button', { class: 'btn', type: 'button', id: 'invClose', onclick: close }, '閉じる')));
+        if (!copied) urlInput.select();
+        onIssued?.();
+    });
+}
+
+/** 発行したリンクの一覧 */
+function inviteCard() {
+    const card = el('div', { class: 'card', id: 'inviteCard' });
+    const load = async () => {
+        let res;
+        try { res = await supabase.rpc('neo_invite_list'); } catch (e) { res = { data: null, error: e }; }
+        const head = el('h2', { text: '発行したリンクの一覧' });
+        if (res.error || !Array.isArray(res.data)) { card.replaceChildren(head, el('p', { class: 'muted', style: { lineHeight: '1.8' }, text: inviteErrorText(res.error) })); return; }
+        const list = res.data;
+        const rows = list.map(v => el('tr', { 'data-invite': v.id, 'data-state': v.state },
+            el('td', { style: { fontWeight: '700' }, text: v.memo || '(メモなし)' }),
+            el('td', { class: 'muted', text: fmtDateTime(v.created_at) }),
+            el('td', { class: 'muted', text: v.expires_at ? fmtDateTime(v.expires_at) : 'なし' }),
+            el('td', {}, el('span', { class: `inv-st ${v.state}`, text: INVITE_STATE[v.state] || v.state }),
+                v.state === 'used' ? el('span', { class: 'inv-used', text: `${v.used_store || '-'}・${v.used_email || '-'}\n${fmtDateTime(v.used_at)}` }) : null),
+            el('td', {}, v.state === 'ok' ? el('div', { class: 'row', style: { flexWrap: 'nowrap' } },
+                el('button', { class: 'btn small', type: 'button', 'data-copy': v.id, onclick: async (e) => {
+                    const b = e.currentTarget; const url = inviteUrl(v.token);
+                    if (await copyToClipboard(url)) { b.textContent = 'コピーしました'; setTimeout(() => { b.textContent = 'URLをコピー'; }, 2000); }
+                    else prompt('自動でコピーできませんでした。このURLをコピーしてください。', url);
+                } }, 'URLをコピー'),
+                el('button', { class: 'btn small danger', type: 'button', 'data-revoke': v.id, onclick: async () => {
+                    if (!confirm(`${v.memo ? `「${v.memo}」の` : ''}リンクを取り消しますか?\n取り消すと、お客様はこのURLで申し込めなくなります(元に戻せません)。`)) return;
+                    let r; try { r = await supabase.rpc('neo_invite_revoke', { p_id: v.id }); } catch (e) { r = { error: e }; }
+                    if (r.error) { alert(inviteErrorText(r.error)); return; }
+                    load();
+                } }, '取り消し')) : el('span', { class: 'muted', text: '-' }))));
+        card.replaceChildren(head,
+            el('div', { class: 'table-wrap' }, el('table', { class: 'table' },
+                el('thead', {}, el('tr', {}, ...['宛先のメモ', '発行日', '期限', '状態', '操作'].map(h => el('th', { text: h })))),
+                el('tbody', { id: 'inviteRows' }, ...(rows.length ? rows : [el('tr', {}, el('td', { colspan: '5', class: 'muted', style: { textAlign: 'center', padding: '24px' }, text: 'まだリンクを発行していません。上の「リンクを発行」から作れます。' }))])))),
+            el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '8px', lineHeight: '1.7' }, text: '新しい順に200件まで表示します。使われたリンクには、使った店舗名・メールアドレス・日時が出ます。想定外の人なら、契約者一覧で確かめてください。' }));
+    };
+    card.append(el('h2', { text: '発行したリンクの一覧' }), el('p', { class: 'muted', text: '読み込み中...' }));
+    load();
+    return { card, reload: load };
+}
+
+// ------------------------------------------------------------
+// プランの切り替え(追加SQL_21):有料にする=MSMスタッフ/Lightにする=MSMの管理者だけ(データを削除する)
+// ------------------------------------------------------------
+function tierErrorText(error) {
+    const m = String(error?.message || '');
+    if (m.includes('Could not find') || m.includes('does not exist') || m.includes('schema cache')) return 'この機能を使うには、Supabase で「追加SQL_21_ワンタイムリンクとMapOn_Light.sql」を実行してください。';
+    if (m.includes('not_allowed')) return 'Lightにする(データを削除する)のは、MSMの管理者だけが行えます。';
+    if (m.includes('name_mismatch')) return '入力した店舗名(またはメールアドレス)が一致しません。';
+    if (m.includes('not_found')) return 'この店舗は見つかりませんでした。画面を読み込み直してください。';
+    if (m.includes('not_neo')) return 'MapOn の店舗ではないため、プランを変えられません。';
+    return '切り替えられませんでした。何も変更していません。' + (m ? '(詳細:' + m + ')' : '');
+}
+function openTierDialog(c, toTier, onChanged) {
+    const name = String(c.company_name || '').trim();
+    const named = name && name !== NAME_PENDING;
+    const shown = named ? name : (c.email || '(店舗名が未入力)');
+    const bg = el('div', { class: 'modal-bg', id: 'tierModal' });
+    const body = el('div', {}, el('p', { class: 'muted', text: '確認しています…' }));
+    let busy = false, done = false;
+    const close = () => { if (busy) return; bg.remove(); document.removeEventListener('keydown', onKey); if (done) onChanged?.(); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    bg.append(el('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'tierTitle' },
+        el('h3', { id: 'tierTitle', text: toTier === 'standard' ? '有料(MapOn)に切り替え' : 'Light(無料)に切り替え' }), body));
+    bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
+    document.addEventListener('keydown', onKey);
+    document.body.append(bg);
+    const closeBtn = (label = '閉じる') => el('button', { class: 'btn sub', type: 'button', id: 'tierClose', onclick: close }, label);
+    const finish = (text) => {
+        done = true;
+        body.replaceChildren(el('p', { class: 'msg ok', id: 'tierDone', style: { fontSize: '15px', fontWeight: '700' }, text }),
+            el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '14px' } }, closeBtn()));
+    };
+    const run = async (button, msg, confirmName) => {
+        busy = true; button.disabled = true; msg.className = 'msg'; msg.textContent = '切り替えています…';
+        let r;
+        try { r = await supabase.rpc('neo_admin_set_tier', { p_client_id: String(c.id), p_tier: toTier, p_confirm_name: confirmName ?? null }); } catch (e) { r = { error: e }; }
+        busy = false;
+        if (r.error || !r.data?.ok) { msg.className = 'msg ng'; msg.textContent = tierErrorText(r.error); button.disabled = false; return false; }
+        return true;
+    };
+
+    if (toTier === 'standard') {
+        const msg = el('p', { class: 'msg', id: 'tierMsg', role: 'alert' });
+        const go = el('button', { class: 'btn', type: 'button', id: 'tierGo' }, '切り替える');
+        go.addEventListener('click', async () => { if (await run(go, msg)) finish(`「${shown}」を、有料(MapOn)に切り替えました。店舗が画面を開き直すと、全機能が使えます。`); });
+        body.replaceChildren(
+            el('p', { style: { lineHeight: '1.8', fontSize: '14px' } }, '「', el('b', { text: shown }), '」様を、有料(MapOn)に切り替えますか?'),
+            el('p', { class: 'muted', style: { lineHeight: '1.8', marginTop: '6px' }, text: 'AIの文章の上限は、月300回になります。会員証・クーポン・アンケートの制限もなくなります。' }),
+            msg, el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '14px' } }, closeBtn('やめる'), go));
+        go.focus();
+        return;
+    }
+
+    (async () => {
+        let res;
+        try { res = await supabase.rpc('neo_admin_tier_preview', { p_client_id: String(c.id) }); } catch (e) { res = { data: null, error: e }; }
+        if (res.error || !res.data) {
+            body.replaceChildren(el('p', { class: 'msg ng', id: 'tierMsg', style: { fontSize: '14px', lineHeight: '1.7' }, text: tierErrorText(res.error) }),
+                el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '14px' } }, closeBtn()));
+            return;
+        }
+        const L = res.data.light || {};
+        const n = (k) => Number(L[k]) || 0;
+        const expect = named ? name : String(res.data.email || c.email || '').trim();
+        const matches = (v) => named ? v.trim() === expect : v.trim().toLowerCase() === expect.toLowerCase();
+        const input = el('input', { class: 'input', id: 'tierConfirm', autocomplete: 'off', spellcheck: 'false' });
+        const msg = el('p', { class: 'msg', id: 'tierMsg', role: 'alert' });
+        const go = el('button', { class: 'btn danger-solid', type: 'button', id: 'tierGo', disabled: true }, 'Lightにする');
+        input.addEventListener('input', () => { go.disabled = !matches(input.value); msg.textContent = ''; });
+        input.addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; e.preventDefault(); if (!go.disabled) go.click(); });
+        go.addEventListener('click', async () => {
+            if (!matches(input.value) || busy) return;
+            input.disabled = true;
+            if (await run(go, msg, input.value.trim())) finish(`「${shown}」を、Light(無料)に切り替えました。データを削除し、記録を残しました。`);
+            else input.disabled = false;
+        });
+        const couponText = n('coupons_delete') === 0 ? `${n('coupons_total')}つ(削除なし)`
+            : `${n('coupons_total')}つのうち、最初に作った1つ${L.keep_coupon_name ? `(「${L.keep_coupon_name}」)` : ''}を残して、${n('coupons_delete')}つを削除${n('coupon_issues_delete') ? `(お客様に渡した記録 ${n('coupon_issues_delete')}件も削除)` : ''}`;
+        const surveyText = n('surveys_delete') === 0 ? `${n('surveys_total')}つ(削除なし)`
+            : `${n('surveys_total')}つのうち、最初に作った1つ${L.keep_survey_title ? `(「${L.keep_survey_title}」)` : ''}を残して、${n('surveys_delete')}つを削除${n('responses_delete') ? `(消えるアンケートの回答 ${n('responses_delete')}件も削除)` : ''}`;
+        body.replaceChildren(
+            el('p', { style: { lineHeight: '1.8', fontSize: '14px' } }, '「', el('b', { text: shown }), '」様を、Light(無料)に切り替えます。次のデータが', el('b', { text: '削除されます' }), ':'),
+            el('dl', { class: 'del-list', id: 'tierCounts', style: { marginTop: '10px' } },
+                el('dt', { text: '会員・ショップカード' }), el('dd', { 'data-count': 'members', text: `すべて(会員 ${n('members')}人・スタンプの記録 ${n('stamp_events')}件を含む)` }),
+                el('dt', { text: 'クーポン' }), el('dd', { 'data-count': 'coupons', text: couponText }),
+                el('dt', { text: 'アンケート' }), el('dd', { 'data-count': 'surveys', text: surveyText })),
+            el('div', { class: 'del-dangerbox' },
+                el('div', { text: '・削除すると、元に戻せません(SupabaseのFreeプランは、バックアップがありません)。' }),
+                el('div', { text: '・AIの文章の上限は、月50回になります。誰が・いつ・何を消したかは、記録に残ります。' })),
+            el('div', { class: 'field' },
+                el('label', { for: 'tierConfirm', text: named ? '確認のため、店舗名を入力してください' : '確認のため、登録のメールアドレスを入力してください' }),
+                el('p', { class: 'muted', style: { margin: '0 0 6px', fontSize: '12px' } }, '入力するもの:', el('b', { text: expect })),
+                input),
+            msg,
+            el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '10px' } }, closeBtn('やめる'), go));
+        input.focus();
+    })();
 }
 
 // AIの文章生成(口コミ文章の下書き)が動くかを、マスター画面から確かめる
@@ -380,6 +633,9 @@ async function render() {
     // 氏名(owner_name)の列は「追加SQL_7」で追加される。まだ実行されていない場合は、氏名なしで一覧を表示する。
     const loadClients = async () => {
         const base = 'id, company_name, email, created_at, auth_id';
+        // プラン(tier)の列は「追加SQL_21」で追加される。まだのときは、プランなしで表示する。
+        const withTier = await supabase.from('clients').select(base + ', owner_name, tier').eq('plan', NEO_PLAN).order('created_at', { ascending: false });
+        if (!withTier.error) return { ...withTier, hasOwnerName: true, hasTier: true };
         const withOwner = await supabase.from('clients').select(base + ', owner_name').eq('plan', NEO_PLAN).order('created_at', { ascending: false });
         if (!withOwner.error) return { ...withOwner, hasOwnerName: true };
         const plain = await supabase.from('clients').select(base).eq('plan', NEO_PLAN).order('created_at', { ascending: false });
@@ -411,6 +667,7 @@ async function render() {
         perClient[key].responses += responsesBySurvey[s.id] || 0;
     }
     const clients = clientsRes.data || [];
+    const hasTier = !!clientsRes.hasTier;
 
     // 申し込みから7日以内は「新しい申し込み」と表示する
     const NEW_DAYS = 7;
@@ -422,8 +679,8 @@ async function render() {
         const q = search.value.trim().toLowerCase();
         const list = clients.filter(c => !q || `${c.company_name} ${c.owner_name || ''} ${c.email}`.toLowerCase().includes(q));
         if (!list.length) {
-            tbody.replaceChildren(el('tr', {}, el('td', { colspan: '7', class: 'muted', style: { textAlign: 'center', padding: '30px', lineHeight: '1.8' },
-                text: clients.length ? '該当する契約者がいません。' : 'まだ登録した契約者がいません。上の「申し込みフォーム」のURLを、契約者に送ってください。' })));
+            tbody.replaceChildren(el('tr', {}, el('td', { colspan: hasTier ? '8' : '7', class: 'muted', style: { textAlign: 'center', padding: '30px', lineHeight: '1.8' },
+                text: clients.length ? '該当する契約者がいません。' : 'まだ登録した契約者がいません。上の「リンクを発行」で、申し込みのURLを作って送ってください。' })));
             return;
         }
         tbody.replaceChildren(...list.map(c => {
@@ -434,6 +691,8 @@ async function render() {
                     isNew(c) ? el('span', { class: 'badge on', style: { marginLeft: '8px' }, text: '新しい申し込み' }) : null),
                 el('td', { text: c.owner_name || '-' }),
                 el('td', { text: c.email || '-' }),
+                hasTier ? el('td', {}, el('span', { class: 'badge', 'data-tier': c.tier, style: c.tier === 'light' ? { background: '#CCFBF1', color: '#115E59' } : { background: '#E0E7FF', color: '#3730A3' },
+                    text: c.tier === 'light' ? 'MapOn Light' : 'MapOn' })) : null,
                 el('td', { class: 'muted', text: fmtDate(c.created_at) }),
                 el('td', { text: `${stat.surveys}件` }),
                 el('td', { text: `${stat.responses}件` }),
@@ -442,17 +701,21 @@ async function render() {
                         el('i', { class: 'fa-solid fa-right-to-bracket' }), '管理画面に入る'),
                     c.auth_id ? el('button', { class: 'btn small sub', type: 'button', title: 'パスワードを忘れた方に送るURLを発行します', onclick: () => issueResetUrl(c) },
                         el('i', { class: 'fa-solid fa-key' }), 'PW再設定URL') : null,
+                    hasTier && c.tier === 'light' ? el('button', { class: 'btn small', type: 'button', 'data-tier-up': String(c.id), title: '有料(MapOn)に切り替えます', onclick: () => openTierDialog(c, 'standard', render) }, '有料にする') : null,
+                    hasTier && c.tier !== 'light' && isAdmin ? el('button', { class: 'btn small sub', type: 'button', 'data-tier-down': String(c.id), title: 'Light(無料)に切り替えます。データを削除します(管理者だけ)', onclick: () => openTierDialog(c, 'light', render) }, 'Lightにする') : null,
                     isAdmin ? el('button', { class: 'btn small danger', type: 'button', 'data-delete': String(c.id), title: 'この店舗アカウントを削除します(管理者だけ)',
                         'aria-label': `${namePending(c) ? (c.email || '店舗') : c.company_name}を削除`, onclick: () => openDeleteDialog(c, render) },
                         el('i', { class: 'fa-solid fa-trash' }), '削除') : null)));
         }));
     };
     search.addEventListener('input', draw);
+    const invites = inviteCard();
 
     app.replaceChildren(
         el('div', { class: 'page-title' }, 'MapOn 契約者一覧'),
         overview,
-        urlCard(),
+        urlCard(() => invites.reload()),
+        invites.card,
         aiCheckCard(),
         settingRes.error
             ? el('div', { class: 'card' }, el('h2', { text: '設問の書き方ガイドのURL' }),
@@ -464,14 +727,16 @@ async function render() {
             clientsRes.hasOwnerName ? null : el('p', { class: 'muted', style: { marginBottom: '10px', fontSize: '12px' },
                 text: '氏名の列を表示するには、Supabase で「追加SQL_7_申し込みフォームの氏名.sql」を実行してください。' }),
             el('div', { class: 'table-wrap' }, el('table', { class: 'table' },
-                el('thead', {}, el('tr', {}, ...['店舗名', '氏名', 'メールアドレス', '登録日', 'アンケート', '回答', ''].map(h => el('th', { text: h })))),
+                el('thead', {}, el('tr', {}, ...['店舗名', '氏名', 'メールアドレス', ...(hasTier ? ['プラン'] : []), '登録日', 'アンケート', '回答', ''].map(h => el('th', { text: h })))),
                 tbody))));
     draw();
+    // サイドバーの「MapOn」(申し込みフォームURL取得)から来たときは、「契約者に送るURL」を見せる
+    if (location.hash === '#invite') document.getElementById('invite')?.scrollIntoView({ block: 'start' });
 }
 
 (async () => {
     const session = await requireStaff();
     if (!session) return;
-    document.head.append(el('style', { text: OVERVIEW_CSS + DELETE_CSS }));
+    document.head.append(el('style', { text: OVERVIEW_CSS + DELETE_CSS + INVITE_CSS }));
     render();
 })();

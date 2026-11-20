@@ -244,7 +244,10 @@ function renderDraft(message = '') {
     $('draftTitle').textContent = ok ? 'アンケートへのご回答ありがとうございます！' : '口コミの文章';
     $('draftNote').textContent = ok
         ? '今回のアンケート内容をもとに、AIがクチコミの文章を作成しました。\n実際の体験や感想と合っているか、文章の内容をご確認ください。\nご確認後、「文章を確認しました」にチェックを入れると、「文章を送信する」ボタンが押せるようになります。\n「文章を送信する」ボタンを押すと、Googleのクチコミ画面が開きます。\nよろしければ、クチコミへのご協力をお願いします！'
-        : '文章を自動で作れませんでした。お手数ですが、ご自身の言葉でお書きください。空欄のまま進むこともできます。';
+        : draft.monthlyLimit
+            // お店のAIの文章が、今月の上限に達したとき(やわらかい言い方にする。アップグレードには触れない)
+            ? '現在、文章の自動作成をお休みしています。ご自身の言葉でお書きください。空欄のまま進むこともできます。'
+            : '文章を自動で作れませんでした。お手数ですが、ご自身の言葉でお書きください。空欄のまま進むこともできます。';
     $('lengthSeg').hidden = !ok;
     $('btnRegen').hidden = !ok;
     const canRegen = ok && draft.remaining > 0 && !draft.busy;
@@ -287,6 +290,7 @@ async function requestDraft(length) {
         if (!res.ok || !data?.ok || !data.text) {
             if (data && typeof data.remaining === 'number') draft.remaining = data.remaining;
             if (data?.reason === 'response_limit') draft.remaining = 0;
+            if (data?.reason === 'monthly_limit') draft.monthlyLimit = true;
             return false;
         }
         draft.available = true;

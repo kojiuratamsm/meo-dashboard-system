@@ -12,6 +12,7 @@
 import { supabase } from './supabase-config.js';
 import { el } from './survey-lib.js';
 import { rankColor } from './rank-lib.js';
+import { isLight, upgradeButton } from './neo-plan.js';
 
 export const DASHBOARD_CSS = `
 .db-head { display: flex; gap: 12px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; margin-bottom: 20px; }
@@ -125,14 +126,16 @@ export function couponReasonText(a) {
  * key がある項目(警告)は、「あえて、このままにする」で消せる。原因が変わると、key も変わるので、また出る。
  * @param {object} d neo_dashboard の結果
  * @param {object|null} alerts neo_dashboard_alerts の結果(追加SQL_19 の前は null)
+ * @param {{light?: boolean}} opts light:MapOn Light の店舗(会員証の項目は出さない。AIの上限には、アップグレードのボタンを付ける)
  */
-export function buildTodos(d, alerts = null) {
-    const t = d.todo || {}, card = d.card || {}, ai = d.ai || {};
+export function buildTodos(d, alerts = null, { light = false } = {}) {
+    const t = d.todo || {}, card = light ? {} : (d.card || {}), ai = d.ai || {};
     const list = [];
-    const add = (must, title, body, action, href, key = null) => list.push({ must, title, body, action, href, key });
+    const add = (must, title, body, action, href, key = null, upgrade = false) => list.push({ must, title, body, action, href, key, upgrade });
 
     // ---- 1. 警告 ----
-    if (alerts && Array.isArray(alerts.stamp_rewards)) {
+    if (light) { /* MapOn Light:ショップカードは使えないので、特典の警告は出さない */ }
+    else if (alerts && Array.isArray(alerts.stamp_rewards)) {
         for (const a of alerts.stamp_rewards) {
             const fix = a.reason === 'deleted'
                 ? 'お客様がこのスタンプの数になっても、特典が届きません。ショップカードで、特典のクーポンを選び直してください。'
@@ -169,7 +172,13 @@ export function buildTodos(d, alerts = null) {
             '期限を過ぎると、会員の方が読み取っても、スタンプが付かなくなります(はじめての方は、登録でスタンプが1個付きます)。', '期限を変える', '#/members',
             `qr:${t.qr_expires_on}:soon`);
     }
-    if (Number(ai.limit) > 0 && Number(ai.month) >= Number(ai.limit) * 0.8) add(true, `今月のAIの文章が、上限に近づいています(${ai.month} / ${ai.limit}回)`,
+    if (light && Number(ai.limit) > 0 && Number(ai.month) >= Number(ai.limit)) add(true, `今月のAIの文章が、上限に達しました(${ai.month} / ${ai.limit}回)`,
+        `お客様の画面は、ご自身の言葉で書く形に切り替わっています。回数は、翌月1日(日本時間)に戻ります。MapOn Lightは月${ai.limit}回まで、有料のMapOnは月300回まで使えます。`, '', '',
+        `ai:${String(d.to || todayJst()).slice(0, 7)}:${ai.limit}:full`, true);
+    else if (light && Number(ai.limit) > 0 && Number(ai.month) >= Number(ai.limit) * 0.8) add(true, `今月のAIの文章が、上限に近づいています(${ai.month} / ${ai.limit}回)`,
+        `MapOn Lightは、月${ai.limit}回までです。有料のMapOnは、月300回まで使えます。`, '', '',
+        `ai:${String(d.to || todayJst()).slice(0, 7)}:${ai.limit}`, true);
+    else if (!light && Number(ai.limit) > 0 && Number(ai.month) >= Number(ai.limit) * 0.8) add(true, `今月のAIの文章が、上限に近づいています(${ai.month} / ${ai.limit}回)`,
         '上限に達すると、今月はAIの文章を作れなくなります。担当者にご連絡ください。', '', '',
         `ai:${String(d.to || todayJst()).slice(0, 7)}:${ai.limit}`);
 
@@ -179,7 +188,7 @@ export function buildTodos(d, alerts = null) {
     else if (!t.published) add(true, '公開中のアンケートがありません', 'アンケートを公開すると、お客様が回答できるようになります。', 'アンケートを開く', '#/');
     if (t.reward_mode === 'none') add(false, 'アンケートのお礼(クーポン)を出していません', '出す場合は「クーポン」で決められます。出さないお店は、そのままで問題ありません。', 'クーポンを開く', '#/coupons');
     if (card.enabled && Number(t.rewards) === 0) add(false, 'ショップカードに、特典がありません', 'スタンプが貯まったときに届くクーポンを決められます。', '特典を決める', '#/members');
-    if (!card.enabled) add(false, 'ショップカードは、いま非公開です', '公開すると、お客様が会員登録して、スタンプを貯められます。', 'ショップカードを開く', '#/members');
+    if (!light && !card.enabled) add(false, 'ショップカードは、いま非公開です', '公開すると、お客様が会員登録して、スタンプを貯められます。', 'ショップカードを開く', '#/members');
 
     // ---- 3. おすすめ ----
     for (const s of (t.no_ai || []).slice(0, 3)) add(false, `「${s.title}」に、AIの文章の設定がありません`,
@@ -207,6 +216,7 @@ function isNotReady(error) {
  */
 export async function renderDashboard({ app, client }) {
     const clientId = String(client.id);
+    const light = isLight(client);
     let days = 30, sel = null, data = null;
     const load = async (n) => {
         try { return await supabase.rpc('neo_dashboard', { p_client_id: clientId, p_days: n }); } catch (e) { return { data: null, error: e }; }
@@ -332,6 +342,12 @@ export async function renderDashboard({ app, client }) {
     }
 
     function membersCard() {
+        // MapOn Light:会員・ショップカードは使えない
+        if (light) return el('div', { class: 'card', id: 'dbMembers' }, el('h2', { text: '会員・リピート' }),
+            el('div', { class: 'plan-lockcard', style: { padding: '16px 6px' } },
+                el('div', { class: 'ic', 'aria-hidden': 'true' }, el('i', { class: 'fa-solid fa-lock' })),
+                el('p', {}, 'MapOn Lightでは、会員証・ショップカードは使えません。', el('br'), '有料のMapOnでお使いいただけます。'),
+                upgradeButton('アップグレードするにはこちらから', { id: 'dbMembersUpgrade' })));
         const m = data.members || {}, card = data.card || {};
         const total = Number(m.total) || 0;
         const num = (label, n, unit, id) => el('div', { id }, el('div', { class: 'l', text: label }), el('div', { class: 'n' }, String(n), el('small', { text: unit })));
@@ -347,7 +363,7 @@ export async function renderDashboard({ app, client }) {
     }
 
     function todoCard() {
-        const all = buildTodos(data, alerts);
+        const all = buildTodos(data, alerts, { light });
         // 原因が直った(いまは出ていない)警告は、消した記録からも外す(同じ原因が、またあとで起きたときは出す)
         const activeKeys = all.filter(t => t.key).map(t => t.key);
         const dismissed = readDismissed(clientId).filter(k => activeKeys.includes(k));
@@ -360,6 +376,7 @@ export async function renderDashboard({ app, client }) {
                 el('div', { class: 'tx' }, el('div', { class: 'tt' }, el('span', { class: 'tag ' + (t.must ? 'must' : 'opt'), text: t.must ? '要対応' : 'おすすめ' }), t.title),
                     el('div', { class: 'tb', text: t.body })),
                 el('div', { class: 'acts' },
+                    t.upgrade ? upgradeButton('アップグレードするにはこちらから', { class: 'btn small plan-upgrade' }) : null,
                     t.href ? el('a', { class: 'btn sub small', href: t.href }, t.action) : null,
                     t.key ? el('button', { class: 'btn small db-dismiss', type: 'button', title: 'この警告を、リストから消します。原因が変わると、また表示されます。',
                         onclick: () => { writeDismissed(clientId, [...readDismissed(clientId), t.key]); redraw(); } }, 'あえて、このままにする') : null)))

@@ -19,6 +19,7 @@ export default defineConfig({
         card: resolve(__dirname, 'card.html'),
         neo: resolve(__dirname, 'neo.html'),
         signupNeo: resolve(__dirname, 'signup-neo.html'),
+        signupLight: resolve(__dirname, 'signup-light.html'),
         media: resolve(__dirname, 'media.html'),
         mediaLogin: resolve(__dirname, 'media-login.html'),
         mediaAdmin: resolve(__dirname, 'media-admin.html')
