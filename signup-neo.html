@@ -156,6 +156,12 @@
         .checking { padding: 40px 30px; text-align: center; color: #64748b; font-size: 14px; }
         .checking[hidden] { display: none; }
 
+        /* 利用規約のチェック */
+        .agree-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; font-size: 14px; line-height: 1.7; color: var(--text-main); }
+        .agree-row input[type=checkbox] { width: 20px; height: 20px; margin-top: 3px; flex-shrink: 0; accent-color: var(--primary); cursor: pointer; }
+        .agree-row label { cursor: pointer; }
+        .terms-link { background: none; border: none; padding: 0; font: inherit; font-weight: 700; color: var(--primary); text-decoration: underline; cursor: pointer; }
+
         .success-icon {
             width: 80px; height: 80px;
             background: #10b981;
@@ -224,6 +230,11 @@
                 </div>
             </div>
 
+            <div class="agree-row">
+                <input type="checkbox" id="agreeTerms">
+                <span><button type="button" class="terms-link" id="openTerms">利用規約</button><label for="agreeTerms">に同意します</label></span>
+            </div>
+
             <p id="formError" role="alert" style="display:none; background:#FEECEB; color:#C5221F; border-radius:10px; padding:12px; font-size:13px; line-height:1.6; margin-bottom:16px;"></p>
 
             <button class="btn-submit" id="submitBtn" onclick="registerClient()">
@@ -246,6 +257,10 @@
 
     <script type="module">
         import { supabase } from './supabase-config.js';
+        import { TERMS_VERSION, openTermsPopup } from './terms.js';
+
+        // 「利用規約」を押すと、規約のポップアップが開く(条ごとに開閉できる)
+        document.getElementById('openTerms').addEventListener('click', (e) => { e.preventDefault(); openTermsPopup('neo'); });
 
         // パスワード欄の「目のマーク」:押すたびに、入力した文字を表示する/隠すを切り替える
         document.querySelectorAll('.pw-toggle').forEach((btn) => {
@@ -377,6 +392,11 @@
                 showError("パスワードと確認パスワードが一致しません。もう一度入力してください。", confirmNode);
                 return;
             }
+            const agreeTerms = document.getElementById('agreeTerms');
+            if(!agreeTerms.checked) {
+                showError("利用規約を確認して、チェックを入れてください。", agreeTerms);
+                return;
+            }
 
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 処理中...';
             btn.disabled = true;
@@ -391,7 +411,7 @@
                     // 氏名と店舗名は、DBのトリガー(handle_mapon_signup)が clients に保存する(どちらも100文字まで)。
                     // 店舗名が入っているので、初回ログインの「店舗名の入力」は出ない。
                     // invite は、ワンタイムリンクの文字。データベースが確かめ、申し込みが完了したときに「使用済み」にする。
-                    data: { signup_source: 'mapon_signup', owner_name: owner_name, company_name: company_name, plan: plan, invite: inviteToken }
+                    data: { signup_source: 'mapon_signup', owner_name: owner_name, company_name: company_name, plan: plan, invite: inviteToken, terms_version: TERMS_VERSION }
                 }
             });
 

@@ -156,6 +156,14 @@
         .checking { padding: 40px 30px; text-align: center; color: #64748b; font-size: 14px; }
         .checking[hidden] { display: none; }
 
+        /* 利用規約・確認のチェック */
+        .agree-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; font-size: 14px; line-height: 1.7; color: var(--text-main); }
+        .agree-row input[type=checkbox] { width: 20px; height: 20px; margin-top: 3px; flex-shrink: 0; accent-color: var(--primary); cursor: pointer; }
+        .agree-row label { cursor: pointer; }
+        .terms-link { background: none; border: none; padding: 0; font: inherit; font-weight: 700; color: var(--primary); text-decoration: underline; cursor: pointer; }
+        .agree-note { font-size: 12px; line-height: 1.7; color: var(--text-sub); margin: 4px 0 0; }
+        .field-hint { font-size: 12px; color: var(--text-sub); margin-top: 6px; line-height: 1.6; }
+
         .success-icon {
             width: 80px; height: 80px;
             background: #10b981;
@@ -204,6 +212,12 @@
             </div>
 
             <div class="form-group">
+                <label for="lineName">LINEに登録されているお名前</label>
+                <input type="text" id="lineName" class="form-control" placeholder="例: やまだ たろう" autocomplete="off" maxlength="100" aria-describedby="lineNameHint">
+                <p class="field-hint" id="lineNameHint">LINEの表示名を、そのまま入力してください。</p>
+            </div>
+
+            <div class="form-group">
                 <label for="storeName">店舗名</label>
                 <input type="text" id="storeName" class="form-control" placeholder="例: 焼肉 新宿本店" autocomplete="organization" maxlength="100">
             </div>
@@ -229,6 +243,18 @@
                 </div>
             </div>
 
+            <div class="agree-row">
+                <input type="checkbox" id="agreeTerms">
+                <span><button type="button" class="terms-link" id="openTerms">利用規約</button><label for="agreeTerms">に同意します</label></span>
+            </div>
+            <div class="agree-row">
+                <input type="checkbox" id="agreeUrl" aria-describedby="agreeUrlNote">
+                <div>
+                    <label for="agreeUrl">申し込みページのURLを、他の方に渡したり、悪用したりしないことを確認しました。</label>
+                    <p class="agree-note" id="agreeUrlNote">不正な申し込み、無断での重複申し込み、第三者へのURL共有による登録が確認された場合、規約違反とみなし、運営の判断により、ご本人および第三者のアカウントを削除する場合がございます。<br>URLの共有・流出・悪用は固くお断りいたします。</p>
+                </div>
+            </div>
+
             <p id="formError" role="alert" style="display:none; background:#FEECEB; color:#C5221F; border-radius:10px; padding:12px; font-size:13px; line-height:1.6; margin-bottom:16px;"></p>
 
             <button class="btn-submit" id="submitBtn" onclick="registerClient()">
@@ -251,6 +277,10 @@
 
     <script type="module">
         import { supabase } from './supabase-config.js';
+        import { TERMS_VERSION, OFFICIAL_LINE_URL, openTermsPopup } from './terms.js';
+
+        // 「利用規約」を押すと、規約のポップアップが開く(条ごとに開閉できる)
+        document.getElementById('openTerms').addEventListener('click', (e) => { e.preventDefault(); openTermsPopup('light'); });
 
         // パスワード欄の「目のマーク」:押すたびに、入力した文字を表示する/隠すを切り替える
         document.querySelectorAll('.pw-toggle').forEach((btn) => {
@@ -294,6 +324,25 @@
         }
         (async () => { if (await isOpen()) showForm(); else showLinkState(); })();
 
+        // このメールアドレスで申し込めるか(追加SQL_22):closed=受付停止 / blocked=解約したメールアドレス / ok
+        // 確かめられないとき(通信の失敗・データベースの設定の前)は ok として進める(最後はデータベースが断る)
+        async function signupCheck(email) {
+            try {
+                const { data, error } = await supabase.rpc('neo_light_signup_check', { p_email: email });
+                return !error && typeof data === 'string' ? data : 'ok';
+            } catch { return 'ok'; }
+        }
+        // 解約したメールアドレスで申し込んだときの案内(公式LINEへのリンクつき)
+        function showBlocked(errorBox, emailNode) {
+            const link = document.createElement('a');
+            link.href = OFFICIAL_LINE_URL; link.target = '_blank'; link.rel = 'noopener'; link.textContent = '公式LINE';
+            link.style.cssText = 'color:#C5221F; font-weight:700; text-decoration:underline;';
+            errorBox.replaceChildren('このメールアドレスは、すでにご登録の履歴があるため、お申し込みいただけません。ご希望の場合は、', link, 'にご連絡ください。');
+            errorBox.dataset.reason = 'blocked';
+            errorBox.style.display = 'block';
+            emailNode.focus();
+        }
+
         // 申し込み直後の「お迎えメール」(ログインURLの案内)を、サーバーに頼む。
         // 送れなくても、申し込み自体は完了している(メールは補助)。待つのは最大10秒。
         async function requestWelcomeMail(accessToken) {
@@ -328,6 +377,9 @@
 
         window.registerClient = async function() {
             const ownerNode = document.getElementById('ownerName');
+            const lineNode = document.getElementById('lineName');
+            const agreeTerms = document.getElementById('agreeTerms');
+            const agreeUrl = document.getElementById('agreeUrl');
             const storeNode = document.getElementById('storeName');
             const emailNode = document.getElementById('emailUrl');
             const passNode = document.getElementById('passwordVal');
@@ -337,6 +389,7 @@
             if (btn.disabled) return;   // 二重送信を防ぐ
 
             const owner_name = ownerNode.value.trim();
+            const line_name = lineNode.value.trim();
             const company_name = storeNode.value.trim();
             const email = emailNode.value.trim();
             const password = passNode.value.trim();
@@ -346,13 +399,14 @@
             // 入力の間違いは、アラートではなくフォームの中に表示する
             const showError = (message, node) => {
                 errorBox.textContent = message;
+                delete errorBox.dataset.reason;
                 errorBox.style.display = 'block';
                 if (node) node.focus();
             };
             errorBox.style.display = 'none';
 
-            if(!owner_name || !company_name || !email || !password || !passwordConfirm) {
-                showError("全ての項目を入力してください。", !owner_name ? ownerNode : !company_name ? storeNode : !email ? emailNode : !password ? passNode : confirmNode);
+            if(!owner_name || !line_name || !company_name || !email || !password || !passwordConfirm) {
+                showError("全ての項目を入力してください。", !owner_name ? ownerNode : !line_name ? lineNode : !company_name ? storeNode : !email ? emailNode : !password ? passNode : confirmNode);
                 return;
             }
             if(company_name === '(店舗名未入力)') {
@@ -371,9 +425,23 @@
                 showError("パスワードと確認パスワードが一致しません。もう一度入力してください。", confirmNode);
                 return;
             }
+            if(!agreeTerms.checked) {
+                showError("利用規約を確認して、チェックを入れてください。", agreeTerms);
+                return;
+            }
+            if(!agreeUrl.checked) {
+                showError("「申し込みページのURLを、他の方に渡したり、悪用したりしないこと」を確認して、チェックを入れてください。", agreeUrl);
+                return;
+            }
 
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 処理中...';
             btn.disabled = true;
+            const resetBtn = () => { btn.innerHTML = '<span>無料で始める</span> <i class="fa-solid fa-arrow-right"></i>'; btn.disabled = false; };
+
+            // 申し込む前に、受付の状態と、解約したメールアドレスでないかを確かめる
+            const before = await signupCheck(email);
+            if (before === 'closed') { showLinkState(); return; }
+            if (before === 'blocked') { showBlocked(errorBox, emailNode); resetBtn(); return; }
 
             // 氏名は signUp の付帯情報として渡し、clients への登録はDBのトリガー
             // (handle_mapon_signup)が行う。パスワードは Supabase Auth がハッシュ化して保持し、
@@ -385,14 +453,19 @@
                     // 氏名と店舗名は、DBのトリガー(handle_mapon_signup)が clients に保存する(どちらも100文字まで)。
                     // 店舗名が入っているので、初回ログインの「店舗名の入力」は出ない。
                     // signup_source が mapon_light のとき、データベースが Light の店舗として登録する(受付が閉じていれば断る)
-                    data: { signup_source: 'mapon_light', owner_name: owner_name, company_name: company_name, plan: plan }
+                    // LINEに登録されているお名前と、同意した利用規約の版も記録する(どちらもないと、データベースが断る)
+                    data: { signup_source: 'mapon_light', owner_name: owner_name, company_name: company_name, line_name: line_name, terms_version: TERMS_VERSION, plan: plan }
                 }
             });
 
             if (authError) {
                 console.error("Auth登録エラー:", authError);
                 // 入力している間に、受付が閉じたときは、その表示に切り替える
-                if (/Database error saving new user/i.test(authError.message || '') && !(await isOpen())) { showLinkState(); return; }
+                if (/Database error saving new user/i.test(authError.message || '')) {
+                    const after = await signupCheck(email);
+                    if (after === 'blocked') { showBlocked(errorBox, emailNode); resetBtn(); return; }
+                    if (after === 'closed' || !(await isOpen())) { showLinkState(); return; }
+                }
                 // よくある原因を、分かる言葉で表示する
                 let reason = authError.message || '';
                 if (/already registered|already exists/i.test(reason)) {
@@ -403,8 +476,7 @@
                     reason = '短い時間に何度も登録が行われました。しばらく待ってから、もう一度お試しください。';
                 }
                 showError("アカウント作成に失敗しました。" + reason);
-                btn.innerHTML = '<span>無料で始める</span> <i class="fa-solid fa-arrow-right"></i>';
-                btn.disabled = false;
+                resetBtn();
                 return;
             }
 

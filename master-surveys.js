@@ -323,6 +323,45 @@ function inviteCard() {
     return { card, reload: load };
 }
 
+/** 解約したLightのメールアドレス(追加SQL_22):同じメールアドレスでのLightの再申し込みを止めている。担当者が許可できる */
+function signupBlockCard() {
+    const card = el('div', { class: 'card', id: 'blockCard' });
+    const head = () => el('h2', { text: '解約したLightのメールアドレス(再申し込みの停止)' });
+    const load = async () => {
+        let res;
+        try { res = await supabase.rpc('neo_admin_signup_blocks'); } catch (e) { res = { data: null, error: e }; }
+        if (res.error || !Array.isArray(res.data)) {
+            const m = String(res.error?.message || '');
+            card.replaceChildren(head(), el('p', { class: 'muted', style: { lineHeight: '1.8' },
+                text: (m.includes('Could not find') || m.includes('does not exist')) ? 'この欄を使うには、Supabase で「追加SQL_22_LINE名と利用規約と解約.sql」を実行してください。' : '読み込めませんでした。画面を読み込み直してください。' }));
+            return;
+        }
+        const rows = res.data.map(b => el('tr', { 'data-block': String(b.id), 'data-released': b.released_at ? '1' : '0' },
+            el('td', { style: { fontWeight: '700' }, text: b.email || '-' }),
+            el('td', { text: b.store_name || '-' }),
+            el('td', { text: b.line_name || '-' }),
+            el('td', { class: 'muted', text: fmtDateTime(b.created_at) }),
+            el('td', {}, b.released_at
+                ? el('span', { class: 'muted', text: `許可済み(${fmtDateTime(b.released_at)})` })
+                : el('div', { class: 'row', style: { flexWrap: 'nowrap' } },
+                    el('span', { class: 'inv-st expired', text: '停止中' }),
+                    el('button', { class: 'btn small sub', type: 'button', 'data-release': String(b.id), onclick: async () => {
+                        if (!confirm(`${b.email} で、もう一度 Light に申し込めるようにしますか?`)) return;
+                        let r; try { r = await supabase.rpc('neo_admin_signup_block_release', { p_id: b.id }); } catch (e) { r = { error: e }; }
+                        if (r.error) { alert('許可できませんでした。画面を読み込み直してください。'); return; }
+                        load();
+                    } }, '再申し込みを許可')))));
+        card.replaceChildren(head(),
+            el('div', { class: 'table-wrap' }, el('table', { class: 'table' },
+                el('thead', {}, el('tr', {}, ...['メールアドレス', '店舗名', 'LINE名', '解約日', '状態'].map(h => el('th', { text: h })))),
+                el('tbody', { id: 'blockRows' }, ...(rows.length ? rows : [el('tr', {}, el('td', { colspan: '5', class: 'muted', style: { textAlign: 'center', padding: '24px' }, text: '解約したLightの店舗は、まだありません。' }))])))),
+            el('p', { class: 'muted', style: { fontSize: '12px', marginTop: '8px', lineHeight: '1.7' }, text: 'Lightの店舗が設定画面から解約すると、ここに載り、同じメールアドレスでは、Lightに申し込めなくなります(有料のリンクからは申し込めます)。新しい順に200件まで表示します。' }));
+    };
+    card.append(head(), el('p', { class: 'muted', text: '読み込み中...' }));
+    load();
+    return card;
+}
+
 // ------------------------------------------------------------
 // プランの切り替え(追加SQL_21):有料にする=MSMスタッフ/Lightにする=MSMの管理者だけ(データを削除する)
 // ------------------------------------------------------------
@@ -633,6 +672,9 @@ async function render() {
     // 氏名(owner_name)の列は「追加SQL_7」で追加される。まだ実行されていない場合は、氏名なしで一覧を表示する。
     const loadClients = async () => {
         const base = 'id, company_name, email, created_at, auth_id';
+        // LINE名(line_name)の列は「追加SQL_22」で追加される。まだのときは、LINE名なしで表示する。
+        const withLine = await supabase.from('clients').select(base + ', owner_name, tier, line_name').eq('plan', NEO_PLAN).order('created_at', { ascending: false });
+        if (!withLine.error) return { ...withLine, hasOwnerName: true, hasTier: true };
         // プラン(tier)の列は「追加SQL_21」で追加される。まだのときは、プランなしで表示する。
         const withTier = await supabase.from('clients').select(base + ', owner_name, tier').eq('plan', NEO_PLAN).order('created_at', { ascending: false });
         if (!withTier.error) return { ...withTier, hasOwnerName: true, hasTier: true };
@@ -673,11 +715,11 @@ async function render() {
     const NEW_DAYS = 7;
     const isNew = (c) => c.created_at && (Date.now() - new Date(c.created_at).getTime()) < NEW_DAYS * 86400000;
     const namePending = (c) => !c.company_name || c.company_name === '(店舗名未入力)';
-    const search = el('input', { class: 'input', placeholder: '店舗名・氏名・メールアドレスで検索', style: { maxWidth: '320px' } });
+    const search = el('input', { class: 'input', placeholder: '店舗名・氏名・メール・LINE名で検索', style: { maxWidth: '320px' } });
     const tbody = el('tbody');
     const draw = () => {
         const q = search.value.trim().toLowerCase();
-        const list = clients.filter(c => !q || `${c.company_name} ${c.owner_name || ''} ${c.email}`.toLowerCase().includes(q));
+        const list = clients.filter(c => !q || `${c.company_name} ${c.owner_name || ''} ${c.email} ${c.line_name || ''}`.toLowerCase().includes(q));
         if (!list.length) {
             tbody.replaceChildren(el('tr', {}, el('td', { colspan: hasTier ? '8' : '7', class: 'muted', style: { textAlign: 'center', padding: '30px', lineHeight: '1.8' },
                 text: clients.length ? '該当する契約者がいません。' : 'まだ登録した契約者がいません。上の「リンクを発行」で、申し込みのURLを作って送ってください。' })));
@@ -692,7 +734,8 @@ async function render() {
                 el('td', { text: c.owner_name || '-' }),
                 el('td', { text: c.email || '-' }),
                 hasTier ? el('td', {}, el('span', { class: 'badge', 'data-tier': c.tier, style: c.tier === 'light' ? { background: '#CCFBF1', color: '#115E59' } : { background: '#E0E7FF', color: '#3730A3' },
-                    text: c.tier === 'light' ? 'MapOn Light' : 'MapOn' })) : null,
+                    text: c.tier === 'light' ? 'MapOn Light' : 'MapOn' }),
+                    c.tier === 'light' && c.line_name ? el('div', { class: 'muted', 'data-line-name': '', style: { fontSize: '12px', marginTop: '4px' }, text: `LINE名:${c.line_name}` }) : null) : null,
                 el('td', { class: 'muted', text: fmtDate(c.created_at) }),
                 el('td', { text: `${stat.surveys}件` }),
                 el('td', { text: `${stat.responses}件` }),
@@ -716,6 +759,7 @@ async function render() {
         overview,
         urlCard(() => invites.reload()),
         invites.card,
+        signupBlockCard(),
         aiCheckCard(),
         settingRes.error
             ? el('div', { class: 'card' }, el('h2', { text: '設問の書き方ガイドのURL' }),

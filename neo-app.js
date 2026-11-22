@@ -19,6 +19,7 @@ import { RESULTS_CSS, renderResults, makeQrCanvas, downloadQrPng } from './surve
 import { renderCoupons, COUPON_CSS } from './neo-coupons.js';
 import { renderMembers, MEMBERS_CSS } from './neo-members.js';
 import { renderDashboard, DASHBOARD_CSS } from './neo-dashboard.js';
+import { cancelCard } from './neo-cancel.js';
 import { placeWordMessage, keywordMessage, buildAiSettings, keywordOptions, hasFreeText, MAX_KEYWORDS } from './ai-settings-lib.js';
 import { isLight, showLockPopup, lightLimitKind, lockedMembersPage, PLAN_CSS } from './neo-plan.js';
 
@@ -562,6 +563,19 @@ async function signOutAfterChange(title, text) {
         el('a', { href: '/login', class: 'btn' }, el('i', { class: 'fa-solid fa-right-to-bracket' }), 'ログイン画面へ')));
 }
 
+// Lightを解約したあと:アカウントは削除済み。この端末のログインの情報も消して、お礼の画面を出す
+async function afterCancel() {
+    await supabase.auth.signOut().catch(() => {});
+    try { localStorage.removeItem('currentUser'); } catch {}
+    dirty = false;
+    document.querySelectorAll('.sidebar .nav-item, .sidebar .plan-meter button').forEach(a => { a.style.pointerEvents = 'none'; a.style.opacity = '0.4'; });
+    app.replaceChildren(el('div', { class: 'card', id: 'cancelDone', style: { maxWidth: '520px', margin: '40px auto', textAlign: 'center' } },
+        el('div', { style: { fontSize: '40px', color: '#34A853', marginBottom: '10px' } }, el('i', { class: 'fa-solid fa-circle-check' })),
+        el('h2', { text: '解約しました。' }),
+        el('p', { style: { lineHeight: '1.8', margin: '10px 0 20px' }, text: 'ご利用ありがとうございました。アカウントとデータは、削除しました。' }),
+        el('a', { href: '/login', class: 'btn' }, 'ログイン画面へ')));
+}
+
 function renderSettings() {
     const msg = () => el('p', { class: 'msg' });
     const setMsg = (node, ok, text) => { node.className = 'msg ' + (ok ? 'ok' : 'ng'); node.textContent = text; };
@@ -721,12 +735,14 @@ function renderSettings() {
         emailBtn, emailMsg,
         el('p', { class: 'muted', style: { marginTop: '8px' }, text: '確認メールは送られません。変更すると、次回から新しいメールアドレスでログインします(パスワードは変わりません)。' }));
 
-    app.replaceChildren(
+    app.replaceChildren(...[
         el('div', { class: 'page-title' }, '設定'),
         nameCard,
         reviewCard,
         emailCard,
-        passCard);
+        passCard,
+        isMasterView ? null : cancelCard(client, afterCancel),   // 解約(パスワードの変更の下。マスターとして見ているときは出さない)
+    ].filter(Boolean));
 }
 
 // ------------------------------------------------------------
