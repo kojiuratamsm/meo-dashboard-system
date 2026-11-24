@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MapOn(マップオン)| お店の「声」を、集める。伝える。広げる。</title>
+    <title>MapOn(マップオン)| お客様の「声」を、集める。伝える。広げる。</title>
     <meta name="description" content="お客様のアンケートの回答をもとに、AIが口コミの文章づくりをお手伝い。クーポン・会員証・ダッシュボードもひとつに。MapOn Lightは無料で始められます。">
-    <meta property="og:title" content="MapOn(マップオン)| お店の「声」を、集める。伝える。広げる。">
+    <meta property="og:title" content="MapOn(マップオン)| お客様の「声」を、集める。伝える。広げる。">
     <meta property="og:description" content="アンケートに答えるだけで、口コミの文章づくりをAIがお手伝い。MapOn Lightは無料で始められます。">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://www.mapon-meo.com/mapon-logo.png">
@@ -79,6 +79,8 @@
         .hero h1 .big { font-size: 1.12em; }
         .hero h1 .verbs { display: block; white-space: nowrap; font-size: min(3.9vw, .84em); }
         @media (max-width: 560px) { .hero h1 { font-size: 7.4vw; } .hero h1 .big { font-size: 1em; } .hero h1 .verbs { display: block; white-space: nowrap; font-size: .93em; } }
+        .hero .hero-sub { font-size: clamp(18px, 2.8vw, 32px); font-weight: 900; line-height: 1.5; color: var(--ink); margin: 22px 0 8px; letter-spacing: -.005em; }
+        @media (max-width: 560px) { .hero .hero-sub { font-size: 5.8vw; } }
         .hero .lead { text-wrap: pretty; font-size: clamp(16px, 2.2vw, 20px); margin: 24px 0 8px; color: var(--text); font-weight: 500; }
         .hero .lead b { color: var(--indigo); font-weight: 900; }
         .hero-chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 30px; }
@@ -257,6 +259,46 @@
         .foot-links a:hover, .foot-links button:hover { color: #fff; }
         .copy { margin-top: 26px; padding-top: 20px; border-top: 1px solid #1E293B; font-size: 12.5px; }
 
+
+        /* ---- できること:カードと、中のイラストの動き ---- */
+        html.js .f-card.reveal { opacity: 0; transform: translateY(54px) scale(.93); transition: opacity .8s ease, transform .9s cubic-bezier(.2,.9,.25,1.12), box-shadow .3s; }
+        html.js .f-card.reveal.in { opacity: 1; transform: none; }
+        html.js .f-card.reveal.in:hover { transform: translateY(-6px); transition-duration: .8s, .3s, .3s; }
+        @keyframes visIn { from { opacity: 0; transform: translateY(26px) scale(.88); } }
+        @keyframes numPop { 0% { transform: scale(0) rotate(-20deg); } 70% { transform: scale(1.25) rotate(4deg); } 100% { transform: none; } }
+        @keyframes optOn { 0% { background: #fff; border-color: var(--line); color: var(--text); transform: scale(1); } 60% { transform: scale(1.18); } 100% { background: #EEF2FF; border-color: var(--indigo); color: var(--indigo); transform: scale(1); } }
+        @keyframes fStar { 0% { transform: scale(0) rotate(-90deg); opacity: 0; } 65% { transform: scale(1.5) rotate(10deg); opacity: 1; } 100% { transform: none; opacity: 1; } }
+        @keyframes shimmer { 0% { background-position: -30% 0; } 100% { background-position: 130% 0; } }
+        @keyframes spark { 0%,100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.35) rotate(18deg); } }
+        @keyframes ticketIn { from { opacity: 0; transform: translateY(-34px) rotate(-16deg) scale(.8); } 60% { transform: translateY(6px) rotate(2deg) scale(1.03); } }
+        @keyframes shine { 0%,55% { left: -45%; } 100% { left: 130%; } }
+        @keyframes couponPulse { 0%,100% { letter-spacing: .15em; } 50% { letter-spacing: .26em; } }
+        @keyframes barBreath { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(.84); } }
+        @keyframes stampIn { 0% { transform: scale(0) rotate(-40deg); opacity: 0; } 70% { transform: scale(1.35) rotate(6deg); opacity: 1; } 100% { transform: none; opacity: 1; } }
+        @keyframes tipPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+        .f-card .f-vis > * { will-change: transform; }
+        .f-card.in .f-vis > * { animation: visIn .85s cubic-bezier(.2,.85,.25,1.1) .3s backwards; }
+        .f-card.in h3 .num { animation: numPop .7s cubic-bezier(.2,.9,.3,1.2) .35s backwards; }
+        .f-vis::after { content: ''; position: absolute; top: 0; bottom: 0; width: 38%; left: -45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent); transform: skewX(-18deg); pointer-events: none; }
+        .f-card.in .f-vis::after { animation: shine 5s ease-in-out 1.2s infinite; }
+        .f-card.in .mini .opt.on { animation: optOn .6s ease .9s backwards; }
+        .f-card.in .mini .opt.on:nth-child(2) { animation-delay: 1.3s; }
+        .f-card.in .stars i.fs { animation: fStar .55s cubic-bezier(.2,.9,.3,1.2) backwards; }
+        .f-card.in .stars i.fs:nth-child(1) { animation-delay: 1.5s; } .f-card.in .stars i.fs:nth-child(2) { animation-delay: 1.65s; } .f-card.in .stars i.fs:nth-child(3) { animation-delay: 1.8s; } .f-card.in .stars i.fs:nth-child(4) { animation-delay: 1.95s; } .f-card.in .stars i.fs:nth-child(5) { animation-delay: 2.1s; }
+        .f-card.in .mini.ai .ai-head i { animation: spark 2.2s ease-in-out .8s infinite; }
+        .f-card.in .mini.ai .ai-text { background: linear-gradient(100deg, transparent 30%, rgba(167,139,250,.2) 50%, transparent 70%) -30% 0 / 200% 100% no-repeat; animation: shimmer 3.4s ease-in-out 1.2s infinite; }
+        .f-card.in .ticket { animation: ticketIn 1s cubic-bezier(.2,.85,.25,1) .3s backwards; overflow: hidden; }
+        .ticket::after { content: ''; position: absolute; top: 0; bottom: 0; width: 30%; left: -45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.8), transparent); transform: skewX(-18deg); pointer-events: none; }
+        .f-card.in .ticket::after { animation: shine 3.6s ease-in-out 1.4s infinite; }
+        .f-card.in .ticket .r { animation: couponPulse 2.6s ease-in-out 1.4s infinite; }
+        .f-card.in .st-grid i.on:not(.pop) { animation: stampIn .5s cubic-bezier(.2,.9,.3,1.2) backwards; }
+        .f-card.in .st-grid i:nth-child(1) { animation-delay: .6s !important; } .f-card.in .st-grid i:nth-child(2) { animation-delay: .72s !important; } .f-card.in .st-grid i:nth-child(3) { animation-delay: .84s !important; } .f-card.in .st-grid i:nth-child(4) { animation-delay: .96s !important; } .f-card.in .st-grid i:nth-child(5) { animation-delay: 1.08s !important; } .f-card.in .st-grid i:nth-child(6) { animation-delay: 1.2s !important; } .f-card.in .st-grid i:nth-child(7) { animation-delay: 1.32s !important; }
+        .f-card.in .st-grid i.pop { animation: stamp 4s 1.9s infinite both; }
+        .f-card.in .stamps .st-t span { display: inline-block; animation: tipPulse 1.8s ease-in-out 1.6s infinite; }
+        .f-card.in .bars i { transform-origin: bottom; animation: barBreath 3.2s ease-in-out 2.4s infinite; }
+        .f-card.in .bars i:nth-child(2) { animation-delay: 2.6s; } .f-card.in .bars i:nth-child(3) { animation-delay: 2.8s; } .f-card.in .bars i:nth-child(4) { animation-delay: 3s; } .f-card.in .bars i:nth-child(5) { animation-delay: 3.2s; } .f-card.in .bars i:nth-child(6) { animation-delay: 3.4s; } .f-card.in .bars i:nth-child(7) { animation-delay: 3.6s; }
+        .f-card.in .dash .kp b { animation: tipPulse .6s ease 1.6s backwards; }
+
         /* ---- スクロールで、ふわっと出る ---- */
         html.js .reveal { opacity: 0; transform: translateY(34px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
         html.js .reveal.in { opacity: 1; transform: none; }
@@ -322,10 +364,9 @@
             <div>
                 <div class="hero-kicker reveal"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> お店のためのGoogleマップ集客ツール</div>
                 <h1 class="reveal d1">
-                    お店の「声」を、<br><span class="verbs"><span class="grad-text big nw">集める。</span><span class="grad-teal nw">伝える。</span><span class="grad-warm nw">広げる。</span></span>
-                    <span class="l2"><span class="nw">はじめてのご来店から、</span><span class="nw"><span class="t-teal">再来店まで</span>、ワンストップで。</span></span>
+                    お客様の「声」を、<br><span class="verbs"><span class="grad-text big nw">集める。</span><span class="grad-teal nw">伝える。</span><span class="grad-warm nw">広げる。</span></span>
                 </h1>
-                <p class="lead reveal d2">お客様の<b>アンケートの回答</b>をもとに、<b>AIが文章づくりをお手伝い</b>。<br>口コミが集まりやすい仕組みで、新しいお客様との出会いを増やします。</p>
+                <p class="hero-sub reveal d2"><span class="nw">はじめてのご来店から、</span><span class="nw"><span class="t-teal">再来店まで</span>、ワンストップで。</span></p>
                 <div class="hero-chips reveal d2">
                     <span class="chip"><i class="fa-solid fa-hand-pointer" aria-hidden="true"></i> アンケートに答えるだけ</span>
                     <span class="chip"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> AIが文章づくりをお手伝い</span>
@@ -431,13 +472,13 @@
             </div>
             <div class="f-grid">
                 <article class="f-card reveal">
-                    <div class="f-vis v1"><div class="mini" aria-hidden="true"><div class="q">ご利用になったメニュー</div><div class="row"><span class="opt on">カット</span><span class="opt on">ヘッドスパ</span><span class="opt">カラー</span></div><div class="q" style="margin-top:9px">満足度</div><div class="stars" style="gap:2px"><i class="fa-solid fa-star" style="font-size:15px;animation:none;color:#FBBF24"></i><i class="fa-solid fa-star" style="font-size:15px;animation:none;color:#FBBF24"></i><i class="fa-solid fa-star" style="font-size:15px;animation:none;color:#FBBF24"></i><i class="fa-solid fa-star" style="font-size:15px;animation:none;color:#FBBF24"></i><i class="fa-solid fa-star" style="font-size:15px;animation:none;color:#E2E8F0"></i></div></div></div>
+                    <div class="f-vis v1"><div class="mini" aria-hidden="true"><div class="q">ご利用になったメニュー</div><div class="row"><span class="opt on">カット</span><span class="opt on">ヘッドスパ</span><span class="opt">カラー</span></div><div class="q" style="margin-top:9px">満足度</div><div class="stars" style="gap:2px"><i class="fa-solid fa-star fs" style="font-size:15px;color:#FBBF24"></i><i class="fa-solid fa-star fs" style="font-size:15px;color:#FBBF24"></i><i class="fa-solid fa-star fs" style="font-size:15px;color:#FBBF24"></i><i class="fa-solid fa-star fs" style="font-size:15px;color:#FBBF24"></i><i class="fa-solid fa-star fs" style="font-size:15px;color:#E2E8F0"></i></div></div></div>
                     <h3><span class="num">01</span>アンケート</h3>
                     <p>QRコードを読み取るだけで、お客様が選んで答えられます。お店の聞きたいことを、自由に設定できます。</p>
                     <div class="f-tags"><span class="tag l">Light:1つまで</span><span class="tag m">MapOn:複数作成</span></div>
                 </article>
                 <article class="f-card reveal d1">
-                    <div class="f-vis v2"><div class="mini ai" aria-hidden="true"><div class="ai-head"><i class="fa-solid fa-wand-magic-sparkles"></i> AIが文章案を作成</div><div class="ai-text">スタッフの方が丁寧に説明してくれて、安心して任せられました。また利用したいです。</div></div></div>
+                    <div class="f-vis v2"><div class="mini ai" aria-hidden="true"><div class="ai-head"><i class="fa-solid fa-wand-magic-sparkles"></i> AIが文章案を作成</div><div class="ai-text">スタッフの方が丁寧に説明してくれて、安心して任せられました。また利用したいです。<span class="caret"></span></div></div></div>
                     <h3><span class="num">02</span>AIの文章づくりのお手伝い</h3>
                     <p>アンケートの回答をもとに、AIが文章案を作ります。お客様は、確認して直して、ご自身で投稿できます。</p>
                     <div class="f-tags"><span class="tag l">Light:月25回まで</span><span class="tag m">MapOn:月300回まで</span></div>
@@ -455,7 +496,7 @@
                     <div class="f-tags"><span class="tag x">Light</span><span class="tag m">MapOnで使えます</span></div>
                 </article>
                 <article class="f-card wide last reveal d1">
-                    <div class="f-vis v5"><div class="dash" aria-hidden="true"><div class="kp"><div>アンケート回答<b>128件</b></div><div>AIの文章を作った人<b>86人</b></div></div><div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+                    <div class="f-vis v5"><div class="dash" aria-hidden="true"><div class="kp"><div>アンケート回答<b data-count="128" data-unit="件">128件</b></div><div>AIの文章を作った人<b data-count="86" data-unit="人">86人</b></div></div><div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
                     <h3><span class="num">05</span>ダッシュボード</h3>
                     <p>アンケートの回答数や、クーポンの使われ方が、グラフで見られます。次の一手を考えやすくなります。</p>
                     <div class="f-tags"><span class="tag l">Light:一部</span><span class="tag m">MapOn:すべて</span></div>
@@ -527,7 +568,7 @@
     <!-- 最後の呼びかけ -->
     <section class="final">
         <div class="container">
-            <h2 class="reveal">まずは無料で、<br>お店の「声」を集めてみませんか?</h2>
+            <h2 class="reveal">まずは無料で、<br>お客様の「声」を集めてみませんか?</h2>
             <p class="reveal d1">MapOn Lightは無料です。いつでも解約できます。</p>
             <a href="/signup-light" class="btn btn-light reveal d2" id="finalLight"><i class="fa-solid fa-gift" aria-hidden="true"></i> MapOn Lightを無料で始める</a>
         </div>
@@ -577,6 +618,25 @@
                 else { el.innerHTML = full.replace(/</g, '&lt;'); timer = setTimeout(function () { i = 0; step(); }, 4200); }
             }
             setTimeout(step, 1600);
+        })();
+
+        (function () {
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            var nums = document.querySelectorAll('.dash b[data-count]');
+            if (reduce || !('IntersectionObserver' in window) || !nums.length) return;
+            var run = function (b) {
+                var to = parseInt(b.getAttribute('data-count'), 10), unit = b.getAttribute('data-unit') || '', t0 = null;
+                var step = function (t) {
+                    if (t0 === null) t0 = t;
+                    var k = Math.min(1, (t - t0 - 600) / 1400);
+                    if (k < 0) { b.textContent = '0' + unit; requestAnimationFrame(step); return; }
+                    b.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))) + unit;
+                    if (k < 1) requestAnimationFrame(step); else b.textContent = to + unit;
+                };
+                requestAnimationFrame(step);
+            };
+            var io2 = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { io2.unobserve(e.target); run(e.target); } }); }, { threshold: .3 });
+            nums.forEach(function (b) { io2.observe(b); });
         })();
     </script>
     <script type="module">
