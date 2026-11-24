@@ -50,12 +50,18 @@
             <label>パスワード</label>
             <input type="password" id="writerPass" class="form-control" placeholder="••••••••">
         </div>
+        <div class="captcha-box" id="captchaBox"></div>
         <button class="btn-primary" onclick="writerLogin()"><i class="fa-solid fa-pen-nib"></i> 執筆ルームへ入る</button>
     </div>
 
 
     <script type="module">
         import { supabase } from './supabase-config.js';
+        import { createCaptcha, isCaptchaError, CAPTCHA_MESSAGE } from './captcha.js';
+
+        // ロボットでないことの確認(Cloudflare Turnstile)。合言葉は、ログインのときに Supabase に渡す
+        const captcha = createCaptcha('captchaBox', 'media-login');
+        captcha.mount();
 
         window.writerLogin = async function() {
             const email = document.getElementById('writerEmail').value.trim();
@@ -67,19 +73,23 @@
                 return;
             }
 
+            if (btn.disabled) return;   // 二重送信を防ぐ
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 認証中...';
             btn.disabled = true;
 
+            const captchaToken = await captcha.getToken();
             const { data, error } = await supabase.auth.signInWithPassword({
                 email: email,
-                password: pass
+                password: pass,
+                options: { captchaToken: captchaToken || undefined }
             });
+            captcha.reset();   // 合言葉は1回しか使えない
 
             btn.innerHTML = '<i class="fa-solid fa-pen-nib"></i> 執筆ルームへ入る';
             btn.disabled = false;
 
             if (error || !data.user) {
-                alert('ログインに失敗しました。メールアドレスまたはパスワードが間違っています。');
+                alert(isCaptchaError(error) ? CAPTCHA_MESSAGE : 'ログインに失敗しました。メールアドレスまたはパスワードが間違っています。');
                 return;
             }
 

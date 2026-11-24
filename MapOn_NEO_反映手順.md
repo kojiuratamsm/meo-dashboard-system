@@ -479,3 +479,28 @@ URLは1回だけ・発行から24時間有効。もう一度発行すると前�
 1. Supabase の SQL Editor で `追加SQL_23_LightのAIの上限を25回に.sql` を実行(前提:SQL_21 を実行済み)
 2. MEO_UPLOAD を GitHub にアップロード(順番は、どちらが先でもかまいません)
 3. 確認:申し込みページの「利用規約」が17条になっている/Lightの店舗の左下が「/ 25回」
+
+## ロボットによる申し込み・ログインを防ぐ(Cloudflare Turnstile)(2026/11/24 追加)
+### できること
+- 申し込み(Light・有料)、ログイン(店舗・マスター・メディア)、パスワード再設定のメールの6ページに、「ロボットでないことの確認」(Cloudflare Turnstile)の欄を出す。
+- 確認が済むと受け取る合言葉(トークン)を、Supabase に渡す(`captchaToken`)。合言葉が本物かは、Supabase が Cloudflare に確かめる。
+- Supabase の設定(Authentication → Bot and Abuse Protection → Enable CAPTCHA protection)をオンにしたときだけ、合言葉のない申し込み・ログイン・再設定のメールを断る。オフの間は、何も変わらない。
+- 確認で断られたときは「ロボットでないことの確認ができませんでした。…」と表示する(パスワードの間違いとは言わない)。
+- Turnstile が読み込めないとき(通信の失敗など)も、ページは止まらず、合言葉なしで試す(最後は Supabase の設定が決める)。
+- 対象外:ログイン済みの人のパスワード変更(Supabase の /user は確認の対象外)、メールのリンクの確認(/verify)。
+
+### キー
+- サイトキー(公開してよい値):`captcha.js` の `TURNSTILE_SITE_KEY`
+- シークレットキー:ファイルには書かない。Supabase の管理画面にだけ貼る。
+- Cloudflare のウィジェット:名前「MapOn 申し込み」、ホスト名 `mapon-meo.com`、モードは Managed。
+
+### 変更・追加したファイル
+- `captcha.js`(新規)
+- `signup-light.html`、`signup-neo.html`、`login.html`、`reset-password.html`、`master-login.html`、`media-login.html`
+
+### 反映の順番(この順番を守る)
+1. MEO_UPLOAD を GitHub にアップロード(この時点では、Supabase の設定はオフのまま。各ページに確認の欄が出るようになる)
+2. 本番の6ページで、確認の欄が出ることを確かめる(ログインも、これまでどおりできる)
+3. Supabase の管理画面で、Authentication → Bot and Abuse Protection(または Attack Protection)→ Enable CAPTCHA protection をオン、プロバイダは Cloudflare Turnstile、シークレットキーを貼って保存
+4. すぐに確認:ログイン(店舗・マスター)、パスワード再設定のメール、Lightの申し込み
+5. ログインできないなどの問題が出たら、3の設定をオフに戻す(すぐ元に戻る)

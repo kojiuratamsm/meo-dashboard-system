@@ -49,11 +49,17 @@
             <label>マスターパスワード</label>
             <input type="password" id="masterPass" class="form-control" placeholder="••••••••">
         </div>
+        <div class="captcha-box" id="captchaBox"></div>
         <button class="btn-primary" onclick="masterLogin()">認証してマスターパネルへ行く</button>
     </div>
 
     <script type="module">
         import { supabase } from './supabase-config.js';
+        import { createCaptcha, isCaptchaError, CAPTCHA_MESSAGE } from './captcha.js';
+
+        // ロボットでないことの確認(Cloudflare Turnstile)。合言葉は、ログインのときに Supabase に渡す
+        const captcha = createCaptcha('captchaBox', 'master-login');
+        captcha.mount();
 
         const reason = new URLSearchParams(location.search).get('reason');
         if (reason === 'forbidden') {
@@ -72,19 +78,23 @@
                 return;
             }
 
+            if (btn.disabled) return;   // 二重送信を防ぐ
             btn.innerText = "認証中...";
             btn.disabled = true;
 
+            const captchaToken = await captcha.getToken();
             const { data, error } = await supabase.auth.signInWithPassword({
                 email: email,
-                password: pass
+                password: pass,
+                options: { captchaToken: captchaToken || undefined }
             });
+            captcha.reset();   // 合言葉は1回しか使えない
 
             btn.innerText = "認証してマスターパネルへ行く";
             btn.disabled = false;
 
             if (error || !data.user) {
-                alert('権限がありません。メールアドレスまたはパスワードが間違っています。');
+                alert(isCaptchaError(error) ? CAPTCHA_MESSAGE : '権限がありません。メールアドレスまたはパスワードが間違っています。');
                 return;
             }
 

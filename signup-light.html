@@ -257,6 +257,7 @@
 
             <p id="formError" role="alert" style="display:none; background:#FEECEB; color:#C5221F; border-radius:10px; padding:12px; font-size:13px; line-height:1.6; margin-bottom:16px;"></p>
 
+            <div class="captcha-box" id="captchaBox"></div>
             <button class="btn-submit" id="submitBtn" onclick="registerClient()">
                 <span>無料で始める</span> <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -278,6 +279,11 @@
     <script type="module">
         import { supabase } from './supabase-config.js';
         import { TERMS_VERSION, OFFICIAL_LINE_URL, openTermsPopup } from './terms.js';
+        import { createCaptcha, isCaptchaError, CAPTCHA_MESSAGE } from './captcha.js';
+
+        // ロボットでないことの確認(Cloudflare Turnstile)。合言葉は、申し込み(signUp)のときに Supabase に渡す。
+        // 確認の欄は、申し込みのフォームを表示したときに出す
+        const captcha = createCaptcha('captchaBox', 'signup-light');
 
         // 「利用規約」を押すと、規約のポップアップが開く(条ごとに開閉できる)
         document.getElementById('openTerms').addEventListener('click', (e) => { e.preventDefault(); openTermsPopup('light'); });
@@ -301,7 +307,7 @@
         // ------------------------------------------------------------
         // MapOn Light の受付:データベースの「Lightの受付」が開いているときだけ、申し込める。
         // 閉じている間は、申し込んでもアカウントは作られない(データベースが断る)。ここでの確認は、表示を分けるためだけ。
-        // ※ボット判定(CAPTCHA)は、方式が決まってから、このページに入れる。
+        // ロボットによる申し込みは、Cloudflare Turnstile(captcha.js)と Supabase の設定で断る。
         // ------------------------------------------------------------
         function showLinkState() {
             document.getElementById('linkChecking').hidden = true;
@@ -314,6 +320,7 @@
             document.getElementById('linkChecking').hidden = true;
             document.getElementById('linkState').hidden = true;
             document.getElementById('signupForm').hidden = false;
+            captcha.mount();
         }
         // 受付が開いているか。確かめられないとき(通信の失敗・データベースの設定の前)は、閉じている扱い
         async function isOpen() {
@@ -446,10 +453,12 @@
             // 氏名は signUp の付帯情報として渡し、clients への登録はDBのトリガー
             // (handle_mapon_signup)が行う。パスワードは Supabase Auth がハッシュ化して保持し、
             // clients テーブルには保存しない。
+            const captchaToken = await captcha.getToken();
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
+                    captchaToken: captchaToken || undefined,   // ロボットでないことの確認の合言葉
                     // 氏名と店舗名は、DBのトリガー(handle_mapon_signup)が clients に保存する(どちらも100文字まで)。
                     // 店舗名が入っているので、初回ログインの「店舗名の入力」は出ない。
                     // signup_source が mapon_light のとき、データベースが Light の店舗として登録する(受付が閉じていれば断る)
@@ -457,6 +466,8 @@
                     data: { signup_source: 'mapon_light', owner_name: owner_name, company_name: company_name, line_name: line_name, terms_version: TERMS_VERSION, plan: plan }
                 }
             });
+
+            captcha.reset();   // 合言葉は1回しか使えない
 
             if (authError) {
                 console.error("Auth登録エラー:", authError);
@@ -472,6 +483,8 @@
                     reason = 'このメールアドレスは、すでに登録されています。ログイン画面からログインしてください。';
                 } else if (/Database error saving new user/i.test(reason)) {
                     reason = 'このメールアドレスは、すでに店舗として登録されている可能性があります。別のメールアドレスで試すか、担当者にご連絡ください。';
+                } else if (isCaptchaError(authError)) {
+                    reason = CAPTCHA_MESSAGE;
                 } else if (/rate limit/i.test(reason)) {
                     reason = '短い時間に何度も登録が行われました。しばらく待ってから、もう一度お試しください。';
                 }

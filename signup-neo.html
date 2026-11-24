@@ -237,6 +237,7 @@
 
             <p id="formError" role="alert" style="display:none; background:#FEECEB; color:#C5221F; border-radius:10px; padding:12px; font-size:13px; line-height:1.6; margin-bottom:16px;"></p>
 
+            <div class="captcha-box" id="captchaBox"></div>
             <button class="btn-submit" id="submitBtn" onclick="registerClient()">
                 <span>申し込む</span> <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -258,6 +259,11 @@
     <script type="module">
         import { supabase } from './supabase-config.js';
         import { TERMS_VERSION, openTermsPopup } from './terms.js';
+        import { createCaptcha, isCaptchaError, CAPTCHA_MESSAGE } from './captcha.js';
+
+        // ロボットでないことの確認(Cloudflare Turnstile)。合言葉は、申し込み(signUp)のときに Supabase に渡す。
+        // 確認の欄は、申し込みのフォームを表示したときに出す
+        const captcha = createCaptcha('captchaBox', 'signup-neo');
 
         // 「利用規約」を押すと、規約のポップアップが開く(条ごとに開閉できる)
         document.getElementById('openTerms').addEventListener('click', (e) => { e.preventDefault(); openTermsPopup('neo'); });
@@ -300,6 +306,7 @@
             document.getElementById('linkChecking').hidden = true;
             document.getElementById('linkState').hidden = true;
             document.getElementById('signupForm').hidden = false;
+            captcha.mount();
         }
         // リンクの状態:ok / used / expired / revoked / invalid。確かめられないとき(通信の失敗など)は null
         async function checkLink() {
@@ -404,16 +411,20 @@
             // 氏名は signUp の付帯情報として渡し、clients への登録はDBのトリガー
             // (handle_mapon_signup)が行う。パスワードは Supabase Auth がハッシュ化して保持し、
             // clients テーブルには保存しない。
+            const captchaToken = await captcha.getToken();
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
+                    captchaToken: captchaToken || undefined,   // ロボットでないことの確認の合言葉
                     // 氏名と店舗名は、DBのトリガー(handle_mapon_signup)が clients に保存する(どちらも100文字まで)。
                     // 店舗名が入っているので、初回ログインの「店舗名の入力」は出ない。
                     // invite は、ワンタイムリンクの文字。データベースが確かめ、申し込みが完了したときに「使用済み」にする。
                     data: { signup_source: 'mapon_signup', owner_name: owner_name, company_name: company_name, plan: plan, invite: inviteToken, terms_version: TERMS_VERSION }
                 }
             });
+
+            captcha.reset();   // 合言葉は1回しか使えない
 
             if (authError) {
                 console.error("Auth登録エラー:", authError);
@@ -428,6 +439,8 @@
                     reason = 'このメールアドレスは、すでに登録されています。ログイン画面からログインしてください。';
                 } else if (/Database error saving new user/i.test(reason)) {
                     reason = 'このメールアドレスは、すでに店舗として登録されている可能性があります。別のメールアドレスで試すか、担当者にご連絡ください。';
+                } else if (isCaptchaError(authError)) {
+                    reason = CAPTCHA_MESSAGE;
                 } else if (/rate limit/i.test(reason)) {
                     reason = '短い時間に何度も登録が行われました。しばらく待ってから、もう一度お試しください。';
                 }

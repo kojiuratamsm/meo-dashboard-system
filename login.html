@@ -59,6 +59,7 @@
                 <label>パスワード</label>
                 <input type="password" id="loginPass" class="form-control" placeholder="••••••••" autocomplete="current-password">
             </div>
+            <div class="captcha-box" id="captchaBox"></div>
             <button class="btn-primary" onclick="processLogin()"><i class="fa-solid fa-right-to-bracket"></i> ログイン</button>
             <a class="link-text" href="/reset-password">パスワードをお忘れの方</a>
         </div>
@@ -68,6 +69,11 @@
     <!-- 認証機能 / Supabase連携スクリプト -->
     <script type="module">
         import { supabase } from './supabase-config.js';
+        import { createCaptcha, isCaptchaError, CAPTCHA_MESSAGE } from './captcha.js';
+
+        // ロボットでないことの確認(Cloudflare Turnstile)。合言葉は、ログインのときに Supabase に渡す
+        const captcha = createCaptcha('captchaBox', 'login');
+        captcha.mount();
 
         // 統合ログイン処理（データベース照合）
         window.processLogin = async function() {
@@ -80,14 +86,20 @@
                 return;
             }
 
+            if (btn.disabled) return;   // 二重送信を防ぐ
+            btn.disabled = true;
+            const captchaToken = await captcha.getToken();
+
             // 1. まずSupabaseの「本物の鍵（Auth）」で認証
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email: email,
-                password: pass
+                password: pass,
+                options: { captchaToken: captchaToken || undefined }
             });
+            captcha.reset();   // 合言葉は1回しか使えない
 
             if (authError || !authData.user) {
-                alert("メールアドレスまたはパスワードが間違っています。");
+                alert(isCaptchaError(authError) ? CAPTCHA_MESSAGE : "メールアドレスまたはパスワードが間違っています。");
                 btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> ログイン';
                 btn.disabled = false;
                 return;
