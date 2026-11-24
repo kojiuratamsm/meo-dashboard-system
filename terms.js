@@ -1,14 +1,13 @@
 // terms.js
 // MapOn の利用規約(有料の MapOn と、無料の MapOn Light の2つ)と、申し込みフォームで開くポップアップ。
 // ・条ごとに開いたり閉じたりできる(最初は閉じている)。「すべて開く」で全文を表示できる。
-// ・利用者に特に関わる条には「重要」の印を付ける。
 // ・規約の文面を変えたときは、TERMS_VERSION を新しい日付にする(申し込み時に、同意した版としてデータベースに記録される)。
 // ※ 公開前に、専門家(弁護士)の確認を受けてください。
 
 export const TERMS_VERSION = '2026-11-24';
 export const OFFICIAL_LINE_URL = 'https://sub.msm-fund.com/line/open/wPBzQBgRMj2L?mtid=bF2CR6ch0ym0';
 
-// 各条:n=条の番号 / title=見出し / important=重要の印 / items=項(2つ以上なら「1.」から番号を付ける)
+// 各条:n=条の番号 / title=見出し / items=項(2つ以上なら「1.」から番号を付ける)
 //   項は 文字列、または [文字列, [号の一覧]](号は「(1)」から番号を付ける)
 const COMMON_AI = {
     title: 'AIによる文章作成',
@@ -45,7 +44,7 @@ const POSITION = {
 const PRIVACY = '個人情報の取り扱いは、本条に定めるほか、当社が別に定めるプライバシーポリシー(https://www.msm-fund.com/privacypolicy)によります。';
 const CLOSING = '附則 本規約は、2026年11月1日から施行します。';
 const COMMON_FORBIDDEN = {
-    title: '禁止事項', important: true,
+    title: '禁止事項',
     items: [
         ['利用者は、次の行為をしてはなりません。', [
             '法令または公序良俗に違反する行為。',
@@ -71,7 +70,7 @@ const COMMON_LAW = {
     items: ['本規約は、日本法に基づき解釈されます。本サービスに関する紛争は、大阪地方裁判所を、第一審の専属的合意管轄裁判所とします。'],
 };
 const ACCOUNT = (urlNote) => ({
-    title: 'アカウントとURLの管理', important: true,
+    title: 'アカウントとURLの管理',
     items: [
         '利用者は、ログイン情報(メールアドレス・パスワード)を、自己の責任で管理し、第三者に使用させ、貸与し、または譲渡してはなりません。',
         urlNote,
@@ -80,7 +79,7 @@ const ACCOUNT = (urlNote) => ({
     ],
 });
 const VIOLATION = (extra) => ({
-    title: '違反時の措置', important: true,
+    title: '違反時の措置',
     items: [
         '不正な申し込み、無断での重複申し込み、第三者へのURL共有による登録など、第9条の違反が確認された場合は、規約違反とみなし、運営の判断により、事前の通知なく、ご本人および第三者のアカウントを削除し、本サービスの利用を停止することがあります。' + (extra || ''),
         '削除したアカウントのデータは、復元できません。',
@@ -129,7 +128,7 @@ const LIGHT = {
         { title: '免責', items: [
             '本サービスは、現状のままで提供します。当社は、特定の目的への適合性、継続的な利用、データが失われないことなどを、保証しません。',
             '当社は、当社に故意または重大な過失がある場合を除き、本サービスに関して利用者に生じた損害について、責任を負いません。'] },
-        { title: '解約', important: true, items: [
+        { title: '解約', items: [
             '利用者は、管理画面の「設定」にある「解約」から、今のパスワードを入力して、いつでも解約できます。',
             '解約すると、アカウントとデータ(アンケート、回答、クーポン、AIで作った文章など)は、直ちに削除され、元に戻せません。お客様に配っているアンケートのURLやQRコードも、使えなくなります。',
             '解約したメールアドレスでは、本サービスに再び申し込むことはできません。'] },
@@ -166,7 +165,7 @@ const NEO = {
         GOOGLE(GOOGLE_MEASURES + '、当社は、当社に故意または重大な過失がある場合を除き、責任を負いません。'),
         COMMON_FORBIDDEN,
         VIOLATION('この場合、当社は、運用代行のご契約を解除することがあります。'),
-        { title: '料金', important: true, items: [
+        { title: '料金', items: [
             '本サービスの料金は、運用代行のご契約に定めるとおりです。',
             '利用者が当社に支払った料金は、解約、利用の中止、運用代行のご契約の終了、規約違反による取り消しなど、理由にかかわらず、一切返金しません。月の途中で解約した場合も、日割りでの返金は行いません。ただし、当社に故意または重大な過失がある場合は、この限りではありません。',
             '運用代行のご契約が終了したときは、本サービスの利用も終了し、当社は、アカウントとデータを削除します。',
@@ -182,7 +181,7 @@ const NEO = {
         { title: '免責・責任の制限', items: [
             '本サービスは、現状のままで提供します。当社は、特定の目的への適合性、データが失われないことなどを、保証しません。',
             '当社が利用者に対して責任を負う場合、その額は、当社に故意または重大な過失がある場合を除き、損害が生じた月に利用者が当社に支払った本サービスの対価を上限とします。'] },
-        { title: '解約', important: true, items: [
+        { title: '解約', items: [
             '解約を希望するときは、当社の公式LINEにご連絡ください。当社が確認のうえ、手続きをご案内します。',
             '解約の手続きが完了すると、アカウントとデータ(アンケート、回答、クーポン、会員証・ショップカード、AIで作った文章など)は削除され、元に戻せません。お客様に配っているアンケートのURLやQRコードも、使えなくなります。',
             '運用代行のご契約とお支払いの停止についても、あわせてご案内します。'] },
@@ -208,7 +207,6 @@ export const TERMS_CSS = `
 .terms-art:last-of-type { border-bottom: 1px solid #E2E8F0; }
 .terms-art > button { width: 100%; display: flex; align-items: center; gap: 8px; background: none; border: none; padding: 12px 2px; font-size: 14px; font-weight: 700; color: #1E293B; text-align: left; cursor: pointer; }
 .terms-art > button .chev { margin-left: auto; color: #64748B; font-size: 18px; font-weight: 500; line-height: 1; width: 18px; text-align: center; flex-shrink: 0; }
-.terms-art .imp { font-size: 11px; font-weight: 800; color: #B91C1C; background: #FEE2E2; border-radius: 999px; padding: 2px 8px; flex-shrink: 0; }
 .terms-art .content { padding: 0 2px 12px; font-size: 13px; line-height: 1.8; color: #334155; }
 .terms-art .content[hidden] { display: none; }
 .terms-art ol { margin: 0; padding-left: 1.6em; }
@@ -260,7 +258,7 @@ export function openTermsPopup(kind, { onClose } = {}) {
         const content = h('div', { class: 'content', id, hidden: true },
             a.items.length > 1 ? h('ol', {}, ...a.items.map(it => h('li', {}, itemNode(it)))) : h('div', {}, itemNode(a.items[0])));
         const btn = h('button', { type: 'button', 'aria-expanded': 'false', 'aria-controls': id, 'data-art': String(i + 1) },
-            `第${i + 1}条(${a.title})`, a.important ? h('span', { class: 'imp', text: '重要' }) : null, h('span', { class: 'chev', 'aria-hidden': 'true', text: '+' }));
+            `第${i + 1}条(${a.title})`, h('span', { class: 'chev', 'aria-hidden': 'true', text: '+' }));
         const set = (open) => { btn.setAttribute('aria-expanded', open ? 'true' : 'false'); content.hidden = !open; btn.querySelector('.chev').textContent = open ? '−' : '+'; };
         btn.addEventListener('click', () => set(content.hidden));
         toggles.push(set);
