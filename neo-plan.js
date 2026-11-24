@@ -12,8 +12,8 @@ export const isLight = (client) => client?.tier === 'light';
 /** Light の AIの文章の月の上限(実際の上限はデータベースが決める。ここは、回数を読み込む前の表示用) */
 export const LIGHT_AI_LIMIT = 25;
 
-// 「アップグレードするにはこちらから」の行き先。決まるまでは空(押しても何も起きない)。
-export const UPGRADE_URL = '';
+// 「アップグレードするにはこちらから」「アップグレード」を押したときの行き先(公式LINE。新しいタブで開く)。
+export const UPGRADE_URL = 'https://sub.msm-fund.com/line/open/pGWnP0xB1H1g?mtid=GOjXkbMxi5P3';
 export function openUpgrade() {
     if (UPGRADE_URL) window.open(UPGRADE_URL, '_blank', 'noopener');
 }
