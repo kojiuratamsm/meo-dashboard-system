@@ -212,7 +212,7 @@
             </div>
 
             <div class="form-group">
-                <label for="lineName">LINEに登録されているお名前</label>
+                <label for="lineName">LINE登録名</label>
                 <input type="text" id="lineName" class="form-control" placeholder="例: やまだ たろう" autocomplete="off" maxlength="100" aria-describedby="lineNameHint">
                 <p class="field-hint" id="lineNameHint">LINEの表示名を、そのまま入力してください。</p>
             </div>
@@ -223,24 +223,33 @@
             </div>
 
             <div class="form-group">
-                <label for="emailUrl">メールアドレス(ログインのときに使います)</label>
-                <input type="email" id="emailUrl" class="form-control" placeholder="example@shop.com" autocomplete="username">
+                <label for="nearestStation">最寄駅</label>
+                <input type="text" id="nearestStation" class="form-control" placeholder="例: 新宿駅" autocomplete="off" maxlength="50" aria-describedby="stationHint">
+                <p class="field-hint" id="stationHint">お店の最寄りの駅名を入力してください。</p>
+            </div>
+
+            <div class="form-group">
+                <label for="emailUrl">メールアドレス</label>
+                <input type="email" id="emailUrl" class="form-control" placeholder="example@shop.com" autocomplete="username" aria-describedby="emailHint">
+                <p class="field-hint" id="emailHint">ログインのときに使います。</p>
             </div>
             
             <div class="form-group">
-                <label for="passwordVal">パスワード(8文字以上・半角英数字)</label>
+                <label for="passwordVal">パスワード</label>
                 <div class="pw-wrap">
                     <input type="password" id="passwordVal" class="form-control" placeholder="••••••••" autocomplete="new-password" minlength="8">
                     <button type="button" class="pw-toggle" data-target="passwordVal" aria-label="パスワードを表示する" aria-pressed="false"><svg class="eye-open" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-closed" hidden viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.2"/><path d="M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.9 0 3.6-.6 5-1.5"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
                 </div>
+                <p class="field-hint">8文字以上・半角英数字で入力してください。</p>
             </div>
 
             <div class="form-group">
-                <label for="passwordConfirm">確認パスワード(同じパスワードをもう一度)</label>
+                <label for="passwordConfirm">確認パスワード</label>
                 <div class="pw-wrap">
                     <input type="password" id="passwordConfirm" class="form-control" placeholder="••••••••" autocomplete="new-password" minlength="8">
                     <button type="button" class="pw-toggle" data-target="passwordConfirm" aria-label="確認パスワードを表示する" aria-pressed="false"><svg class="eye-open" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-closed" hidden viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.2"/><path d="M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.9 0 3.6-.6 5-1.5"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
                 </div>
+                <p class="field-hint">同じパスワードをもう一度入力してください。</p>
             </div>
 
             <div class="agree-row">
@@ -388,6 +397,7 @@
             const agreeTerms = document.getElementById('agreeTerms');
             const agreeUrl = document.getElementById('agreeUrl');
             const storeNode = document.getElementById('storeName');
+            const stationNode = document.getElementById('nearestStation');
             const emailNode = document.getElementById('emailUrl');
             const passNode = document.getElementById('passwordVal');
             const confirmNode = document.getElementById('passwordConfirm');
@@ -398,6 +408,7 @@
             const owner_name = ownerNode.value.trim();
             const line_name = lineNode.value.trim();
             const company_name = storeNode.value.trim();
+            const nearest_station = stationNode.value.trim();
             const email = emailNode.value.trim();
             const password = passNode.value.trim();
             const passwordConfirm = confirmNode.value.trim();
@@ -412,8 +423,8 @@
             };
             errorBox.style.display = 'none';
 
-            if(!owner_name || !line_name || !company_name || !email || !password || !passwordConfirm) {
-                showError("全ての項目を入力してください。", !owner_name ? ownerNode : !line_name ? lineNode : !company_name ? storeNode : !email ? emailNode : !password ? passNode : confirmNode);
+            if(!owner_name || !line_name || !company_name || !nearest_station || !email || !password || !passwordConfirm) {
+                showError("全ての項目を入力してください。", !owner_name ? ownerNode : !line_name ? lineNode : !company_name ? storeNode : !nearest_station ? stationNode : !email ? emailNode : !password ? passNode : confirmNode);
                 return;
             }
             if(company_name === '(店舗名未入力)') {
@@ -463,7 +474,7 @@
                     // 店舗名が入っているので、初回ログインの「店舗名の入力」は出ない。
                     // signup_source が mapon_light のとき、データベースが Light の店舗として登録する(受付が閉じていれば断る)
                     // LINEに登録されているお名前と、同意した利用規約の版も記録する(どちらもないと、データベースが断る)
-                    data: { signup_source: 'mapon_light', owner_name: owner_name, company_name: company_name, line_name: line_name, terms_version: TERMS_VERSION, plan: plan }
+                    data: { signup_source: 'mapon_light', owner_name: owner_name, company_name: company_name, nearest_station: nearest_station, line_name: line_name, terms_version: TERMS_VERSION, plan: plan }
                 }
             });
 
