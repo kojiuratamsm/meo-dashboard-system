@@ -27,6 +27,10 @@ export const DASHBOARD_CSS = `
 .db-kpi .n { font-size: 30px; font-weight: 800; line-height: 1.2; margin: 4px 0 2px; }
 .db-kpi .n small { font-size: 14px; font-weight: 600; color: #4A5568; margin-left: 3px; }
 .db-kpi .s { font-size: 12px; color: #4A5568; }
+.db-kpi.locked { position: relative; overflow: hidden; }
+.db-kpi.locked .blur { filter: blur(7px); user-select: none; pointer-events: none; }
+.db-kpi.locked .lock { position: absolute; inset: 34px 10px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; font-size: 12px; font-weight: 700; color: #134E4A; line-height: 1.5; }
+.db-kpi.locked .lock i { font-size: 16px; color: #0F766E; }
 .db-cols { display: flex; gap: 20px; flex-wrap: wrap; align-items: stretch; }
 .db-cols > .card { flex: 1 1 340px; min-width: 0; }
 .db-cols > .card.wide { flex: 2 1 480px; }
@@ -255,6 +259,11 @@ export async function renderDashboard({ app, client }) {
 
     const kpi = (id, label, value, unit, sub) => el('div', { class: 'db-kpi', id },
         el('div', { class: 'l', text: label }), el('div', { class: 'n' }, String(value), el('small', { text: unit })), el('div', { class: 's', text: sub }));
+    // MapOn Light:会員証・ショップカードは使えないので、数字はぼかして、鍵を出す(実際の数字は入れない)
+    const lockedKpi = (id, label, unit, sub) => el('div', { class: 'db-kpi locked', id, 'data-locked': '' },
+        el('div', { class: 'l', text: label }),
+        el('div', { class: 'blur', 'aria-hidden': 'true' }, el('div', { class: 'n' }, '12', el('small', { text: unit })), el('div', { class: 's', text: sub })),
+        el('div', { class: 'lock' }, el('i', { class: 'fa-solid fa-lock', 'aria-hidden': 'true' }), '有料のMapOnでご利用いただけます'));
 
     // 棒グラフ(1本ずつ、マウス・キーボードで値が出る)
     function bars({ values, labels, onPick, picked, dense, cls = '' }) {
@@ -395,9 +404,11 @@ export async function renderDashboard({ app, client }) {
             el('div', { class: 'db-kpis' },
                 kpi('dbKpiResponses', 'アンケート回答', Number(r.n) || 0, '件', compareText(Number(r.n) || 0, Number(r.prev) || 0, days)),
                 kpi('dbKpiDrafts', 'AIの文章を作った人', Number(f.drafted) || 0, '人', `回答の${pct(f.drafted, f.responses)}%`),
-                kpi('dbKpiMembers', '新しい会員', Number(m.new) || 0, '人', `会員は全部で${Number(m.total) || 0}人`),
+                light ? lockedKpi('dbKpiMembers', '新しい会員', '人', '会員は全部で00人')
+                    : kpi('dbKpiMembers', '新しい会員', Number(m.new) || 0, '人', `会員は全部で${Number(m.total) || 0}人`),
                 kpi('dbKpiCoupons', 'クーポンの使用率', Number(c.issued) ? pct(c.used, c.issued) : '-', Number(c.issued) ? '%' : '', `${Number(c.issued) || 0}枚発行 / ${Number(c.used) || 0}枚使用`),
-                kpi('dbKpiStamps', 'スタンプを押した数', Number(data.stamps) || 0, '回', `特典に届いた会員 ${Number(m.reward) || 0}人`)),
+                light ? lockedKpi('dbKpiStamps', 'スタンプを押した数', '回', '特典に届いた会員 0人')
+                    : kpi('dbKpiStamps', 'スタンプを押した数', Number(data.stamps) || 0, '回', `特典に届いた会員 ${Number(m.reward) || 0}人`)),
             el('div', { class: 'db-cols' }, chartCard(), funnelCard()),
             el('div', { class: 'db-cols' }, membersCard(), todoCard()));
     }

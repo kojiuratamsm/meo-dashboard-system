@@ -56,27 +56,30 @@ export function newQuestion(type = 'single') {
 function opts(labels) { return labels.map(label => ({ id: newId('o'), label })); }
 
 // MapOn で新しくアンケートを作ったときの初期内容(業種を問わない共通の形)
+// 選択肢に「その他」「特になし」は入れない(押されると、AIの文章の材料にならないため。2026/11/24)。
+// その代わり、選択肢の設問は必須にしない(当てはまるものがないお客様は、選ばずに進める。事実と違う選択肢を押させない)。
 export const DEFAULT_INTRO = '本日はご来店ありがとうございました！\nよろしければ、簡単なアンケートにご協力ください(1分ほどで終わります)';
 export function defaultQuestions() {
     return [
         { id: newId('q'), type: 'stars', label: '本日の満足度を教えてください', required: true },
-        { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['商品・サービスの内容', 'スタッフの対応', 'お店の雰囲気', '価格', '特になし']) },
-        { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['特になし', '待ち時間', '料金', 'その他']) },
+        { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['商品・サービスの内容', 'スタッフの対応', 'お店の雰囲気', '価格']) },
+        { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['待ち時間', '料金']) },
         { id: newId('q'), type: 'long_text', label: 'ご感想(ご自由にお書きください)', required: false },
     ];
 }
 
 // 業種別のひな形(設計書 6-2 のルールに沿い、「気になった点」を必ず含める)
+// ここも「その他」「特になし」は入れず、選択肢の設問は必須にしない(上と同じ理由)
 export const TEMPLATES = {
     restaurant: {
         name: '飲食店',
         intro: '本日はご来店ありがとうございました。\nよろしければ、簡単なアンケートにご協力ください(1分ほどで終わります)。',
         questions: () => [
             { id: newId('q'), type: 'stars', label: '本日の満足度を教えてください', required: true },
-            { id: newId('q'), type: 'single', label: 'ご利用のシーン', required: true, options: opts(['ランチ', '夜ご飯', '飲み会・宴会', 'デート', 'お一人で', 'その他']) },
-            { id: newId('q'), type: 'multi', label: '召し上がったもの', required: false, options: opts(['(メニュー名に書き換えてください)', 'その他']) },
-            { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['料理の味', '接客', 'お店の雰囲気', '価格', '提供の早さ', '特になし']) },
-            { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['特になし', '待ち時間', '料金', '席・雰囲気', '接客', 'その他']) },
+            { id: newId('q'), type: 'single', label: 'ご利用のシーン', required: false, options: opts(['ランチ', '夜ご飯', '飲み会・宴会', 'デート', 'お一人で']) },
+            { id: newId('q'), type: 'multi', label: '召し上がったもの', required: false, options: opts(['(メニュー名に書き換えてください)']) },
+            { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['料理の味', '接客', 'お店の雰囲気', '価格', '提供の早さ']) },
+            { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['待ち時間', '料金', '席・雰囲気', '接客']) },
             { id: newId('q'), type: 'long_text', label: 'ご感想(ご自由にお書きください)', required: false },
         ],
     },
@@ -85,10 +88,10 @@ export const TEMPLATES = {
         intro: '本日はご来店ありがとうございました。\nよろしければ、簡単なアンケートにご協力ください(1分ほどで終わります)。',
         questions: () => [
             { id: newId('q'), type: 'stars', label: '本日の満足度を教えてください', required: true },
-            { id: newId('q'), type: 'multi', label: '受けられたメニュー', required: true, options: opts(['(メニュー名に書き換えてください)', 'その他']) },
-            { id: newId('q'), type: 'single', label: 'ご来店のきっかけ', required: false, options: opts(['Googleマップ', 'インターネット検索', 'SNS', 'ご紹介', '通りがかり', 'その他']) },
-            { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['施術・技術', '説明のわかりやすさ', '接客', '清潔さ', '予約の取りやすさ', '特になし']) },
-            { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['特になし', '待ち時間', '料金', '予約の取りにくさ', 'その他']) },
+            { id: newId('q'), type: 'multi', label: '受けられたメニュー', required: false, options: opts(['(メニュー名に書き換えてください)']) },
+            { id: newId('q'), type: 'single', label: 'ご来店のきっかけ', required: false, options: opts(['Googleマップ', 'インターネット検索', 'SNS', 'ご紹介', '通りがかり']) },
+            { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['施術・技術', '説明のわかりやすさ', '接客', '清潔さ', '予約の取りやすさ']) },
+            { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['待ち時間', '料金', '予約の取りにくさ']) },
             { id: newId('q'), type: 'long_text', label: 'ご感想(ご自由にお書きください)', required: false },
         ],
     },
@@ -97,9 +100,9 @@ export const TEMPLATES = {
         intro: '本日はご来院ありがとうございました。\nよろしければ、簡単なアンケートにご協力ください(1分ほどで終わります)。',
         questions: () => [
             { id: newId('q'), type: 'stars', label: '本日の満足度を教えてください', required: true },
-            { id: newId('q'), type: 'single', label: 'ご来院の目的', required: false, options: opts(['(診療科目に書き換えてください)', 'その他']) },
-            { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['説明のわかりやすさ', 'スタッフの対応', '院内の清潔さ', '待ち時間の短さ', '特になし']) },
-            { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['特になし', '待ち時間', '予約の取りにくさ', '説明', 'その他']) },
+            { id: newId('q'), type: 'single', label: 'ご来院の目的', required: false, options: opts(['(診療科目に書き換えてください)']) },
+            { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['説明のわかりやすさ', 'スタッフの対応', '院内の清潔さ', '待ち時間の短さ']) },
+            { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['待ち時間', '予約の取りにくさ', '説明']) },
             { id: newId('q'), type: 'long_text', label: 'ご感想(ご自由にお書きください)', required: false },
         ],
     },
@@ -108,8 +111,8 @@ export const TEMPLATES = {
         intro: '本日はご利用ありがとうございました。\nよろしければ、簡単なアンケートにご協力ください(1分ほどで終わります)。',
         questions: () => [
             { id: newId('q'), type: 'stars', label: '本日の満足度を教えてください', required: true },
-            { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['サービスの内容', 'スタッフの対応', '価格', '特になし']) },
-            { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['特になし', '待ち時間', '料金', 'その他']) },
+            { id: newId('q'), type: 'multi', label: '良かった点', required: false, options: opts(['サービスの内容', 'スタッフの対応', '価格']) },
+            { id: newId('q'), type: 'multi', label: '気になった点', required: false, options: opts(['待ち時間', '料金']) },
             { id: newId('q'), type: 'long_text', label: 'ご感想(ご自由にお書きください)', required: false },
         ],
     },

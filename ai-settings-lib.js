@@ -65,3 +65,38 @@ export function keywordOptions(keyword, questions) {
 export function hasFreeText(questions) {
     return (Array.isArray(questions) ? questions : []).some(q => q.type === 'short_text' || q.type === 'long_text');
 }
+
+// ------------------------------------------------------------
+// キーワードの質問を作る(ひな型)
+// 狙いたいキーワードを、お客様が「実際に利用したもの・当てはまるもの」として選べる質問にする。
+//  ・事実を聞く形にする(「〜はいかがでしたか」のように、評価を誘導する聞き方はしない)
+//  ・選択肢は、キーワードの言葉そのまま(評価の言葉は足さない)
+//  ・「その他」「特になし」は入れない(押されると、AIの文章の材料にならないため)
+//  ・その代わり、必須にしない(当てはまらないお客様は、選ばずに進める。事実と違う選択肢を押させない)
+// ------------------------------------------------------------
+export const KEYWORD_QUESTION_KINDS = [
+    { value: 'menu', name: 'メニュー・サービス', label: 'ご利用になったメニューをお選びください(複数選べます)', example: 'ヘッドスパ / カット / カラー' },
+    { value: 'reason', name: 'お店を選んだ理由', label: 'このお店を選んだ理由をお選びください(複数選べます)', example: '駅から近い / 個室がある / 夜遅くまで営業' },
+    { value: 'scene', name: 'ご利用のシーン', label: '今回のご利用のシーンをお選びください(複数選べます)', example: 'デート / 記念日 / 女子会' },
+    { value: 'facility', name: '設備・サービス', label: 'ご利用になった設備やサービスをお選びください(複数選べます)', example: '駐車場 / Wi-Fi / 個室' },
+];
+
+/** ひな型の質問を作る。kind:KEYWORD_QUESTION_KINDS の value / keywords:選択肢に入れるキーワード / makeId:IDを作る関数 */
+export function keywordQuestion(kind, keywords, makeId) {
+    const k = KEYWORD_QUESTION_KINDS.find(x => x.value === kind) || KEYWORD_QUESTION_KINDS[0];
+    const seen = new Set(); const labels = [];
+    for (const w of Array.isArray(keywords) ? keywords : []) {
+        const t = String(w ?? '').replace(/\s+/g, ' ').trim();
+        if (!t || seen.has(norm(t))) continue;
+        seen.add(norm(t)); labels.push(t);
+    }
+    return { id: makeId('q'), type: 'multi', label: k.label, required: false, options: labels.map(label => ({ id: makeId('o'), label })) };
+}
+
+/** ひな型の質問を入れる位置:最後に続く自由記述の設問(ご感想など)の、すぐ上。自由記述がなければ一番下 */
+export function keywordQuestionIndex(questions) {
+    const list = Array.isArray(questions) ? questions : [];
+    let i = list.length;
+    while (i > 0 && (list[i - 1].type === 'short_text' || list[i - 1].type === 'long_text')) i--;
+    return i;
+}

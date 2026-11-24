@@ -20,7 +20,8 @@ import { renderCoupons, COUPON_CSS } from './neo-coupons.js';
 import { renderMembers, MEMBERS_CSS } from './neo-members.js';
 import { renderDashboard, DASHBOARD_CSS } from './neo-dashboard.js';
 import { cancelCard } from './neo-cancel.js';
-import { placeWordMessage, keywordMessage, buildAiSettings, keywordOptions, hasFreeText, MAX_KEYWORDS } from './ai-settings-lib.js';
+import { placeWordMessage, keywordMessage, buildAiSettings, keywordOptions, hasFreeText, MAX_KEYWORDS,
+    KEYWORD_QUESTION_KINDS, keywordQuestion, keywordQuestionIndex } from './ai-settings-lib.js';
 import { isLight, showLockPopup, lightLimitKind, lockedMembersPage, PLAN_CSS } from './neo-plan.js';
 
 let app = null;               // 描画先
@@ -362,11 +363,69 @@ async function renderEditor(id) {
                 el('span', { class: 'badge ' + (hits.length ? 'on' : 'off'), text: hits.length ? '選択肢に入っています' : '選択肢に入っていません' }),
                 el('span', { class: 'muted', style: { fontSize: '12px', flex: '1', minWidth: '200px' },
                     text: hits.length ? `「${hits.slice(0, 2).join('」「')}」${hits.length > 2 ? ` ほか${hits.length - 2}件` : ''} を選んだお客様の文章に入ります`
-                        : (free ? 'お客様が自由記述に書いたときだけ入ります。' : 'このままでは文章に入りません。') + 'この言葉を含む選択肢を、上の設問に足してください' }),
+                        : free ? 'この言葉を含む選択肢を、上の設問に足してください。もしくは、お客様が自由記述に書いたときだけ入ります。'
+                            : 'このままでは文章に入りません。この言葉を含む選択肢を、上の設問に足してください' }),
+                // 選択肢に入っていないキーワードは、ひな型の質問を作れる
+                ...(hits.length ? [] : [el('button', { class: 'btn sub small kw-question', type: 'button', 'aria-label': `キーワード「${k}」の質問を作る`,
+                    onclick: () => openKeywordQuestion(k) }, el('i', { class: 'fa-solid fa-wand-magic-sparkles' }), '質問を作る')]),
                 el('button', { class: 'icon-btn', type: 'button', 'aria-label': `キーワード「${k}」を削除`, onclick: () => { ai.keywords.splice(i, 1); markDirty(); } }, el('i', { class: 'fa-solid fa-xmark' }), '削除'));
         }) : [el('p', { class: 'muted', text: 'キーワードは、まだありません。' })]));
     }
     onEdit = drawKeywords;
+
+    // キーワードの質問を作る(ひな型):種類を選ぶと、キーワードを選択肢にした質問を、自由記述の設問のすぐ上に足す
+    function openKeywordQuestion(keyword) {
+        const candidates = ai.keywords.filter(k => !keywordOptions(k, survey.questions).length);
+        if (!candidates.includes(keyword)) candidates.unshift(keyword);
+        let kind = KEYWORD_QUESTION_KINDS[0].value;
+        const picked = new Set([keyword]);
+        const preview = el('div', { id: 'kwqPreview', style: { background: '#F7FAFC', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '12px 14px', margin: '6px 0 12px' } });
+        const addBtn = el('button', { class: 'btn', type: 'button', id: 'kwqAdd' }, '質問を追加する');
+        const drawPreview = () => {
+            const q = keywordQuestion(kind, candidates.filter(k => picked.has(k)), newId);
+            preview.replaceChildren(
+                el('div', { style: { fontWeight: '700', fontSize: '14px', marginBottom: '8px' }, text: q.label }),
+                ...q.options.map(o => el('div', { style: { fontSize: '13px', lineHeight: '1.9' } }, el('i', { class: 'fa-regular fa-square', style: { marginRight: '6px', color: '#718096' } }), o.label)),
+                ...(q.options.length ? [] : [el('p', { class: 'muted', style: { fontSize: '12px' }, text: 'キーワードを1つ以上選んでください。' })]));
+            addBtn.disabled = !q.options.length;
+        };
+        const kindList = el('div', { role: 'radiogroup', 'aria-label': '質問の種類', style: { display: 'flex', flexDirection: 'column', gap: '6px', margin: '6px 0 12px' } },
+            ...KEYWORD_QUESTION_KINDS.map((k, i) => {
+                const input = el('input', { type: 'radio', name: 'kwqKind', value: k.value, id: 'kwqKind_' + k.value });
+                input.checked = i === 0;
+                input.addEventListener('change', () => { kind = k.value; drawPreview(); });
+                return el('label', { for: 'kwqKind_' + k.value, style: { display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer', fontSize: '14px', lineHeight: '1.6' } },
+                    input, el('span', {}, el('b', { text: k.name }), el('span', { class: 'muted', style: { fontSize: '12px', display: 'block' }, text: '例:' + k.example })));
+            }));
+        const kwChecks = el('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px 14px', margin: '6px 0 10px' } },
+            ...candidates.map((k, i) => {
+                const input = el('input', { type: 'checkbox', id: 'kwqKw_' + i, 'data-kw': k });
+                input.checked = picked.has(k);
+                input.addEventListener('change', () => { if (input.checked) picked.add(k); else picked.delete(k); drawPreview(); });
+                return el('label', { for: 'kwqKw_' + i, style: { display: 'flex', gap: '6px', alignItems: 'center', cursor: 'pointer', fontSize: '14px' } }, input, k);
+            }));
+        const m = openModal(el('div', { id: 'kwqModal' },
+            el('h2', { style: { fontSize: '18px', marginBottom: '8px' }, text: 'キーワードの質問を作る' }),
+            el('p', { class: 'muted', style: { fontSize: '13px', lineHeight: '1.7', marginBottom: '12px' },
+                text: 'お客様が、実際に利用したもの・当てはまるものを選ぶ質問を作ります。追加したあとも、設問文と選択肢は自由に直せます。' }),
+            el('div', { style: { fontWeight: '700', fontSize: '13px' }, text: '1. 質問の種類' }), kindList,
+            el('div', { style: { fontWeight: '700', fontSize: '13px' }, text: '2. 選択肢に入れるキーワード' }), kwChecks,
+            el('div', { style: { fontWeight: '700', fontSize: '13px' }, text: '3. できあがる質問' }), preview,
+            el('p', { class: 'muted', style: { fontSize: '12px', lineHeight: '1.7', marginBottom: '14px' },
+                text: '必須にはしません。当てはまるものがないお客様は、選ばずに進めます(実際と違う選択肢を押さなくて済むようにするためです)。' }),
+            el('div', { class: 'row', style: { justifyContent: 'flex-end', gap: '8px' } },
+                el('button', { class: 'btn sub', type: 'button', id: 'kwqCancel', onclick: () => m.close() }, 'やめる'), addBtn)));
+        addBtn.addEventListener('click', () => {
+            const q = keywordQuestion(kind, candidates.filter(k => picked.has(k)), newId);
+            if (!q.options.length) return;
+            const at = keywordQuestionIndex(survey.questions);
+            survey.questions.splice(at, 0, q);
+            m.close(); markDirty(); drawQuestions();
+            const card = qArea.children[at];
+            if (card) { card.scrollIntoView({ block: 'center' }); card.querySelector('.q-head .input')?.focus(); }
+        });
+        drawPreview();
+    }
     {
         const placeField = (id, key, label, placeholder) => {
             const input = el('input', { class: 'input', id, maxlength: '20', placeholder, style: { maxWidth: '260px' } }); input.value = ai[key];
@@ -397,9 +456,7 @@ async function renderEditor(id) {
                 el('div', { class: 'row' }, kwInput, el('button', { class: 'btn sub', type: 'button', id: 'aiKeywordAdd', onclick: addKeyword }, '+ 追加')),
                 kwMsg, kwList,
                 el('p', { class: 'muted', style: { fontSize: '12px', lineHeight: '1.7' },
-                    text: 'キーワードは、お客様がその言葉を含む選択肢を選んだとき(または自由記述に書いたとき)に、文章に自然に合う場合だけ、そのままの言葉で使われます(無理には入れません)。選んでいないお客様の文章には入りません。狙いたい言葉は、設問の選択肢に入れておいてください(例:設問「ご利用のメニュー」に「ヘッドスパ」)。' })),
-            el('div', { class: 'warnbox', style: { marginBottom: 0 },
-                text: 'ご注意:Googleは、お店が口コミに特定の内容を入れるよう求めることを禁じています。「地域名・業種」を文章に入れる設定は、お店が口コミの内容に関わる形になるため、口コミの削除などのリスクがあります。心配な場合は、地域名・業種を空欄にしてください。' }));
+                    text: 'キーワードは、お客様がその言葉を含む選択肢を選んだとき(または自由記述に書いたとき)に、文章に自然に合う場合だけ、そのままの言葉で使われます(無理には入れません)。選んでいないお客様の文章には入りません。狙いたい言葉は、設問の選択肢に入れておいてください(例:設問「ご利用のメニュー」に「ヘッドスパ」)。選択肢に入っていないキーワードは、「質問を作る」で、そのキーワードを選択肢にした質問を作れます。' })));
         drawKeywords();
     }
 
