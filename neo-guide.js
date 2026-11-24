@@ -45,15 +45,19 @@ const STEPS = [
     },
     {
         svg: frame(`${browser('MapOn の管理画面')}
-      <text x="24" y="58" font-size="10.5" font-weight="700" fill="#2B3674">GoogleクチコミURL(公開の条件)</text>
-      <rect x="24" y="70" width="186" height="30" rx="8" fill="#fff" stroke="#4285F4" stroke-width="2"/>
-      <text x="32" y="89" font-size="9" fill="#2D3748">https://g.page/r/XXXX/review</text>
-      <rect x="218" y="70" width="78" height="30" rx="8" fill="#FFF5F5" stroke="${HL}" stroke-width="2.5"/>
-      <text x="232" y="89" font-size="9.5" font-weight="700" fill="#2D3748">リンクを確認</text>
+      <text x="24" y="54" font-size="11" font-weight="700" fill="#2B3674">Google口コミ設定</text>
+      <text x="24" y="70" font-size="8.5" font-weight="700" fill="#2D3748">Google口コミ投稿ページURL</text>
+      <rect x="24" y="76" width="130" height="28" rx="7" fill="#fff" stroke="#4285F4" stroke-width="2"/>
+      <text x="30" y="94" font-size="8" fill="#2D3748">https://g.page/r/XXXX/review</text>
+      <rect x="160" y="76" width="74" height="28" rx="7" fill="#FFF5F5" stroke="${HL}" stroke-width="2.5"/>
+      <text x="168" y="94" font-size="8.5" font-weight="700" fill="#2D3748">リンクを確認</text>
+      <rect x="240" y="76" width="56" height="28" rx="7" fill="#4285F4"/>
+      <text x="250" y="94" font-size="8.5" font-weight="700" fill="#fff">保存する</text>
       <text x="24" y="120" font-size="9" fill="#1E7E34">✓ 正しい形式です</text>
-      <text x="24" y="146" font-size="9" fill="#4A5568">① 貼り付け(⌘+V / Ctrl+V)</text>
-      <text x="24" y="162" font-size="9" fill="#4A5568">② お店のクチコミ画面が開けば完了</text>`),
-        text: ['この画面に戻り、上の入力欄に貼り付けます。', '「リンクを確認」', 'を押して、お店のクチコミ画面が開けば完了です。'],
+      <text x="24" y="144" font-size="9" fill="#4A5568">① 貼り付け(⌘+V / Ctrl+V)</text>
+      <text x="24" y="159" font-size="9" fill="#4A5568">② 「リンクを確認」で、お店のクチコミ画面が開けば</text>
+      <text x="24" y="174" font-size="9" fill="#4A5568">③ 「保存する」を押して完了</text>`),
+        text: ['この画面(「Google口コミ設定」)の「Google口コミ投稿ページURL」の入力欄に貼り付けます。', '「リンクを確認」', 'を押して、お店のクチコミ画面が開けば、「保存する」を押して完了です。'],
     },
 ];
 

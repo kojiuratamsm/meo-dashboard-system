@@ -29,16 +29,27 @@ export function findPromoWords(text) {
 
 // DB の制約と同じ条件(https で始まり、ドメインを含む)
 const REVIEW_URL_RE = /^https:\/\/[^\s/?#]+\.[^\s]+$/;
+// Google の口コミ投稿ページのURLに使われる、Google のドメイン(Google の公式ヘルプには、URLの形は書かれていない。
+// 店舗の管理画面「クチコミを増やす」でコピーできるリンクは g.page/r/…/review の形。短縮のURLや、旧来の writereview の形も通す)
+const GOOGLE_HOSTS = ['g.page', 'g.co', 'goo.gl', 'google.com', 'google.co.jp'];
+const isGoogleHost = (host) => GOOGLE_HOSTS.some(h => host === h || host.endsWith('.' + h));
+const NOT_GOOGLE = '入力が間違っています。Googleの口コミ投稿ページのURL(https://g.page/r/…/review など)を貼り付けてください。';
 export function checkReviewUrl(url) {
     const u = String(url || '').trim();
     if (!u) return { ok: false, message: 'Google口コミ投稿ページのURLを入力してください。' };
     if (!u.startsWith('https://')) return { ok: false, message: 'https:// で始まるURLを入力してください。' };
+    let parsed;
     try {
-        const parsed = new URL(u);
+        parsed = new URL(u);
         if (parsed.protocol !== 'https:' || !parsed.hostname.includes('.') || !REVIEW_URL_RE.test(u)) throw new Error();
     } catch {
         return { ok: false, message: 'URLの形式が正しくありません。貼り付けたURLをご確認ください。' };
     }
+    const host = parsed.hostname.toLowerCase(), path = parsed.pathname.replace(/\/+$/, '');
+    if (parsed.username || parsed.password || !isGoogleHost(host)) return { ok: false, message: NOT_GOOGLE };
+    if (host === 'g.page' && !/\/review$/.test(path)) return { ok: false, message: '入力が間違っています。g.page のURLは、最後が /review になっている「クチコミのリンク」を貼り付けてください(お店のページのURLではありません)。' };
+    if (host === 'search.google.com' && path !== '/local/writereview') return { ok: false, message: NOT_GOOGLE };
+    if ((host === 'google.com' || host === 'google.co.jp' || host === 'www.google.com' || host === 'www.google.co.jp') && path === '') return { ok: false, message: NOT_GOOGLE };
     return { ok: true, message: '正しい形式です。「リンクを確認」で、その店舗のクチコミ画面が開くか確かめてください。' };
 }
 

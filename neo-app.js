@@ -23,6 +23,7 @@ import { cancelCard } from './neo-cancel.js';
 import { placeWordMessage, keywordMessage, buildAiSettings, keywordOptions, hasFreeText, MAX_KEYWORDS,
     KEYWORD_INDUSTRIES, keywordIndustry, guessKeywordIndustry, keywordQuestion, keywordQuestionIndex } from './ai-settings-lib.js';
 import { isLight, showLockPopup, lightLimitKind, lockedMembersPage, PLAN_CSS } from './neo-plan.js';
+import { needsReviewSetup, showReviewSetupGate } from './neo-gate.js';
 
 let app = null;               // 描画先
 let client = null;            // 対象の店舗(契約者)の clients 行
@@ -704,6 +705,8 @@ function renderSettings() {
         if (url) {
             const r = checkReviewUrl(url);
             if (!r.ok) return setMsg(urlMsg, false, r.message);
+        } else if (isLight(client)) {
+            return setMsg(urlMsg, false, 'MapOn Lightでは、Google口コミ投稿ページのURLが必要です。空欄にはできません(別のURLに書き換えてください)。');
         } else if (!confirm('URLを空欄にすると、お客様の画面に口コミのボタンが出なくなります。よろしいですか?')) return;
         if (url === String(client.google_review_url || '')) return setMsg(urlMsg, true, '変更はありません。');
         urlSaveBtn.disabled = true;
@@ -838,4 +841,6 @@ export function startNeoApp({ root, client: targetClient, isMasterView: master =
     document.head.append(el('style', { text: SURVEY_FORM_CSS + RESULTS_CSS + GUIDE_CSS + COUPON_CSS + MEMBERS_CSS + DASHBOARD_CSS + PLAN_CSS }));
     lastHash = location.hash;
     route();
+    // MapOn Light:Google口コミ投稿ページのURLが入るまで、何も操作できない(URLを保存すると、いまの画面を読み直す)
+    if (needsReviewSetup(client, isMasterView)) showReviewSetupGate(client, { onDone: () => route() });
 }
