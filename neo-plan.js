@@ -33,6 +33,10 @@ export const PLAN_CSS = `
 .plan-meter .bar i { display: block; height: 8px; background: #34D399; }
 .plan-meter .bar i.warn { background: #FBBF24; }
 .plan-meter .bar i.full { background: #F87171; }
+.plan-meter .left { font-size: 12px; font-weight: 700; color: #E2E8F0; margin: -4px 0 10px; }
+.plan-meter .left.warn { color: #FBBF24; }
+.plan-meter .left.full { color: #FCA5A5; }
+.plan-meter.std .left { margin-bottom: 0; }
 .plan-meter .plan-upgrade { width: 100%; justify-content: center; padding: 9px; font-size: 13px; background: #4F46E5; }
 .plan-pop { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 4px 0; }
 .plan-pop .ic { width: 52px; height: 52px; border-radius: 999px; background: #CCFBF1; color: #0F766E; display: flex; align-items: center; justify-content: center; font-size: 22px; }
@@ -90,14 +94,15 @@ export function lockedMembersPage(app) {
     showLockPopup('card');
 }
 
-/** 左のメニュー:Light の表示・会員証の鍵・今月のAIの回数 */
+/** 左のメニュー:今月のAIの回数と残り(Light・有料のMapOnの両方)。Light は、さらに「MapOn Light」の表示・会員証の鍵・アップグレード */
 export async function decorateSidebar(client) {
-    if (!isLight(client)) return;
-    document.head.append(el('style', { text: PLAN_CSS }));
+    if (!client) return;
+    const light = isLight(client);
+    if (!document.getElementById('planCss')) document.head.append(el('style', { id: 'planCss', text: PLAN_CSS }));
     const logo = document.querySelector('.sidebar .logo-area');
-    if (logo && !document.getElementById('planBadge')) logo.append(el('div', { class: 'plan-badge', id: 'planBadge', text: 'MapOn Light' }));
+    if (light && logo && !document.getElementById('planBadge')) logo.append(el('div', { class: 'plan-badge', id: 'planBadge', text: 'MapOn Light' }));
     const members = document.querySelector('.sidebar .nav-item[data-view="members"]');
-    if (members && !members.classList.contains('plan-locked')) {
+    if (light && members && !members.classList.contains('plan-locked')) {
         members.classList.add('plan-locked');
         members.setAttribute('aria-label', '会員・ショップカード(MapOn Lightでは使えません)');
         members.append(el('i', { class: 'fa-solid fa-lock', 'aria-hidden': 'true' }));
@@ -105,19 +110,25 @@ export async function decorateSidebar(client) {
     }
     const settings = document.querySelector('.sidebar .nav-item[data-view="settings"]');
     if ((!settings && !members) || document.getElementById('planMeter')) return;
-    const meter = el('div', { class: 'plan-meter', id: 'planMeter' },
+    const fallback = light ? LIGHT_AI_LIMIT : (Number(client.monthly_ai_limit) || 300);
+    const meter = el('div', { class: 'plan-meter' + (light ? '' : ' std'), id: 'planMeter' },
         el('div', { class: 'l', text: '今月のAIの文章' }),
-        el('div', { class: 'n', id: 'planMeterCount' }, '-', el('small', { text: `/ ${LIGHT_AI_LIMIT}回` })),
+        el('div', { class: 'n', id: 'planMeterCount' }, '-', el('small', { text: `/ ${fallback}回` })),
         el('div', { class: 'bar' }, el('i', { id: 'planMeterBar', style: { width: '0%' } })),
-        upgradeButton('アップグレード', { id: 'planMeterUpgrade' }));
+        el('div', { class: 'left', id: 'planMeterLeft', text: '残り -回' }),
+        light ? upgradeButton('アップグレード', { id: 'planMeterUpgrade' }) : null);
     if (members) members.after(meter); else settings.before(meter);   // メニューのすぐ下(「設定」は、これまでどおり一番下)
     try {
         const { data, error } = await supabase.rpc('neo_dashboard', { p_client_id: String(client.id), p_days: 7 });
         if (error || !data?.ai) return;
-        const used = Number(data.ai.month) || 0, limit = Number(data.ai.limit) || LIGHT_AI_LIMIT;
+        const used = Number(data.ai.month) || 0, limit = Number(data.ai.limit) || fallback;
+        const left = Math.max(0, limit - used);
         document.getElementById('planMeterCount').replaceChildren(String(used), el('small', { text: `/ ${limit}回` }));
         const bar = document.getElementById('planMeterBar');
         bar.style.width = `${Math.min(100, Math.round(used / limit * 100))}%`;
         bar.className = used >= limit ? 'full' : used >= limit * 0.8 ? 'warn' : '';
+        const leftEl = document.getElementById('planMeterLeft');
+        leftEl.textContent = left > 0 ? `今月の残り ${left}回` : '今月の上限に達しました';
+        leftEl.className = 'left' + (left === 0 ? ' full' : used >= limit * 0.8 ? ' warn' : '');
     } catch { /* 回数を読めないときは「-」のまま */ }
 }

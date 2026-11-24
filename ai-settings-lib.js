@@ -81,9 +81,64 @@ export const KEYWORD_QUESTION_KINDS = [
     { value: 'facility', name: '設備・サービス', label: 'ご利用になった設備やサービスをお選びください(複数選べます)', example: '駐車場 / Wi-Fi / 個室' },
 ];
 
-/** ひな型の質問を作る。kind:KEYWORD_QUESTION_KINDS の value / keywords:選択肢に入れるキーワード / makeId:IDを作る関数 */
-export function keywordQuestion(kind, keywords, makeId) {
-    const k = KEYWORD_QUESTION_KINDS.find(x => x.value === kind) || KEYWORD_QUESTION_KINDS[0];
+// 業種ごとのひな型(2026/11/24)。最初に業種を選び、その業種に合った「質問の種類」から選ぶ。
+// 「その他の業種」は、これまでの共通のひな型(KEYWORD_QUESTION_KINDS)。
+const REASON = { value: 'reason', name: 'お店を選んだ理由', label: 'このお店を選んだ理由をお選びください(複数選べます)' };
+export const KEYWORD_INDUSTRIES = [
+    { value: 'beauty', name: '美容関係', hint: '美容室・ネイル・まつげ・エステなど', kinds: [
+        { value: 'menu', name: '受けられたメニュー', label: '今回受けられたメニューをお選びください(複数選べます)', example: 'カット / カラー / ヘッドスパ' },
+        { value: 'concern', name: 'ご相談の内容', label: '今回ご相談された内容をお選びください(複数選べます)', example: '髪のダメージ / 白髪 / くせ毛' },
+        { ...REASON, example: '駅から近い / 個室がある / 夜遅くまで営業' },
+        { value: 'facility', name: '設備・サービス', label: 'ご利用になった設備やサービスをお選びください(複数選べます)', example: '駐車場 / キッズスペース / 完全予約制' },
+    ] },
+    { value: 'food', name: '飲食', hint: 'カフェ・居酒屋・レストランなど', kinds: [
+        { value: 'menu', name: '召し上がったもの', label: '今回召し上がったものをお選びください(複数選べます)', example: 'ランチセット / 自家製デザート / 地酒' },
+        { value: 'scene', name: 'ご利用のシーン', label: '今回のご利用のシーンをお選びください(複数選べます)', example: 'デート / 記念日 / 女子会' },
+        { ...REASON, example: '駅から近い / 個室がある / 夜遅くまで営業' },
+        { value: 'facility', name: '設備・サービス', label: 'ご利用になった設備やサービスをお選びください(複数選べます)', example: '個室 / テラス席 / テイクアウト' },
+    ] },
+    { value: 'massage', name: 'マッサージ', hint: '整体・リラクゼーションなど', kinds: [
+        { value: 'menu', name: '受けられたコース', label: '今回受けられたコースをお選びください(複数選べます)', example: '全身もみほぐし / 足つぼ / ヘッドマッサージ' },
+        { value: 'concern', name: 'お悩みの部位', label: '今回ご相談された、お悩みの部位をお選びください(複数選べます)', example: '肩 / 腰 / 首' },
+        { ...REASON, example: '駅から近い / 夜遅くまで営業 / 当日予約ができる' },
+        { value: 'facility', name: '設備・サービス', label: 'ご利用になった設備やサービスをお選びください(複数選べます)', example: '個室 / 着替えの貸し出し / 駐車場' },
+    ] },
+    { value: 'car', name: '中古車販売', hint: '中古車の販売・買取など', kinds: [
+        { value: 'service', name: 'ご利用の内容', label: '今回のご利用の内容をお選びください(複数選べます)', example: '車の購入 / 下取り / 車検' },
+        { value: 'type', name: 'お車のタイプ', label: 'ご購入・ご検討されたお車のタイプをお選びください(複数選べます)', example: '軽自動車 / ミニバン / SUV' },
+        { ...REASON, example: '在庫の多さ / 保証がある / 自宅から近い' },
+        { value: 'support', name: '受けられたサービス', label: '今回受けられたサービスをお選びください(複数選べます)', example: '試乗 / ローンの相談 / 納車前の点検' },
+    ] },
+    { value: 'realestate', name: '不動産', hint: '賃貸・売買・管理など', kinds: [
+        { value: 'service', name: 'ご相談の内容', label: '今回ご相談された内容をお選びください(複数選べます)', example: '賃貸のお部屋探し / 購入 / 売却の査定' },
+        { value: 'type', name: '物件の種類', label: 'ご検討された物件の種類をお選びください(複数選べます)', example: '1LDK / ファミリー向け / 戸建て' },
+        { ...REASON, example: '駅から近い / 土日も相談できる / オンラインで相談できる' },
+        { value: 'support', name: '受けられたサービス', label: '今回受けられたサービスをお選びください(複数選べます)', example: '内見 / オンライン相談 / 契約の説明' },
+    ] },
+    { value: 'other', name: 'その他の業種', hint: '上にない業種', kinds: KEYWORD_QUESTION_KINDS },
+];
+
+/** 「業種」の欄の言葉から、ひな型の業種を推し量る(分からなければ '') */
+export function guessKeywordIndustry(category) {
+    const t = String(category ?? '');
+    if (!t.trim()) return '';
+    if (/マッサージ|整体|リラク|もみほぐし|整骨|接骨|カイロ|指圧|足つぼ|鍼灸/.test(t)) return 'massage';
+    if (/美容|ヘア|理容|バーバー|床屋|ネイル|まつげ|まつ毛|アイラッシュ|エステ|脱毛|眉/.test(t)) return 'beauty';
+    if (/中古車|自動車|車/.test(t)) return 'car';
+    if (/不動産|賃貸|売買|住宅|マンション|物件/.test(t)) return 'realestate';
+    if (/飲食|カフェ|喫茶|居酒屋|レストラン|食堂|ラーメン|焼肉|寿司|鮨|バル|ダイニング|ビストロ|ベーカリー|パン|スイーツ|ケーキ|そば|うどん|定食|焼き鳥|焼鳥|イタリアン|フレンチ|中華|和食|料理|バー/.test(t)) return 'food';
+    return '';
+}
+
+/** 業種のひな型(見つからなければ「その他の業種」) */
+export function keywordIndustry(industry) {
+    return KEYWORD_INDUSTRIES.find(x => x.value === industry) || KEYWORD_INDUSTRIES[KEYWORD_INDUSTRIES.length - 1];
+}
+
+/** ひな型の質問を作る。kind:質問の種類の value / keywords:選択肢に入れるキーワード / makeId:IDを作る関数 / industry:業種(省略すると「その他の業種」) */
+export function keywordQuestion(kind, keywords, makeId, industry = 'other') {
+    const kinds = keywordIndustry(industry).kinds;
+    const k = kinds.find(x => x.value === kind) || kinds[0];
     const seen = new Set(); const labels = [];
     for (const w of Array.isArray(keywords) ? keywords : []) {
         const t = String(w ?? '').replace(/\s+/g, ' ').trim();

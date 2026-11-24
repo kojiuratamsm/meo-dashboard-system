@@ -280,6 +280,8 @@
                         <option value="B">旧・MapOn(提供終了)</option>
                         <option value="C">旧・MapOnモニター(提供終了)</option>
                         <option value="D">MapOn</option>
+                        <option value="D:standard">MapOn(有料のみ)</option>
+                        <option value="D:light">MapOn Light のみ</option>
                     </select>
                     <!-- 検索バー -->
                     <div style="position:relative;">
@@ -1034,9 +1036,11 @@ Googleの評価システム上、成果には一定期間を要しますが、
             for (let i = 0; i < rows.length; i++) {
                 let text = rows[i].innerText.toLowerCase();
                 let plan = rows[i].dataset.plan;
+                let tier = rows[i].dataset.tier;
                 
                 let matchesSearch = text.includes(input);
-                let matchesPlan = (filterPlan === 'all' || plan === filterPlan);
+                // 「D:standard」「D:light」は、MapOn の中の有料/Light で絞り込む
+                let matchesPlan = (filterPlan === 'all' || plan === filterPlan || (plan + ':' + tier) === filterPlan);
                 
                 if (matchesSearch && matchesPlan) {
                     rows[i].style.display = "";
@@ -1071,6 +1075,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
     <script type="module">
         import { supabase } from './supabase-config.js';
         import { requireStaff, staffLogout, authHeaders } from './staff-guard.js';
+        import { planCell, nameButton, loadIsAdmin } from './master-clients.js';
 
         window.staffLogout = staffLogout;
 
@@ -1142,6 +1147,9 @@ Googleの評価システム上、成果には一定期間を要しますが、
                 return;
             }
 
+            // プランの切り替え(MapOn → Light)は管理者だけなので、先に確かめる
+            const isAdmin = await loadIsAdmin();
+
             tableBody.innerHTML = '';
             if (data.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#A0AEC0;">まだ登録されているクライアントがいません</td></tr>';
@@ -1152,6 +1160,7 @@ Googleの評価システム上、成果には一定期間を要しますが、
                 const tr = document.createElement('tr');
                 tr.className = 'client-row';
                 tr.dataset.plan = client.plan || '';
+                tr.dataset.tier = client.plan === 'D' ? (client.tier === 'light' ? 'light' : 'standard') : '';
                 
                 // ステータスバッジの小技
                 const statusHtml = client.status === '稼働中' 
@@ -1182,8 +1191,16 @@ Googleの評価システム上、成果には一定期間を要しますが、
                         ${client.auth_id ? `<a href="javascript:void(0)" onclick="issueRecoveryLink('${client.id}')" class="btn-action" style="background:#718096; margin-left:4px;" title="パスワードを忘れた方に送る、パスワード再設定URLを発行します"><i class="fa-solid fa-key"></i> PW再設定URL</a>` : ''}
                     </td>
                 `;
+                // MapOn の店舗:店舗名を押すと申し込みの内容を表示。その下に、プラン(MapOn / MapOn Light)のプルダウン
+                // (旧プランの店舗は、これまでどおり。運用代行プランは店舗名でブログ一覧)
+                if (client.plan === 'D') {
+                    const cell = tr.querySelector('.search-target');
+                    cell.replaceChildren(nameButton(client), planCell(client, { isAdmin, onChanged: loadClients }));
+                    cell.classList.add('plan-name-cell');
+                }
                 tableBody.appendChild(tr);
             });
+            if (typeof window.filterClients === 'function') window.filterClients();
         }
 
         // DBに新しいクライアントを保存する

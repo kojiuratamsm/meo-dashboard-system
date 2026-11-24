@@ -5,6 +5,7 @@
 import { supabase } from './supabase-config.js';
 import { requireStaff, staffLogout, authHeaders } from './staff-guard.js';
 import { el } from './survey-lib.js';
+import { openTierDialog } from './master-tier.js';
 
 const NEO_PLAN = 'D';
 const app = document.getElementById('app');
@@ -360,105 +361,6 @@ function signupBlockCard() {
     card.append(head(), el('p', { class: 'muted', text: '読み込み中...' }));
     load();
     return card;
-}
-
-// ------------------------------------------------------------
-// プランの切り替え(追加SQL_21):有料にする=MSMスタッフ/Lightにする=MSMの管理者だけ(データを削除する)
-// ------------------------------------------------------------
-function tierErrorText(error) {
-    const m = String(error?.message || '');
-    if (m.includes('Could not find') || m.includes('does not exist') || m.includes('schema cache')) return 'この機能を使うには、Supabase で「追加SQL_21_ワンタイムリンクとMapOn_Light.sql」を実行してください。';
-    if (m.includes('not_allowed')) return 'Lightにする(データを削除する)のは、MSMの管理者だけが行えます。';
-    if (m.includes('name_mismatch')) return '入力した店舗名(またはメールアドレス)が一致しません。';
-    if (m.includes('not_found')) return 'この店舗は見つかりませんでした。画面を読み込み直してください。';
-    if (m.includes('not_neo')) return 'MapOn の店舗ではないため、プランを変えられません。';
-    return '切り替えられませんでした。何も変更していません。' + (m ? '(詳細:' + m + ')' : '');
-}
-function openTierDialog(c, toTier, onChanged) {
-    const name = String(c.company_name || '').trim();
-    const named = name && name !== NAME_PENDING;
-    const shown = named ? name : (c.email || '(店舗名が未入力)');
-    const bg = el('div', { class: 'modal-bg', id: 'tierModal' });
-    const body = el('div', {}, el('p', { class: 'muted', text: '確認しています…' }));
-    let busy = false, done = false;
-    const close = () => { if (busy) return; bg.remove(); document.removeEventListener('keydown', onKey); if (done) onChanged?.(); };
-    const onKey = (e) => { if (e.key === 'Escape') close(); };
-    bg.append(el('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'tierTitle' },
-        el('h3', { id: 'tierTitle', text: toTier === 'standard' ? '有料(MapOn)に切り替え' : 'Light(無料)に切り替え' }), body));
-    bg.addEventListener('click', (e) => { if (e.target === bg) close(); });
-    document.addEventListener('keydown', onKey);
-    document.body.append(bg);
-    const closeBtn = (label = '閉じる') => el('button', { class: 'btn sub', type: 'button', id: 'tierClose', onclick: close }, label);
-    const finish = (text) => {
-        done = true;
-        body.replaceChildren(el('p', { class: 'msg ok', id: 'tierDone', style: { fontSize: '15px', fontWeight: '700' }, text }),
-            el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '14px' } }, closeBtn()));
-    };
-    const run = async (button, msg, confirmName) => {
-        busy = true; button.disabled = true; msg.className = 'msg'; msg.textContent = '切り替えています…';
-        let r;
-        try { r = await supabase.rpc('neo_admin_set_tier', { p_client_id: String(c.id), p_tier: toTier, p_confirm_name: confirmName ?? null }); } catch (e) { r = { error: e }; }
-        busy = false;
-        if (r.error || !r.data?.ok) { msg.className = 'msg ng'; msg.textContent = tierErrorText(r.error); button.disabled = false; return false; }
-        return true;
-    };
-
-    if (toTier === 'standard') {
-        const msg = el('p', { class: 'msg', id: 'tierMsg', role: 'alert' });
-        const go = el('button', { class: 'btn', type: 'button', id: 'tierGo' }, '切り替える');
-        go.addEventListener('click', async () => { if (await run(go, msg)) finish(`「${shown}」を、有料(MapOn)に切り替えました。店舗が画面を開き直すと、全機能が使えます。`); });
-        body.replaceChildren(
-            el('p', { style: { lineHeight: '1.8', fontSize: '14px' } }, '「', el('b', { text: shown }), '」様を、有料(MapOn)に切り替えますか?'),
-            el('p', { class: 'muted', style: { lineHeight: '1.8', marginTop: '6px' }, text: 'AIの文章の上限は、月300回になります。会員証・クーポン・アンケートの制限もなくなります。' }),
-            msg, el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '14px' } }, closeBtn('やめる'), go));
-        go.focus();
-        return;
-    }
-
-    (async () => {
-        let res;
-        try { res = await supabase.rpc('neo_admin_tier_preview', { p_client_id: String(c.id) }); } catch (e) { res = { data: null, error: e }; }
-        if (res.error || !res.data) {
-            body.replaceChildren(el('p', { class: 'msg ng', id: 'tierMsg', style: { fontSize: '14px', lineHeight: '1.7' }, text: tierErrorText(res.error) }),
-                el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '14px' } }, closeBtn()));
-            return;
-        }
-        const L = res.data.light || {};
-        const n = (k) => Number(L[k]) || 0;
-        const expect = named ? name : String(res.data.email || c.email || '').trim();
-        const matches = (v) => named ? v.trim() === expect : v.trim().toLowerCase() === expect.toLowerCase();
-        const input = el('input', { class: 'input', id: 'tierConfirm', autocomplete: 'off', spellcheck: 'false' });
-        const msg = el('p', { class: 'msg', id: 'tierMsg', role: 'alert' });
-        const go = el('button', { class: 'btn danger-solid', type: 'button', id: 'tierGo', disabled: true }, 'Lightにする');
-        input.addEventListener('input', () => { go.disabled = !matches(input.value); msg.textContent = ''; });
-        input.addEventListener('keydown', (e) => { if (e.key !== 'Enter') return; e.preventDefault(); if (!go.disabled) go.click(); });
-        go.addEventListener('click', async () => {
-            if (!matches(input.value) || busy) return;
-            input.disabled = true;
-            if (await run(go, msg, input.value.trim())) finish(`「${shown}」を、Light(無料)に切り替えました。データを削除し、記録を残しました。`);
-            else input.disabled = false;
-        });
-        const couponText = n('coupons_delete') === 0 ? `${n('coupons_total')}つ(削除なし)`
-            : `${n('coupons_total')}つのうち、最初に作った1つ${L.keep_coupon_name ? `(「${L.keep_coupon_name}」)` : ''}を残して、${n('coupons_delete')}つを削除${n('coupon_issues_delete') ? `(お客様に渡した記録 ${n('coupon_issues_delete')}件も削除)` : ''}`;
-        const surveyText = n('surveys_delete') === 0 ? `${n('surveys_total')}つ(削除なし)`
-            : `${n('surveys_total')}つのうち、最初に作った1つ${L.keep_survey_title ? `(「${L.keep_survey_title}」)` : ''}を残して、${n('surveys_delete')}つを削除${n('responses_delete') ? `(消えるアンケートの回答 ${n('responses_delete')}件も削除)` : ''}`;
-        body.replaceChildren(
-            el('p', { style: { lineHeight: '1.8', fontSize: '14px' } }, '「', el('b', { text: shown }), '」様を、Light(無料)に切り替えます。次のデータが', el('b', { text: '削除されます' }), ':'),
-            el('dl', { class: 'del-list', id: 'tierCounts', style: { marginTop: '10px' } },
-                el('dt', { text: '会員・ショップカード' }), el('dd', { 'data-count': 'members', text: `すべて(会員 ${n('members')}人・スタンプの記録 ${n('stamp_events')}件を含む)` }),
-                el('dt', { text: 'クーポン' }), el('dd', { 'data-count': 'coupons', text: couponText }),
-                el('dt', { text: 'アンケート' }), el('dd', { 'data-count': 'surveys', text: surveyText })),
-            el('div', { class: 'del-dangerbox' },
-                el('div', { text: '・削除すると、元に戻せません(SupabaseのFreeプランは、バックアップがありません)。' }),
-                el('div', { text: '・AIの文章の上限は、月25回になります。誰が・いつ・何を消したかは、記録に残ります。' })),
-            el('div', { class: 'field' },
-                el('label', { for: 'tierConfirm', text: named ? '確認のため、店舗名を入力してください' : '確認のため、登録のメールアドレスを入力してください' }),
-                el('p', { class: 'muted', style: { margin: '0 0 6px', fontSize: '12px' } }, '入力するもの:', el('b', { text: expect })),
-                input),
-            msg,
-            el('div', { class: 'row', style: { justifyContent: 'flex-end', marginTop: '10px' } }, closeBtn('やめる'), go));
-        input.focus();
-    })();
 }
 
 // AIの文章生成(口コミ文章の下書き)が動くかを、マスター画面から確かめる

@@ -21,7 +21,7 @@ import { renderMembers, MEMBERS_CSS } from './neo-members.js';
 import { renderDashboard, DASHBOARD_CSS } from './neo-dashboard.js';
 import { cancelCard } from './neo-cancel.js';
 import { placeWordMessage, keywordMessage, buildAiSettings, keywordOptions, hasFreeText, MAX_KEYWORDS,
-    KEYWORD_QUESTION_KINDS, keywordQuestion, keywordQuestionIndex } from './ai-settings-lib.js';
+    KEYWORD_INDUSTRIES, keywordIndustry, guessKeywordIndustry, keywordQuestion, keywordQuestionIndex } from './ai-settings-lib.js';
 import { isLight, showLockPopup, lightLimitKind, lockedMembersPage, PLAN_CSS } from './neo-plan.js';
 
 let app = null;               // 描画先
@@ -373,30 +373,53 @@ async function renderEditor(id) {
     }
     onEdit = drawKeywords;
 
-    // キーワードの質問を作る(ひな型):種類を選ぶと、キーワードを選択肢にした質問を、自由記述の設問のすぐ上に足す
+    // キーワードの質問を作る(ひな型):業種 → 質問の種類を選ぶと、キーワードを選択肢にした質問を、自由記述の設問のすぐ上に足す
     function openKeywordQuestion(keyword) {
         const candidates = ai.keywords.filter(k => !keywordOptions(k, survey.questions).length);
         if (!candidates.includes(keyword)) candidates.unshift(keyword);
-        let kind = KEYWORD_QUESTION_KINDS[0].value;
+        // 業種:「AIが作る口コミ文章の設定」の業種の欄から推し量る(分からなければ、選んでもらう)
+        let industry = guessKeywordIndustry(ai.category);
+        let kind = industry ? keywordIndustry(industry).kinds[0].value : '';
         const picked = new Set([keyword]);
         const preview = el('div', { id: 'kwqPreview', style: { background: '#F7FAFC', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '12px 14px', margin: '6px 0 12px' } });
         const addBtn = el('button', { class: 'btn', type: 'button', id: 'kwqAdd' }, '質問を追加する');
         const drawPreview = () => {
-            const q = keywordQuestion(kind, candidates.filter(k => picked.has(k)), newId);
+            if (!industry) {
+                preview.replaceChildren(el('p', { class: 'muted', style: { fontSize: '12px' }, text: '業種を選ぶと、できあがる質問が表示されます。' }));
+                addBtn.disabled = true; return;
+            }
+            const q = keywordQuestion(kind, candidates.filter(k => picked.has(k)), newId, industry);
             preview.replaceChildren(
                 el('div', { style: { fontWeight: '700', fontSize: '14px', marginBottom: '8px' }, text: q.label }),
                 ...q.options.map(o => el('div', { style: { fontSize: '13px', lineHeight: '1.9' } }, el('i', { class: 'fa-regular fa-square', style: { marginRight: '6px', color: '#718096' } }), o.label)),
                 ...(q.options.length ? [] : [el('p', { class: 'muted', style: { fontSize: '12px' }, text: 'キーワードを1つ以上選んでください。' })]));
             addBtn.disabled = !q.options.length;
         };
-        const kindList = el('div', { role: 'radiogroup', 'aria-label': '質問の種類', style: { display: 'flex', flexDirection: 'column', gap: '6px', margin: '6px 0 12px' } },
-            ...KEYWORD_QUESTION_KINDS.map((k, i) => {
+        const industryList = el('div', { role: 'radiogroup', 'aria-label': '業種', id: 'kwqIndustry', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '6px', margin: '6px 0 12px' } },
+            ...KEYWORD_INDUSTRIES.map(x => {
+                const input = el('input', { type: 'radio', name: 'kwqInd', value: x.value, id: 'kwqInd_' + x.value });
+                input.checked = x.value === industry;
+                input.addEventListener('change', () => {
+                    industry = x.value;
+                    const kinds = keywordIndustry(industry).kinds;
+                    if (!kinds.some(k => k.value === kind)) kind = kinds[0].value;   // 同じ種類があれば、そのまま
+                    drawKinds(); drawPreview();
+                });
+                return el('label', { for: 'kwqInd_' + x.value, style: { display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer', fontSize: '14px', lineHeight: '1.5', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '8px 10px' } },
+                    input, el('span', {}, el('b', { text: x.name }), el('span', { class: 'muted', style: { fontSize: '11px', display: 'block' }, text: x.hint })));
+            }));
+        const kindList = el('div', { role: 'radiogroup', 'aria-label': '質問の種類', id: 'kwqKinds', style: { display: 'flex', flexDirection: 'column', gap: '6px', margin: '6px 0 12px' } });
+        function drawKinds() {
+            if (!industry) { kindList.replaceChildren(el('p', { class: 'muted', style: { fontSize: '12px' }, text: '先に、業種を選んでください。' })); return; }
+            kindList.replaceChildren(...keywordIndustry(industry).kinds.map(k => {
                 const input = el('input', { type: 'radio', name: 'kwqKind', value: k.value, id: 'kwqKind_' + k.value });
-                input.checked = i === 0;
+                input.checked = k.value === kind;
                 input.addEventListener('change', () => { kind = k.value; drawPreview(); });
                 return el('label', { for: 'kwqKind_' + k.value, style: { display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer', fontSize: '14px', lineHeight: '1.6' } },
                     input, el('span', {}, el('b', { text: k.name }), el('span', { class: 'muted', style: { fontSize: '12px', display: 'block' }, text: '例:' + k.example })));
             }));
+        }
+        drawKinds();
         const kwChecks = el('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '6px 14px', margin: '6px 0 10px' } },
             ...candidates.map((k, i) => {
                 const input = el('input', { type: 'checkbox', id: 'kwqKw_' + i, 'data-kw': k });
@@ -408,15 +431,15 @@ async function renderEditor(id) {
             el('h2', { style: { fontSize: '18px', marginBottom: '8px' }, text: 'キーワードの質問を作る' }),
             el('p', { class: 'muted', style: { fontSize: '13px', lineHeight: '1.7', marginBottom: '12px' },
                 text: 'お客様が、実際に利用したもの・当てはまるものを選ぶ質問を作ります。追加したあとも、設問文と選択肢は自由に直せます。' }),
-            el('div', { style: { fontWeight: '700', fontSize: '13px' }, text: '1. 質問の種類' }), kindList,
-            el('div', { style: { fontWeight: '700', fontSize: '13px' }, text: '2. 選択肢に入れるキーワード' }), kwChecks,
-            el('div', { style: { fontWeight: '700', fontSize: '13px' }, text: '3. できあがる質問' }), preview,
-            el('p', { class: 'muted', style: { fontSize: '12px', lineHeight: '1.7', marginBottom: '14px' },
-                text: '必須にはしません。当てはまるものがないお客様は、選ばずに進めます(実際と違う選択肢を押さなくて済むようにするためです)。' }),
+            el('div', { style: { fontWeight: '700', fontSize: '13px' }, text: '1. 業種' }), industryList,
+            el('div', { style: { fontWeight: '700', fontSize: '13px' }, text: '2. 質問の種類' }), kindList,
+            el('div', { style: { fontWeight: '700', fontSize: '13px' }, text: '3. 選択肢に入れるキーワード' }), kwChecks,
+            el('div', { style: { fontWeight: '700', fontSize: '13px' }, text: '4. できあがる質問' }), preview,
             el('div', { class: 'row', style: { justifyContent: 'flex-end', gap: '8px' } },
                 el('button', { class: 'btn sub', type: 'button', id: 'kwqCancel', onclick: () => m.close() }, 'やめる'), addBtn)));
         addBtn.addEventListener('click', () => {
-            const q = keywordQuestion(kind, candidates.filter(k => picked.has(k)), newId);
+            if (!industry) return;
+            const q = keywordQuestion(kind, candidates.filter(k => picked.has(k)), newId, industry);
             if (!q.options.length) return;
             const at = keywordQuestionIndex(survey.questions);
             survey.questions.splice(at, 0, q);
