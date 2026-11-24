@@ -12,7 +12,7 @@ import { reviewUrlGuide } from './neo-guide.js';
 
 const CSS = `
 #reviewGate { position: fixed; inset: 0; background: rgba(15,23,42,.62); z-index: 1100; display: flex; align-items: flex-start; justify-content: center; padding: 16px; overflow-y: auto; }
-#reviewGate .gate { background: #fff; border-radius: 20px; width: 100%; max-width: 600px; margin: auto; padding: 26px 24px 20px; box-shadow: 0 24px 60px rgba(0,0,0,.3); color: #2D3748; }
+#reviewGate .gate { background: #fff; border-radius: 20px; width: 100%; max-width: 720px; margin: auto; padding: 28px 28px 24px; box-shadow: 0 24px 60px rgba(0,0,0,.3); color: #2D3748; }
 #reviewGate .gate-ic { width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, #4285F4, #7C3AED); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0 auto 12px; }
 #reviewGate h2 { font-size: 20px; text-align: center; margin: 0 0 6px; line-height: 1.5; }
 #reviewGate .gate-lead { font-size: 13.5px; color: #4A5568; text-align: center; line-height: 1.8; margin-bottom: 16px; }
@@ -21,8 +21,18 @@ const CSS = `
 #reviewGate .gate-row { display: flex; gap: 8px; flex-wrap: wrap; }
 #reviewGate .gate-row .input { flex: 1 1 220px; min-width: 0; }
 #reviewGate .gate-hint { font-size: 12px; color: #718096; line-height: 1.7; margin-top: 8px; }
-#reviewGate .gate-out { text-align: center; margin-top: 14px; font-size: 12px; }
-#reviewGate .gate-out button { background: none; border: none; color: #718096; text-decoration: underline; cursor: pointer; font: inherit; }
+#reviewGate .url-guide { margin-top: 16px; }
+#reviewGate .url-guide > summary { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 18px; font-size: 17px; font-weight: 800; color: #fff; background: linear-gradient(135deg, #4285F4, #7C3AED); border-radius: 14px; box-shadow: 0 8px 20px rgba(66,133,244,.35); transition: transform .15s, box-shadow .15s; animation: gateGuidePulse 2.6s ease-in-out infinite; }
+#reviewGate .url-guide > summary:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(66,133,244,.45); }
+#reviewGate .url-guide > summary:focus-visible { outline: 3px solid #1E3A8A; outline-offset: 3px; }
+#reviewGate .url-guide > summary::before { content: '\\f03e'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: 18px; margin-right: 0; transform: none !important; }
+#reviewGate .url-guide[open] > summary { animation: none; }
+#reviewGate .url-guide-steps { max-width: none; gap: 20px; }
+#reviewGate .url-guide-step .cap { font-size: 14.5px; padding: 14px 16px; }
+#reviewGate .url-guide-step svg { max-width: 560px; }
+@keyframes gateGuidePulse { 0%,100% { box-shadow: 0 8px 20px rgba(66,133,244,.35); } 50% { box-shadow: 0 8px 30px rgba(124,58,237,.55); } }
+@media (prefers-reduced-motion: reduce) { #reviewGate .url-guide > summary { animation: none; } }
+@media (max-width: 480px) { #reviewGate .url-guide > summary { font-size: 14px; padding: 14px 10px; gap: 8px; } }
 #reviewGate .gate-done { text-align: center; padding: 14px 0 6px; }
 #reviewGate .gate-done .ok { width: 60px; height: 60px; border-radius: 50%; background: #1E7E34; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 14px; }
 @media (max-width: 480px) { #reviewGate .gate { padding: 22px 16px 16px; } #reviewGate h2 { font-size: 18px; } }
@@ -58,12 +68,11 @@ export function showReviewSetupGate(client, { onDone } = {}) {
         msg,
         el('p', { class: 'gate-hint', text: 'お客様がAIで作った文章を、Googleの口コミ投稿ページに送るときの行き先になります。入力例:https://g.page/r/CAbCdEfGhIjKlMnOp/review' }),
         reviewUrlGuide());
-    const logout = el('div', { class: 'gate-out' }, el('button', { type: 'button', id: 'gateLogout', onclick: () => document.getElementById('logoutLink')?.click() }, 'あとで設定する(ログアウト)'));
     const dialog = el('div', { class: 'gate', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'gateTitle' },
         el('div', { class: 'gate-ic', 'aria-hidden': 'true' }, el('i', { class: 'fa-brands fa-google' })),
         el('h2', { id: 'gateTitle', text: 'まずはこちらをご登録ください' }),
         el('p', { class: 'gate-lead' }, 'Google口コミ投稿ページのURLを登録すると、', el('br'), 'アンケートやクーポンが使えるようになります。'),
-        box, logout);
+        box);
     const bg = el('div', { id: 'reviewGate' }, dialog);
 
     // 入力しているとき:Googleの口コミ投稿ページのURLではないものは、すぐ「入力が間違っています」と出す
