@@ -3,510 +3,586 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MapOn | 店舗集客を自動化する次世代MEOツール</title>
+    <title>MapOn(マップオン)| アンケートから、口コミが書きやすく。集客アップへ。</title>
+    <meta name="description" content="お客様のアンケートの回答をもとに、AIが口コミの文章づくりをお手伝い。クーポン・会員証・ダッシュボードもひとつに。MapOn Lightは無料で始められます。">
+    <meta property="og:title" content="MapOn(マップオン)| 口コミが、圧倒的に書きやすくなる。">
+    <meta property="og:description" content="アンケートに答えるだけで、口コミの文章づくりをAIがお手伝い。MapOn Lightは無料で始められます。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://www.mapon-meo.com/mapon-logo.png">
+    <meta name="theme-color" content="#4F46E5">
     <link rel="icon" href="mapon-logo.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>document.documentElement.classList.add('js');</script>
     <style>
         :root {
-            --primary-blue: #4285F4;
-            --navy-dark: #0F172A;
-            --text-main: #1E293B;
-            --text-muted: #475569;
-            --bg-light: #F8FAFC;
-            --bg-white: #FFFFFF;
-            --accent-red: #EA4335;
-            --accent-green: #34A853;
-            --accent-yellow: #FBBC05;
+            --ink: #0F172A; --text: #334155; --muted: #64748B;
+            --blue: #3B82F6; --indigo: #4F46E5; --violet: #7C3AED;
+            --teal: #0D9488; --mint: #CCFBF1; --amber: #F59E0B; --rose: #F43F5E;
+            --bg: #F8FAFF; --card: #FFFFFF; --line: #E2E8F0;
+            --grad: linear-gradient(135deg, #3B82F6 0%, #4F46E5 55%, #7C3AED 100%);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { word-break: auto-phrase; font-family: 'Noto Sans JP', 'Hiragino Sans', 'Meiryo', sans-serif; color: var(--text); background: #fff; line-height: 1.8; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        a { color: inherit; text-decoration: none; }
+        img, svg { max-width: 100%; }
+        .container { width: 100%; max-width: 1120px; margin: 0 auto; padding: 0 22px; }
+        section { position: relative; }
+        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+        /* ---- 文字の色・強弱 ---- */
+        .grad-text { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .nw { white-space: nowrap; }
+        .mark { background: linear-gradient(transparent 62%, #FDE68A 62%); padding: 0 .1em; }
+        .mark-mint { background: linear-gradient(transparent 62%, #99F6E4 62%); padding: 0 .1em; }
+        .t-blue { color: var(--blue); } .t-indigo { color: var(--indigo); } .t-teal { color: var(--teal); } .t-rose { color: var(--rose); } .t-amber { color: #D97706; }
+        .eyebrow { display: inline-block; font-size: 13px; font-weight: 900; letter-spacing: .14em; color: var(--indigo); background: #EEF2FF; border-radius: 999px; padding: 6px 16px; margin-bottom: 14px; }
+        .sec-title { text-wrap: balance; font-size: clamp(27px, 4.6vw, 42px); font-weight: 900; line-height: 1.4; color: var(--ink); text-align: center; letter-spacing: .01em; }
+        .sec-title small { display: block; font-size: clamp(14px, 2vw, 17px); font-weight: 500; color: var(--muted); margin-top: 12px; line-height: 1.8; }
+        .sec-head { text-align: center; margin-bottom: 52px; }
+
+        /* ---- ボタン ---- */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-family: inherit; font-weight: 900; font-size: 17px; border: none; cursor: pointer; border-radius: 999px; padding: 17px 34px; line-height: 1.4; text-align: center; transition: transform .25s, box-shadow .25s, background-position .4s; }
+        .btn:hover { transform: translateY(-3px); }
+        .btn:focus-visible, a:focus-visible, button:focus-visible { outline: 3px solid #FBBF24; outline-offset: 3px; }
+        .btn-light { color: #fff; background: linear-gradient(135deg, #14B8A6, #0D9488 60%, #0F766E); box-shadow: 0 10px 26px rgba(13,148,136,.38); }
+        .btn-light:hover { box-shadow: 0 16px 34px rgba(13,148,136,.5); }
+        .btn-main { color: #fff; background: var(--grad); box-shadow: 0 10px 26px rgba(79,70,229,.36); }
+        .btn-main:hover { box-shadow: 0 16px 34px rgba(79,70,229,.48); }
+        .btn-ghost { color: var(--indigo); background: #fff; border: 2px solid #C7D2FE; }
+        .btn-ghost:hover { background: #EEF2FF; }
+        .btn-sm { font-size: 14px; padding: 11px 22px; }
+        .btn .pulse { position: relative; }
+        .btn-light.glow { animation: glow 2.6s ease-in-out infinite; }
+        @keyframes glow { 0%,100% { box-shadow: 0 10px 26px rgba(13,148,136,.38); } 50% { box-shadow: 0 10px 40px rgba(13,148,136,.7); } }
+
+        /* ---- ヘッダー ---- */
+        header.top { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(226,232,240,.8); }
+        .top-in { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 68px; }
+        .top-in .logo img { height: 38px; display: block; }
+
+        /* ---- 最初の見出し ---- */
+        .hero { overflow: hidden; background: radial-gradient(1200px 600px at 85% -10%, #E0E7FF 0%, transparent 60%), radial-gradient(900px 500px at -10% 20%, #CCFBF1 0%, transparent 55%), linear-gradient(180deg, #F5F7FF, #fff); padding: 56px 0 90px; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; pointer-events: none; animation: drift 14s ease-in-out infinite alternate; }
+        .blob.b1 { width: 320px; height: 320px; background: #A5B4FC; top: -60px; right: 8%; }
+        .blob.b2 { width: 260px; height: 260px; background: #5EEAD4; bottom: 0; left: -40px; animation-delay: -5s; }
+        @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,-26px) scale(1.12); } }
+        .hero-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; position: relative; }
+        .hero-kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 900; color: var(--teal); background: #fff; border: 2px solid #99F6E4; border-radius: 999px; padding: 7px 18px; box-shadow: 0 6px 16px rgba(13,148,136,.12); margin-bottom: 20px; }
+        .hero h1 { font-size: clamp(34px, 5.6vw, 60px); font-weight: 900; line-height: 1.22; color: var(--ink); letter-spacing: -.01em; }
+        .hero h1 .l2 { display: block; font-size: .78em; margin-top: 4px; }
+        .hero h1 .big { font-size: 1.12em; }
+        .hero .lead { text-wrap: pretty; font-size: clamp(16px, 2.2vw, 20px); margin: 24px 0 8px; color: var(--text); font-weight: 500; }
+        .hero .lead b { color: var(--indigo); font-weight: 900; }
+        .hero-chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 30px; }
+        .chip { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; box-shadow: 0 4px 12px rgba(15,23,42,.05); }
+        .chip i { color: var(--blue); } .chip.free { background: #F0FDFA; border-color: #99F6E4; } .chip.free i { color: var(--teal); }
+        .hero-cta { display: flex; flex-wrap: wrap; gap: 14px; }
+        .hero-note { font-size: 12.5px; color: var(--muted); margin-top: 16px; line-height: 1.8; }
+        .line-note { font-size: 12.5px; color: var(--muted); margin-top: 10px; }
+        .line-note a { color: var(--teal); font-weight: 700; text-decoration: underline; }
+
+        /* ---- スマホのイメージ(動く) ---- */
+        .phone-wrap { position: relative; display: flex; justify-content: center; }
+        .phone { width: 292px; background: #0F172A; border-radius: 42px; padding: 11px; box-shadow: 0 40px 70px rgba(30,41,99,.35), 0 0 0 2px #1E293B; animation: float 6s ease-in-out infinite; position: relative; }
+        @keyframes float { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-14px) rotate(1deg); } }
+        .screen { background: #F8FAFF; border-radius: 32px; padding: 20px 16px 18px; min-height: 520px; position: relative; overflow: hidden; }
+        .screen .notch { width: 92px; height: 20px; background: #0F172A; border-radius: 0 0 14px 14px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+        .s-title { font-size: 13px; font-weight: 900; color: var(--ink); margin: 14px 0 2px; }
+        .s-sub { font-size: 10.5px; color: var(--muted); margin-bottom: 12px; }
+        .s-q { font-size: 11.5px; font-weight: 700; color: var(--ink); margin: 12px 0 6px; }
+        .stars { display: flex; gap: 4px; }
+        .stars i { font-size: 22px; color: #E2E8F0; animation: starOn 8s infinite; }
+        .stars i:nth-child(1) { animation-delay: .2s; } .stars i:nth-child(2) { animation-delay: .5s; } .stars i:nth-child(3) { animation-delay: .8s; } .stars i:nth-child(4) { animation-delay: 1.1s; } .stars i:nth-child(5) { animation-delay: 1.4s; }
+        @keyframes starOn { 0%,4% { color: #E2E8F0; transform: scale(1); } 8% { color: #FBBF24; transform: scale(1.35); } 12%,88% { color: #FBBF24; transform: scale(1); } 96%,100% { color: #E2E8F0; } }
+        .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+        .opt { font-size: 11px; font-weight: 700; border: 1.5px solid var(--line); background: #fff; color: var(--text); padding: 5px 11px; border-radius: 999px; }
+        .opt.pick { animation: pick 8s infinite; }
+        .opt.pick.p2 { animation-delay: .9s; }
+        @keyframes pick { 0%,14% { background: #fff; border-color: var(--line); color: var(--text); } 20%,88% { background: #EEF2FF; border-color: var(--indigo); color: var(--indigo); } 96%,100% { background: #fff; border-color: var(--line); color: var(--text); } }
+        .ai-box { margin-top: 14px; background: #fff; border: 1.5px solid #C7D2FE; border-radius: 14px; padding: 11px 12px; box-shadow: 0 8px 18px rgba(79,70,229,.1); }
+        .ai-head { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 900; color: var(--indigo); margin-bottom: 6px; }
+        .ai-head i { color: var(--violet); }
+        .ai-text { font-size: 11.5px; line-height: 1.75; color: var(--ink); min-height: 82px; }
+        .ai-text .caret { display: inline-block; width: 2px; height: 1em; background: var(--indigo); vertical-align: -2px; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .s-btn { margin-top: 12px; text-align: center; font-size: 11.5px; font-weight: 900; color: #fff; background: var(--grad); border-radius: 999px; padding: 10px; }
+        .s-foot { font-size: 9.5px; color: var(--muted); text-align: center; margin-top: 8px; }
+        .float-card { position: absolute; background: #fff; border-radius: 16px; box-shadow: 0 16px 34px rgba(30,41,99,.18); padding: 10px 14px; font-size: 12px; font-weight: 900; color: var(--ink); display: flex; align-items: center; gap: 9px; animation: float2 5s ease-in-out infinite; }
+        .float-card .ic { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; }
+        .float-card.fc1 { left: -6px; top: 70px; } .float-card.fc2 { right: -10px; top: 250px; animation-delay: -2s; } .float-card.fc3 { left: 4px; bottom: 50px; animation-delay: -3.4s; }
+        .float-card small { display: block; font-size: 10.5px; font-weight: 500; color: var(--muted); }
+        @keyframes float2 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* ---- お悩み ---- */
+        .problems { background: linear-gradient(180deg, #fff, #FFF7F7 40%, #FFF1F2); padding: 100px 0; }
+        .problems .sec-title .t-rose { text-decoration: underline wavy #FDA4AF; text-underline-offset: 8px; text-decoration-thickness: 2px; }
+        .p-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .p-card { background: #fff; border-radius: 22px; padding: 26px 20px 24px; text-align: center; box-shadow: 0 10px 30px rgba(244,63,94,.08); border: 1px solid #FFE4E6; transition: transform .3s; }
+        .p-card:hover { transform: translateY(-6px) rotate(-.6deg); }
+        .p-card .ill { width: 150px; height: 112px; margin: 0 auto 8px; display: block; animation: bob 4s ease-in-out infinite; }
+        .p-card:nth-child(2) .ill { animation-delay: -1s; } .p-card:nth-child(3) .ill { animation-delay: -2s; } .p-card:nth-child(4) .ill { animation-delay: -3s; }
+        @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .p-card h3 { font-size: 20px; font-weight: 900; color: var(--ink); margin: 6px 0 8px; line-height: 1.45; }
+        .p-card h3 em { font-style: normal; color: var(--rose); }
+        .p-card p { font-size: 14px; color: var(--muted); line-height: 1.8; }
+        .p-arrow { text-align: center; margin: 46px 0 0; }
+        .p-arrow .down { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; color: var(--indigo); font-weight: 900; font-size: 18px; }
+        .p-arrow .down i { font-size: 26px; animation: nudge 1.4s ease-in-out infinite; }
+        @keyframes nudge { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+
+        /* ---- MapOnとは ---- */
+        .about { padding: 100px 0; background: linear-gradient(180deg, #fff, #F5F7FF); }
+        .about-lead { max-width: 760px; margin: 0 auto 50px; text-align: center; font-size: clamp(16px, 2.2vw, 19px); }
+        .about-lead b { color: var(--indigo); }
+        .flow { display: grid; grid-template-columns: 1fr 46px 1fr 46px 1fr; align-items: stretch; gap: 0; }
+        .flow-step { background: #fff; border-radius: 24px; padding: 28px 22px 26px; text-align: center; box-shadow: 0 14px 36px rgba(79,70,229,.1); border: 1px solid #E0E7FF; position: relative; }
+        .flow-step .no { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); background: var(--grad); color: #fff; font-weight: 900; font-size: 14px; padding: 4px 18px; border-radius: 999px; box-shadow: 0 6px 14px rgba(79,70,229,.3); }
+        .flow-step .ill { width: 130px; height: 120px; display: block; margin: 8px auto 10px; }
+        .flow-step h3 { font-size: 19px; font-weight: 900; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
+        .flow-step p { font-size: 14px; color: var(--muted); line-height: 1.8; }
+        .flow-arrow { display: flex; align-items: center; justify-content: center; color: #A5B4FC; font-size: 26px; }
+        .flow-arrow i { animation: slide 1.6s ease-in-out infinite; }
+        @keyframes slide { 0%,100% { transform: translateX(-4px); } 50% { transform: translateX(6px); } }
+        .about-note { margin: 34px auto 0; max-width: 760px; text-align: center; font-size: 13.5px; color: var(--muted); }
+        .about-note b { color: var(--ink); }
+
+        /* ---- できること ---- */
+        .features { padding: 100px 0; background: #fff; }
+        .f-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 22px; }
+        .f-card { grid-column: span 2; background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 22px 22px 26px; box-shadow: 0 10px 28px rgba(15,23,42,.05); transition: transform .3s, box-shadow .3s; overflow: hidden; }
+        .f-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(79,70,229,.14); }
+        .f-card.wide { grid-column: span 3; }
+        .f-vis { height: 170px; border-radius: 16px; margin-bottom: 18px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .f-vis.v1 { background: linear-gradient(135deg, #DBEAFE, #E0E7FF); } .f-vis.v2 { background: linear-gradient(135deg, #EDE9FE, #FCE7F3); } .f-vis.v3 { background: linear-gradient(135deg, #FEF3C7, #FFEDD5); } .f-vis.v4 { background: linear-gradient(135deg, #CCFBF1, #D1FAE5); } .f-vis.v5 { background: linear-gradient(135deg, #E0F2FE, #EDE9FE); }
+        .f-card h3 { font-size: 21px; font-weight: 900; color: var(--ink); line-height: 1.45; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .f-card h3 .num { font-size: 13px; font-weight: 900; color: #fff; background: var(--grad); border-radius: 8px; padding: 2px 9px; }
+        .f-card p { font-size: 14px; color: var(--muted); margin-top: 8px; line-height: 1.85; }
+        .f-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+        .tag { font-size: 11.5px; font-weight: 900; border-radius: 999px; padding: 3px 11px; }
+        .tag.l { background: #CCFBF1; color: #0F766E; } .tag.m { background: #E0E7FF; color: #4338CA; } .tag.x { background: #F1F5F9; color: #94A3B8; text-decoration: line-through; }
+        /* 各画面のイメージ */
+        .mini { width: 78%; background: #fff; border-radius: 14px; padding: 12px 14px; box-shadow: 0 10px 24px rgba(15,23,42,.12); font-size: 11px; color: var(--ink); }
+        .mini .q { font-weight: 900; margin-bottom: 7px; }
+        .mini .row { display: flex; gap: 5px; flex-wrap: wrap; }
+        .mini .opt { font-size: 10.5px; padding: 3px 9px; }
+        .mini .opt.on { background: #EEF2FF; border-color: var(--indigo); color: var(--indigo); }
+        .ticket { width: 80%; background: #fff; border-radius: 14px; display: flex; box-shadow: 0 10px 24px rgba(217,119,6,.2); position: relative; transform: rotate(-3deg); transition: transform .4s; }
+        .f-card:hover .ticket { transform: rotate(0) scale(1.04); }
+        .ticket .l { flex: 1; padding: 14px 14px; border-right: 2px dashed #FCD34D; }
+        .ticket .l b { display: block; font-size: 15px; color: var(--ink); font-weight: 900; line-height: 1.4; }
+        .ticket .l small { font-size: 10px; color: var(--muted); }
+        .ticket .r { width: 62px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 13px; color: #D97706; writing-mode: vertical-rl; letter-spacing: .15em; }
+        .stamps { width: 84%; max-width: 300px; background: #fff; border-radius: 14px; padding: 12px 12px 10px; box-shadow: 0 10px 24px rgba(13,148,136,.18); }
+        .stamps .st-t { font-size: 11px; font-weight: 900; color: var(--ink); margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .stamps .st-t span { color: var(--teal); }
+        .st-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; }
+        .st-grid i { aspect-ratio: 1; border-radius: 50%; border: 2px dashed #99F6E4; display: block; position: relative; }
+        .st-grid i.on { border: none; background: radial-gradient(circle at 35% 30%, #5EEAD4, #0D9488); }
+        .st-grid i.on::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: #fff; font-size: 10px; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+        .st-grid i.pop { animation: stamp 4s infinite; }
+        @keyframes stamp { 0%,35% { transform: scale(0); opacity: 0; } 45% { transform: scale(1.4); opacity: 1; } 55%,100% { transform: scale(1); opacity: 1; } }
+        .dash { width: 86%; max-width: 380px; background: #fff; border-radius: 14px; padding: 12px 14px; box-shadow: 0 10px 24px rgba(79,70,229,.16); }
+        .dash .kp { display: flex; gap: 8px; margin-bottom: 10px; }
+        .dash .kp div { flex: 1; background: #F1F5FF; border-radius: 8px; padding: 5px 8px; font-size: 9.5px; color: var(--muted); font-weight: 700; }
+        .dash .kp b { display: block; font-size: 15px; color: var(--indigo); font-weight: 900; line-height: 1.2; }
+        .bars { display: flex; align-items: flex-end; gap: 6px; height: 56px; }
+        .bars i { flex: 1; background: linear-gradient(180deg, #818CF8, #4F46E5); border-radius: 4px 4px 0 0; height: 8%; transition: height 1s cubic-bezier(.2,.8,.2,1); }
+        .in .bars i:nth-child(1) { height: 30%; } .in .bars i:nth-child(2) { height: 42%; transition-delay: .1s; } .in .bars i:nth-child(3) { height: 38%; transition-delay: .2s; } .in .bars i:nth-child(4) { height: 60%; transition-delay: .3s; } .in .bars i:nth-child(5) { height: 74%; transition-delay: .4s; } .in .bars i:nth-child(6) { height: 70%; transition-delay: .5s; } .in .bars i:nth-child(7) { height: 96%; transition-delay: .6s; }
+        .f-card .ai-text { min-height: 0; font-size: 11px; }
+        .mini.ai { border: 1.5px solid #DDD6FE; }
+        .video-slot { display: none; }   /* 動画を入れるときは、ここに <video> を置き、display を block にします */
+        .sample-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 26px; }
+
+        /* ---- プラン ---- */
+        .plans { padding: 100px 0 110px; background: linear-gradient(180deg, #F5F7FF, #EEF2FF); }
+        .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; max-width: 980px; margin: 0 auto; align-items: stretch; }
+        .plan { background: #fff; border-radius: 28px; padding: 38px 32px 34px; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(15,23,42,.08); border: 2px solid var(--line); transition: transform .3s; }
+        .plan:hover { transform: translateY(-6px); }
+        .plan.light { border-color: #5EEAD4; box-shadow: 0 22px 54px rgba(13,148,136,.2); }
+        .plan.pro { border-color: #A5B4FC; box-shadow: 0 22px 54px rgba(79,70,229,.18); }
+        .ribbon { position: absolute; top: -17px; left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: 900; color: #fff; padding: 6px 20px; border-radius: 999px; white-space: nowrap; }
+        .light .ribbon { background: linear-gradient(135deg, #14B8A6, #0D9488); box-shadow: 0 8px 18px rgba(13,148,136,.35); }
+        .pro .ribbon { background: var(--grad); box-shadow: 0 8px 18px rgba(79,70,229,.35); }
+        .plan h3 { font-size: 24px; font-weight: 900; color: var(--ink); text-align: center; }
+        .plan .for { text-align: center; font-size: 13px; color: var(--muted); margin: 2px 0 14px; }
+        .price { text-align: center; margin: 6px 0 22px; line-height: 1.2; }
+        .price .free { font-size: 64px; font-weight: 900; color: var(--teal); letter-spacing: .02em; }
+        .price .yen { font-size: 22px; font-weight: 900; color: var(--teal); }
+        .price .ask { display: inline-block; font-size: 22px; font-weight: 900; color: var(--indigo); background: #EEF2FF; border-radius: 14px; padding: 12px 20px; }
+        .price small { display: block; font-size: 12.5px; color: var(--muted); font-weight: 500; margin-top: 6px; }
+        .plan ul { list-style: none; margin-bottom: 22px; }
+        .plan li { display: flex; gap: 11px; font-size: 15px; font-weight: 700; color: var(--ink); padding: 11px 0; border-bottom: 1px solid #F1F5F9; line-height: 1.6; }
+        .plan li i { margin-top: 5px; flex-shrink: 0; }
+        .light li i { color: var(--teal); } .pro li i { color: var(--indigo); }
+        .plan li small { display: block; font-size: 12.5px; font-weight: 500; color: var(--muted); }
+        .plan li.no { color: #94A3B8; font-weight: 500; font-size: 14px; } .plan li.no i { color: #CBD5E1; }
+        .plan .btn { width: 100%; margin-top: auto; }
+        .plan .line-note { text-align: center; }
+
+        /* ---- 安心 ---- */
+        .trust { padding: 100px 0; background: #fff; }
+        .t-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+        .t-card { border-radius: 24px; padding: 30px 24px; background: linear-gradient(180deg, #F0FDFA, #fff); border: 1px solid #99F6E4; text-align: center; transition: transform .3s; }
+        .t-card:nth-child(2) { background: linear-gradient(180deg, #EEF2FF, #fff); border-color: #C7D2FE; } .t-card:nth-child(3) { background: linear-gradient(180deg, #FFF7ED, #fff); border-color: #FED7AA; }
+        .t-card:hover { transform: translateY(-6px); }
+        .t-card .ic { width: 68px; height: 68px; border-radius: 20px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fff; background: linear-gradient(135deg, #14B8A6, #0D9488); box-shadow: 0 10px 22px rgba(13,148,136,.3); animation: bob 4s ease-in-out infinite; }
+        .t-card:nth-child(2) .ic { background: var(--grad); box-shadow: 0 10px 22px rgba(79,70,229,.3); animation-delay: -1.3s; } .t-card:nth-child(3) .ic { background: linear-gradient(135deg, #FB923C, #F59E0B); box-shadow: 0 10px 22px rgba(245,158,11,.3); animation-delay: -2.6s; }
+        .t-card h3 { font-size: 19px; font-weight: 900; color: var(--ink); margin-bottom: 8px; line-height: 1.5; }
+        .t-card p { font-size: 14px; color: var(--text); line-height: 1.85; text-align: left; }
+        .trust-box { margin: 34px auto 0; max-width: 820px; background: #F8FAFC; border: 1px solid var(--line); border-radius: 18px; padding: 20px 24px; font-size: 13.5px; color: var(--muted); line-height: 1.9; }
+        .trust-box b { color: var(--ink); }
+        .link-btn { font: inherit; background: none; border: none; color: var(--indigo); font-weight: 700; text-decoration: underline; cursor: pointer; padding: 0; }
+
+        /* ---- 最後の呼びかけ・フッター ---- */
+        .final { background: var(--grad); color: #fff; text-align: center; padding: 76px 0; overflow: hidden; }
+        .final h2 { font-size: clamp(26px, 4.4vw, 40px); font-weight: 900; line-height: 1.5; }
+        .final p { margin: 12px 0 28px; opacity: .92; font-size: 16px; }
+        .final .btn-light { background: #fff; color: var(--teal); box-shadow: 0 14px 30px rgba(0,0,0,.2); animation: none; }
+        footer { background: #0B1220; color: #94A3B8; padding: 44px 0 36px; font-size: 13.5px; }
+        .foot-in { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 22px; align-items: center; }
+        .foot-brand { color: #fff; font-weight: 900; font-size: 16px; }
+        .foot-brand small { display: block; font-weight: 500; font-size: 12.5px; color: #94A3B8; margin-top: 3px; }
+        .foot-links { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+        .foot-links a, .foot-links button { color: #CBD5E1; font: inherit; background: none; border: none; cursor: pointer; padding: 0; text-decoration: underline; text-underline-offset: 4px; }
+        .foot-links a:hover, .foot-links button:hover { color: #fff; }
+        .copy { margin-top: 26px; padding-top: 20px; border-top: 1px solid #1E293B; font-size: 12.5px; }
+
+        /* ---- スクロールで、ふわっと出る ---- */
+        html.js .reveal { opacity: 0; transform: translateY(34px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.8,.2,1); }
+        html.js .reveal.in { opacity: 1; transform: none; }
+        html.js .reveal.d1 { transition-delay: .1s; } html.js .reveal.d2 { transition-delay: .2s; } html.js .reveal.d3 { transition-delay: .3s; } html.js .reveal.d4 { transition-delay: .4s; }
+
+        /* ---- 動きを減らす設定の人には、動かさない ---- */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+            html.js .reveal { opacity: 1; transform: none; }
+            .stars i { color: #FBBF24; } .opt.pick { background: #EEF2FF; border-color: var(--indigo); color: var(--indigo); }
+            .bars i:nth-child(1) { height: 30%; } .bars i:nth-child(2) { height: 42%; } .bars i:nth-child(3) { height: 38%; } .bars i:nth-child(4) { height: 60%; } .bars i:nth-child(5) { height: 74%; } .bars i:nth-child(6) { height: 70%; } .bars i:nth-child(7) { height: 96%; }
+            .st-grid i.pop { transform: none; opacity: 1; }
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Noto Sans JP', sans-serif;
+        /* ---- タブレット・スマホ ---- */
+        @media (max-width: 960px) {
+            .hero-grid { grid-template-columns: 1fr; gap: 46px; }
+            .p-grid { grid-template-columns: repeat(2, 1fr); }
+            .flow { grid-template-columns: 1fr; gap: 30px; }
+            .flow-arrow { transform: rotate(90deg); height: 30px; }
+            .f-grid { grid-template-columns: repeat(2, 1fr); }
+            .f-card, .f-card.wide { grid-column: span 1; }
+            .f-card.last { grid-column: span 2; }
+            .t-grid { grid-template-columns: 1fr; }
+            .plan-grid { grid-template-columns: 1fr; max-width: 520px; gap: 40px; }
         }
-
-        body {
-            color: var(--text-main);
-            background-color: var(--bg-light);
-            line-height: 1.6;
-        }
-
-        /* --- ヘッダー・ナビゲーション --- */
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            z-index: 100;
-            padding: 15px 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            font-size: 24px;
-            font-weight: 900;
-            color: var(--navy-dark);
-            letter-spacing: 1px;
-            text-decoration: none;
-        }
-        .logo img {
-            height: 40px;
-            margin-right: -5px;
-            mix-blend-mode: multiply;
-        }
-        .nav-cta {
-            background: var(--navy-dark);
-            color: white;
-            padding: 10px 25px;
-            border-radius: 30px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-        .nav-cta:hover {
-            background: var(--primary-blue);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
-        }
-
-        /* --- セクション共通 --- */
-        section {
-            padding: 100px 5%;
-        }
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-        .section-title {
-            text-align: center;
-            font-size: 32px;
-            font-weight: 900;
-            margin-bottom: 20px;
-            color: var(--navy-dark);
-            position: relative;
-        }
-        .section-title::after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 4px;
-            background: var(--primary-blue);
-            margin: 15px auto 50px;
-            border-radius: 2px;
-        }
-        .section-subtitle {
-            text-align: center;
-            font-size: 16px;
-            color: var(--text-muted);
-            margin-bottom: 50px;
-            font-weight: 500;
-        }
-
-        /* --- 1. 究極の未来 (Hero) --- */
-        .hero {
-            padding-top: 150px;
-            padding-bottom: 120px;
-            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
-            text-align: center;
-            overflow: hidden;
-            position: relative;
-        }
-        .hero h1 {
-            font-size: 42px;
-            font-weight: 900;
-            line-height: 1.4;
-            color: var(--navy-dark);
-            margin-bottom: 25px;
-        }
-        .hero h1 span {
-            color: var(--primary-blue);
-        }
-        .hero p {
-            font-size: 18px;
-            color: var(--text-muted);
-            max-width: 700px;
-            margin: 0 auto 40px;
-            font-weight: 500;
-        }
-        .hero-cta {
-            display: inline-block;
-            background: var(--primary-blue);
-            color: white;
-            padding: 18px 40px;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: 700;
-            text-decoration: none;
-            box-shadow: 0 10px 25px rgba(66, 133, 244, 0.4);
-            transition: all 0.3s;
-        }
-        .hero-cta:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(66, 133, 244, 0.5);
-        }
-
-        /* --- 2. MapOnとは --- */
-        .about {
-            background: var(--bg-white);
-        }
-        .about-content {
-            display: flex;
-            align-items: center;
-            gap: 50px;
-        }
-        .about-text {
-            flex: 1;
-        }
-        .about-text p {
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-        .about-text h3 {
-            font-size: 24px;
-            margin-bottom: 15px;
-            color: var(--primary-blue);
-        }
-        .about-image {
-            flex: 1;
-            background: var(--bg-light);
-            border-radius: 20px;
-            height: 350px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #E2E8F0;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-            position: relative;
-        }
-        .about-image img {
-            width: 80%;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-
-        /* --- 3. よくあるお悩み --- */
-        .problems {
-            background: var(--bg-light);
-        }
-        .problem-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-        }
-        .problem-card {
-            background: var(--bg-white);
-            padding: 40px 30px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.03);
-            border-top: 5px solid var(--accent-red);
-        }
-        .problem-card i {
-            font-size: 40px;
-            color: var(--accent-red);
-            margin-bottom: 20px;
-        }
-        .problem-card h4 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-
-        /* --- 4. 全て解決できます --- */
-        .solution {
-            background: var(--navy-dark);
-            color: white;
-            text-align: center;
-        }
-        .solution .section-title {
-            color: white;
-        }
-        .solution .section-title::after {
-            background: white;
-        }
-        .solution-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 40px;
-            margin-top: 50px;
-        }
-        .solution-item {
-            background: rgba(255,255,255,0.05);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            text-align: left;
-        }
-        .solution-item h4 {
-            font-size: 20px;
-            margin-bottom: 15px;
-            color: #60A5FA;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .solution-item h4 i {
-            font-size: 24px;
-        }
-
-        /* --- 5. MapOnで叶う事 --- */
-        .benefits {
-            background: var(--bg-white);
-        }
-        .benefit-steps {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-        }
-        .benefit-step {
-            flex: 1;
-            text-align: center;
-            padding: 30px;
-        }
-        .benefit-icon {
-            width: 80px;
-            height: 80px;
-            background: #EFF6FF;
-            color: var(--primary-blue);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            margin: 0 auto 20px;
-        }
-        .benefit-step h4 {
-            font-size: 20px;
-            margin-bottom: 10px;
-            color: var(--navy-dark);
-        }
-
-        /* --- 6. 料金 --- */
-        .pricing {
-            background: var(--bg-light);
-            text-align: center;
-        }
-        .pricing-card {
-            max-width: 500px;
-            margin: 0 auto;
-            background: var(--bg-white);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-            border: 2px solid var(--primary-blue);
-        }
-        .pricing-header {
-            background: var(--primary-blue);
-            color: white;
-            padding: 30px;
-        }
-        .pricing-header h3 {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        .price {
-            font-size: 48px;
-            font-weight: 900;
-        }
-        .price span {
-            font-size: 16px;
-            font-weight: normal;
-        }
-        .pricing-features {
-            padding: 40px;
-            text-align: left;
-        }
-        .pricing-features ul {
-            list-style: none;
-            margin-bottom: 40px;
-        }
-        .pricing-features li {
-            padding: 12px 0;
-            border-bottom: 1px solid #E2E8F0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .pricing-features li i {
-            color: var(--accent-green);
-        }
-
-        /* Footer */
-        footer {
-            background: var(--navy-dark);
-            color: rgba(255,255,255,0.6);
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        /* レスポンシブ */
-        @media (max-width: 768px) {
-            .about-content, .solution-grid, .benefit-steps {
-                flex-direction: column;
-            }
-            .problem-grid, .solution-grid {
-                grid-template-columns: 1fr;
-            }
-            .hero h1 {
-                font-size: 32px;
-            }
-            .hero {
-                padding-top: 120px;
-            }
+        @media (max-width: 640px) {
+            .container { padding: 0 18px; }
+            .top-in { height: 62px; } .top-in .logo img { height: 32px; }
+            .btn { font-size: 16px; padding: 16px 26px; }
+            .top .btn-sm { font-size: 12.5px; padding: 10px 14px; }
+            .hero { padding: 36px 0 64px; }
+            .hero-cta .btn { width: 100%; }
+            .problems, .about, .features, .plans, .trust { padding: 70px 0; }
+            .sec-head { margin-bottom: 38px; }
+            .p-grid { grid-template-columns: 1fr; gap: 16px; }
+            .p-card { display: grid; grid-template-columns: 112px 1fr; text-align: left; align-items: center; gap: 4px 12px; padding: 16px; }
+            .p-card .ill { width: 112px; height: 84px; margin: 0; grid-row: span 2; }
+            .p-card h3 { margin: 0; font-size: 17px; } .p-card p { font-size: 13px; }
+            .f-grid { grid-template-columns: 1fr; } .f-card.last { grid-column: span 1; }
+            .phone { width: 262px; } .screen { min-height: 480px; }
+            .float-card { display: none; }
+            .plan { padding: 36px 22px 28px; } .price .free { font-size: 54px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ヘッダー -->
-    <header>
-        <a href="#" class="logo">
-            <img src="mapon-logo.png" alt="MapOn Logo" style="height: 38px;">
-        </a>
-        <a href="#pricing" class="nav-cta">お申し込みはこちら</a>
+    <!-- ヘッダー:ロゴと、右上の「MapOn Lightを無料で始める」 -->
+    <header class="top">
+        <div class="container top-in">
+            <a href="/landing" class="logo" aria-label="MapOn トップへ"><img src="mapon-logo.png" alt="MapOn"></a>
+            <a href="/signup-light" class="btn btn-light btn-sm" id="headCta"><i class="fa-solid fa-gift" aria-hidden="true"></i> MapOn Lightを無料で始める</a>
+        </div>
     </header>
 
-    <!-- 1. ヒーローセクション -->
-    <section class="hero">
-        <div class="container">
-            <h1>Googleマップ集客を完全自動化。<br>店舗ビジネスに<span>圧倒的な活気</span>を。</h1>
-            <p>MEO対策に必要な「分析」「クチコミ促進」「AI投稿」を全て一つに。<br>明日からあなたの店舗の見え方が、そして来店数が変わります。</p>
-            <a href="#pricing" class="hero-cta">今すぐMapOnを導入する</a>
+    <main>
+    <!-- 1. 最初の見出し -->
+    <section class="hero" id="top">
+        <div class="blob b1" aria-hidden="true"></div><div class="blob b2" aria-hidden="true"></div>
+        <div class="container hero-grid">
+            <div>
+                <div class="hero-kicker reveal"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> お店のためのGoogleマップ集客ツール</div>
+                <h1 class="reveal d1">
+                    口コミが、<br><span class="grad-text big">圧倒的に</span><span class="mark nw">書きやすく</span>。
+                    <span class="l2"><span class="nw">集客アップの流れを、</span><span class="nw"><span class="t-teal">店舗の味方</span>に。</span></span>
+                </h1>
+                <p class="lead reveal d2">お客様の<b>アンケートの回答</b>をもとに、<b>AIが文章づくりをお手伝い</b>。<br>口コミが集まりやすい仕組みで、新しいお客様との出会いを増やします。</p>
+                <div class="hero-chips reveal d2">
+                    <span class="chip"><i class="fa-solid fa-hand-pointer" aria-hidden="true"></i> アンケートに答えるだけ</span>
+                    <span class="chip"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> AIが文章づくりをお手伝い</span>
+                    <span class="chip"><i class="fa-solid fa-ticket" aria-hidden="true"></i> クーポン・会員証もひとつに</span>
+                    <span class="chip free"><i class="fa-solid fa-gift" aria-hidden="true"></i> Lightは無料</span>
+                </div>
+                <div class="hero-cta reveal d3">
+                    <a href="/signup-light" class="btn btn-light glow" id="heroLight"><i class="fa-solid fa-gift" aria-hidden="true"></i> MapOn Lightを無料で始める</a>
+                    <a href="#plans" class="btn btn-ghost" id="heroPlans">プランを見る <i class="fa-solid fa-arrow-down" aria-hidden="true"></i></a>
+                </div>
+                <p class="line-note reveal d3">お申し込みには、<a href="https://sub.msm-fund.com/line/open/wPBzQBgRMj2L?mtid=bF2CR6ch0ym0" target="_blank" rel="noopener" data-line>公式LINE</a>の友だち登録が必要です。</p>
+                <p class="hero-note reveal d3">※効果には個人差があり、口コミの数や集客の結果を保証するものではありません。</p>
+            </div>
+
+            <!-- スマホの画面(アンケート → AIの文章案)。動きます -->
+            <div class="phone-wrap reveal d2" aria-hidden="true">
+                <div class="phone"><div class="screen">
+                    <div class="notch"></div>
+                    <div class="s-title">本日はありがとうございました!</div>
+                    <div class="s-sub">1分ほどで終わるアンケートです</div>
+                    <div class="s-q">満足度を教えてください</div>
+                    <div class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                    <div class="s-q">ご利用になったメニュー</div>
+                    <div class="opts"><span class="opt pick">カット</span><span class="opt pick p2">ヘッドスパ</span><span class="opt">カラー</span></div>
+                    <div class="ai-box">
+                        <div class="ai-head"><i class="fa-solid fa-wand-magic-sparkles"></i> AIが文章案を作りました</div>
+                        <div class="ai-text" id="typeTarget" data-text="ヘッドスパをお願いしました。丁寧に説明してもらえて安心でき、仕上がりにも満足です。">ヘッドスパをお願いしました。丁寧に説明してもらえて安心でき、仕上がりにも満足です。</div>
+                    </div>
+                    <div class="s-btn">確認して、Googleに投稿する</div>
+                    <div class="s-foot">※画面はイメージです。投稿はお客様ご自身が行います</div>
+                </div></div>
+                <div class="float-card fc1"><span class="ic" style="background:linear-gradient(135deg,#FBBF24,#F59E0B)"><i class="fa-solid fa-star"></i></span><span>アンケート<small>お客様の声を集める</small></span></div>
+                <div class="float-card fc2"><span class="ic" style="background:linear-gradient(135deg,#8B5CF6,#6366F1)"><i class="fa-solid fa-wand-magic-sparkles"></i></span><span>AIがお手伝い<small>文章づくり</small></span></div>
+                <div class="float-card fc3"><span class="ic" style="background:linear-gradient(135deg,#14B8A6,#0D9488)"><i class="fa-solid fa-ticket"></i></span><span>お礼のクーポン<small>再来店のきっかけに</small></span></div>
+            </div>
         </div>
     </section>
 
-    <!-- 2. MapOnとは？ -->
-    <section class="about" id="about">
-        <div class="container about-content">
-            <div class="about-text">
-                <h3>MapOn（マップオン）とは？</h3>
-                <p>MapOnは、飲食店やサロンなどの実店舗ビジネスに向けた**次世代型MEO（Googleマップ上位表示）管理ツール**です。</p>
-                <p>これまで手間がかかっていた「競合順位のチェック」「クチコミの収集と自動返信」「Googleへの最新情報の投稿」を、独自のシステムとAIによって一元管理・自動化します。</p>
-                <p>専門的な知識がなくても、まるで専属のWebマーケターを雇ったかのように、Googleマップ経由の新規顧客を安定して獲得し続けることが可能です。</p>
-            </div>
-            <div class="about-image">
-                <!-- 管理画面のスクショ差し替え用 -->
-                <div style="background: white; width: 80%; height: 60%; border-radius: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: flex; align-items:center; justify-content:center; color:#A0AEC0; font-weight:bold;">管理画面イメージ</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 3. よくあるお悩み -->
+    <!-- 2. こんなお悩みありませんか? -->
     <section class="problems" id="problems">
         <div class="container">
-            <h2 class="section-title">こんなお悩みはありませんか？</h2>
-            <div class="problem-grid">
-                <div class="problem-card">
-                    <i class="fa-solid fa-store-slash"></i>
-                    <h4>検索順位が上がらない</h4>
-                    <p>近くで検索されても自分のお店が表示されず、見込み客をライバル店に奪われている。</p>
+            <div class="sec-head reveal">
+                <span class="eyebrow" style="background:#FFE4E6;color:#BE123C">PROBLEM</span>
+                <h2 class="sec-title">こんな<span class="t-rose">お悩み</span>、ありませんか?</h2>
+            </div>
+            <div class="p-grid">
+                <div class="p-card reveal">
+                    <svg class="ill" viewBox="0 0 160 120" aria-hidden="true"><rect x="12" y="14" width="136" height="92" rx="14" fill="#FEF2F2"/><rect x="28" y="28" width="52" height="9" rx="4.5" fill="#FECACA"/><path d="M30 88 L58 74 L86 82 L120 96" fill="none" stroke="#EF4444" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="120" cy="96" r="7" fill="#EF4444"/><path d="M118 34 v26 m0 0 l-10 -10 m10 10 l10 -10" fill="none" stroke="#F43F5E" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <h3><em>集客数</em>が<br>増えない</h3>
+                    <p>近くで探されていても、自分のお店が選ばれていない気がする。</p>
                 </div>
-                <div class="problem-card">
-                    <i class="fa-solid fa-comment-dots"></i>
-                    <h4>クチコミが集まらない</h4>
-                    <p>お客さんにお願いしてもなかなかクチコミを書いてもらえず、お店の魅力が伝わっていない。</p>
+                <div class="p-card reveal d1">
+                    <svg class="ill" viewBox="0 0 160 120" aria-hidden="true"><rect x="14" y="16" width="84" height="48" rx="16" fill="#FFF7ED" stroke="#FDBA74" stroke-width="3"/><path d="M34 64 l-8 18 l26 -18z" fill="#FFF7ED" stroke="#FDBA74" stroke-width="3" stroke-linejoin="round"/><circle cx="42" cy="40" r="4.5" fill="#FDBA74"/><circle cx="56" cy="40" r="4.5" fill="#FDBA74"/><circle cx="70" cy="40" r="4.5" fill="#FDBA74"/><rect x="82" y="58" width="64" height="40" rx="14" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="3"/><path d="M128 98 l8 14 l-24 -14z" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="3" stroke-linejoin="round"/><path d="M114 70 l3.2 6.6 7.2 1 -5.2 5 1.3 7.2 -6.5 -3.4 -6.5 3.4 1.3 -7.2 -5.2 -5 7.2 -1z" fill="none" stroke="#F43F5E" stroke-width="2.6" stroke-linejoin="round"/></svg>
+                    <h3><em>口コミ</em>が<br>全く増えない</h3>
+                    <p>お願いしても、なかなか書いてもらえない。お店の良さが伝わらない。</p>
                 </div>
-                <div class="problem-card">
-                    <i class="fa-solid fa-pen-nib"></i>
-                    <h4>運用する時間がない</h4>
-                    <p>本業が忙しく、Googleビジネスプロフィールの更新や分析まで手が回らない。</p>
+                <div class="p-card reveal d2">
+                    <svg class="ill" viewBox="0 0 160 120" aria-hidden="true"><rect x="22" y="22" width="116" height="76" rx="14" fill="#FEF2F2"/><g fill="none" stroke="#FCA5A5" stroke-width="3" stroke-dasharray="5 5"><circle cx="48" cy="52" r="11"/><circle cx="80" cy="52" r="11"/><circle cx="112" cy="52" r="11"/><circle cx="48" cy="82" r="0"/></g><circle cx="48" cy="52" r="11" fill="#FCA5A5"/><path d="M43 52 l4 4 l7 -8" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M62 88 q18 -14 42 0" fill="none" stroke="#F43F5E" stroke-width="5" stroke-linecap="round"/><circle cx="66" cy="76" r="3" fill="#F43F5E"/><circle cx="100" cy="76" r="3" fill="#F43F5E"/></svg>
+                    <h3><em>リピート</em>に<br>つながらない</h3>
+                    <p>一度来てくれたお客様に、もう一度来てもらうきっかけがない。</p>
+                </div>
+                <div class="p-card reveal d3">
+                    <svg class="ill" viewBox="0 0 160 120" aria-hidden="true"><circle cx="64" cy="62" r="40" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="4"/><circle cx="64" cy="62" r="4" fill="#F43F5E"/><path d="M64 62 V38 M64 62 L82 72" stroke="#F43F5E" stroke-width="5" stroke-linecap="round"/><g stroke="#FCA5A5" stroke-width="3" stroke-linecap="round"><path d="M64 26 v4 M64 94 v4 M28 62 h4 M96 62 h4"/></g><rect x="108" y="30" width="38" height="50" rx="6" fill="#fff" stroke="#FCA5A5" stroke-width="3"/><path d="M116 44 h22 M116 54 h22 M116 64 h14" stroke="#FECACA" stroke-width="4" stroke-linecap="round"/><path d="M36 20 q-4 8 0 12 q4 -4 0 -12z" fill="#7DD3FC"/></svg>
+                    <h3><em>運用する時間</em>が<br>ない</h3>
+                    <p>本業が忙しく、Googleの情報の更新や分析まで手が回らない。</p>
                 </div>
             </div>
+            <div class="p-arrow reveal"><div class="down"><span>その悩み、MapOnが<span class="grad-text">お手伝い</span>します</span><i class="fa-solid fa-angles-down" aria-hidden="true"></i></div></div>
         </div>
     </section>
 
-    <!-- 4. 全て解決できます -->
-    <section class="solution" id="solution">
+    <!-- 3. MapOnとは -->
+    <section class="about" id="about">
         <div class="container">
-            <h2 class="section-title">MapOnなら、全て解決できます</h2>
-            <p style="color: rgba(255,255,255,0.8); font-size: 18px;">圧倒的な機能で、あなたのお店のMEO対策を全自動サポート。</p>
-            
-            <div class="solution-grid">
-                <div class="solution-item">
-                    <h4><i class="fa-solid fa-robot"></i> AIによる自動投稿・生成</h4>
-                    <p>検索キーワードを考慮した自然なアピール文をAIが1タップで作成。さらに指定した日時に自動で予約投稿されるため、更新の手間がゼロになります。</p>
-                </div>
-                <div class="solution-item">
-                    <h4><i class="fa-solid fa-qrcode"></i> 独自アンケート＆クチコミ誘導</h4>
-                    <p>お客様に専用のQRコードを読み込んでもらうだけで、高評価はGoogleマップへ直接誘導、低評価は内部アンケートのみに留める画期的な仕組みを搭載。</p>
-                </div>
-                <div class="solution-item">
-                    <h4><i class="fa-solid fa-chess-knight"></i> ライバル店との競合分析</h4>
-                    <p>周辺の競合店舗がどのキーワードで強いのか、自店舗の順位はどう推移しているのかを直感的なグラフで完全可視化します。</p>
-                </div>
-                <div class="solution-item">
-                    <h4><i class="fa-solid fa-magnifying-glass-chart"></i> パフォーマンスの見える化</h4>
-                    <p>検索回数やルート検索数など「どれだけの人がお店に興味を持ったか」を分かりやすいダッシュボードで一目で確認できます。</p>
-                </div>
+            <div class="sec-head reveal">
+                <span class="eyebrow">ABOUT</span>
+                <h2 class="sec-title"><span class="grad-text">MapOn</span>とは?</h2>
             </div>
+            <p class="about-lead reveal">MapOnは、<b>お客様のアンケートの回答をもとに、AIが口コミの文章づくりをお手伝いする</b>、店舗のためのツールです。<br>お客様が「書きやすい」から、お店の声が集まりやすくなります。</p>
+            <div class="flow">
+                <div class="flow-step reveal"><span class="no">STEP 1</span>
+                    <svg class="ill" viewBox="0 0 130 120" aria-hidden="true"><rect x="38" y="6" width="54" height="108" rx="12" fill="#1E293B"/><rect x="43" y="16" width="44" height="88" rx="7" fill="#EEF2FF"/><g fill="#FBBF24"><circle cx="52" cy="32" r="4"/><circle cx="65" cy="32" r="4"/><circle cx="78" cy="32" r="4"/></g><rect x="49" y="46" width="32" height="8" rx="4" fill="#C7D2FE"/><rect x="49" y="60" width="32" height="8" rx="4" fill="#A5B4FC"/><rect x="49" y="74" width="32" height="8" rx="4" fill="#C7D2FE"/><circle cx="102" cy="26" r="13" fill="#10B981"/><path d="M96 26 l4 4 l8 -8" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <h3>お客様が<br>アンケートに回答</h3><p>QRコードを読み取って、選ぶだけ。1分ほどで終わります。</p></div>
+                <div class="flow-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="flow-step reveal d1"><span class="no">STEP 2</span>
+                    <svg class="ill" viewBox="0 0 130 120" aria-hidden="true"><rect x="12" y="22" width="106" height="66" rx="18" fill="#EDE9FE" stroke="#A78BFA" stroke-width="3"/><path d="M40 88 l-6 18 l26 -18z" fill="#EDE9FE" stroke="#A78BFA" stroke-width="3" stroke-linejoin="round"/><rect x="28" y="40" width="74" height="7" rx="3.5" fill="#C4B5FD"/><rect x="28" y="54" width="56" height="7" rx="3.5" fill="#C4B5FD"/><rect x="28" y="68" width="40" height="7" rx="3.5" fill="#C4B5FD"/><path d="M104 8 l3 8 l8 3 l-8 3 l-3 8 l-3 -8 l-8 -3 l8 -3z" fill="#F59E0B"/><path d="M118 40 l2 5 l5 2 l-5 2 l-2 5 l-2 -5 l-5 -2 l5 -2z" fill="#F472B6"/></svg>
+                    <h3>AIが回答をもとに<br>文章案をお手伝い</h3><p>選んだ内容から、自然な文章案を作ります。参考として使えます。</p></div>
+                <div class="flow-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="flow-step reveal d2"><span class="no">STEP 3</span>
+                    <svg class="ill" viewBox="0 0 130 120" aria-hidden="true"><circle cx="65" cy="60" r="44" fill="#CCFBF1"/><circle cx="65" cy="44" r="14" fill="#0D9488"/><path d="M36 92 q29 -40 58 0" fill="#0D9488"/><path d="M92 20 l3.4 7 l7.6 1 l-5.6 5.4 l1.4 7.6 l-6.8 -3.6 l-6.8 3.6 l1.4 -7.6 l-5.6 -5.4 l7.6 -1z" fill="#FBBF24"/></svg>
+                    <h3>お客様が確認して<br>ご自身で投稿</h3><p>内容を確認し、直して、投稿するかどうかも、お客様ご自身が決めます。</p></div>
+            </div>
+            <p class="about-note reveal"><b>お礼のクーポンなどの特典</b>は、アンケートにご回答いただいたことへのお礼です。口コミの投稿や評価で、特典は変わりません。</p>
         </div>
     </section>
 
-    <!-- 5. MapOnで叶う事 -->
-    <section class="benefits" id="benefits">
+    <!-- 4. できること -->
+    <section class="features" id="features">
         <div class="container">
-            <h2 class="section-title">MapOnで叶う、究極の未来</h2>
-            <div class="benefit-steps">
-                <div class="benefit-step">
-                    <div class="benefit-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                    <h4>検索表示回数が激増</h4>
-                    <p>常に最新情報と高い関連性が維持されるため、エリア検索で上位に表示されやすくなります。</p>
-                </div>
-                <div class="benefit-step">
-                    <div class="benefit-icon"><i class="fa-solid fa-users"></i></div>
-                    <h4>新規来店客の獲得</h4>
-                    <p>良いクチコミと上位表示との相乗効果で、「行ってみよう」と思う新規顧客が自動的に集まります。</p>
-                </div>
-                <div class="benefit-step">
-                    <div class="benefit-icon"><i class="fa-solid fa-heart"></i></div>
-                    <h4>店舗のブランド確立</h4>
-                    <p>豊富なレビューと丁寧な対応が見えるお店として地域の信頼を獲得し、リピーター定着に繋がります。</p>
-                </div>
+            <div class="sec-head reveal">
+                <span class="eyebrow">FEATURES</span>
+                <h2 class="sec-title">MapOnで、<span class="grad-text">できること</span><small>お店の「声を集める」から「また来てもらう」まで、ひとつの管理画面で。</small></h2>
             </div>
+            <div class="f-grid">
+                <article class="f-card reveal">
+                    <div class="f-vis v1"><div class="mini" aria-hidden="true"><div class="q">ご利用になったメニュー</div><div class="row"><span class="opt on">カット</span><span class="opt on">ヘッドスパ</span><span class="opt">カラー</span></div><div class="q" style="margin-top:9px">満足度</div><div class="stars" style="gap:2px"><i class="fa-solid fa-star" style="font-size:15px;animation:none;color:#FBBF24"></i><i class="fa-solid fa-star" style="font-size:15px;animation:none;color:#FBBF24"></i><i class="fa-solid fa-star" style="font-size:15px;animation:none;color:#FBBF24"></i><i class="fa-solid fa-star" style="font-size:15px;animation:none;color:#FBBF24"></i><i class="fa-solid fa-star" style="font-size:15px;animation:none;color:#E2E8F0"></i></div></div></div>
+                    <h3><span class="num">01</span>アンケート</h3>
+                    <p>QRコードを読み取るだけで、お客様が選んで答えられます。お店の聞きたいことを、自由に設定できます。</p>
+                    <div class="f-tags"><span class="tag l">Light:1つまで</span><span class="tag m">MapOn:複数作成</span></div>
+                </article>
+                <article class="f-card reveal d1">
+                    <div class="f-vis v2"><div class="mini ai" aria-hidden="true"><div class="ai-head"><i class="fa-solid fa-wand-magic-sparkles"></i> AIが文章案を作成</div><div class="ai-text">スタッフの方が丁寧に説明してくれて、安心して任せられました。また利用したいです。</div></div></div>
+                    <h3><span class="num">02</span>AIの文章づくりのお手伝い</h3>
+                    <p>アンケートの回答をもとに、AIが文章案を作ります。お客様は、確認して直して、ご自身で投稿できます。</p>
+                    <div class="f-tags"><span class="tag l">Light:月25回まで</span><span class="tag m">MapOn:月300回まで</span></div>
+                </article>
+                <article class="f-card reveal d2">
+                    <div class="f-vis v3"><div class="ticket" aria-hidden="true"><div class="l"><small>ご回答ありがとうございます</small><b>ドリンク1杯<br>サービス</b></div><div class="r">COUPON</div></div></div>
+                    <h3><span class="num">03</span>クーポン</h3>
+                    <p>アンケートにご回答いただいたお礼として、クーポンをお渡しできます。再来店のきっかけになります。</p>
+                    <div class="f-tags"><span class="tag l">Light:1つまで</span><span class="tag m">MapOn:複数作成</span></div>
+                </article>
+                <article class="f-card wide reveal">
+                    <div class="f-vis v4"><div class="stamps" aria-hidden="true"><div class="st-t">ショップカード<span>あと2つで特典!</span></div><div class="st-grid"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on pop"></i><i></i><i></i></div></div></div>
+                    <h3><span class="num">04</span>会員証・ショップカード</h3>
+                    <p>スタンプを貯めて、特典がもらえるカードをデジタルで。紙のカードを忘れても大丈夫です。</p>
+                    <div class="f-tags"><span class="tag x">Light</span><span class="tag m">MapOnで使えます</span></div>
+                </article>
+                <article class="f-card wide last reveal d1">
+                    <div class="f-vis v5"><div class="dash" aria-hidden="true"><div class="kp"><div>アンケート回答<b>128件</b></div><div>AIの文章を作った人<b>86人</b></div></div><div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+                    <h3><span class="num">05</span>ダッシュボード</h3>
+                    <p>アンケートの回答数や、クーポンの使われ方が、グラフで見られます。次の一手を考えやすくなります。</p>
+                    <div class="f-tags"><span class="tag l">Light:一部</span><span class="tag m">MapOn:すべて</span></div>
+                </article>
+            </div>
+            <!-- 動画を入れるとき:下の video-slot に <video> を置き、CSS の .video-slot の display を block にしてください -->
+            <div class="video-slot" id="videoSlot"></div>
+            <p class="sample-note reveal">※画面の表示は、すべてイメージです。数字や文章は、見本です。</p>
         </div>
     </section>
 
-    <!-- 6. 料金 -->
-    <section class="pricing" id="pricing">
+    <!-- 5. プラン -->
+    <section class="plans" id="plans">
         <div class="container">
-            <h2 class="section-title">料金プラン</h2>
-            <p class="section-subtitle">シンプルでわかりやすい、圧倒的なコストパフォーマンス。</p>
-            
-            <div class="pricing-card">
-                <div class="pricing-header">
-                    <h3>MapOn 通常プラン</h3>
-                    <div class="price">19,800<span>円 / 月額(税抜)</span></div>
-                </div>
-                <div class="pricing-features">
+            <div class="sec-head reveal">
+                <span class="eyebrow">PLAN</span>
+                <h2 class="sec-title">お店に合わせて、<span class="grad-text">2つのプラン</span><small>まずは無料のMapOn Lightから、気軽に始められます。</small></h2>
+            </div>
+            <div class="plan-grid">
+                <div class="plan light reveal">
+                    <span class="ribbon"><i class="fa-solid fa-gift" aria-hidden="true"></i> まずはここから</span>
+                    <h3>MapOn Light</h3>
+                    <p class="for">はじめての方・個人のお店に</p>
+                    <div class="price"><span class="free">無料</span><small>0円・お支払いはありません</small></div>
                     <ul>
-                        <li><i class="fa-solid fa-circle-check"></i> ダッシュボードでの高度な分析機能</li>
-                        <li><i class="fa-solid fa-circle-check"></i> AIを活用した記事の自動生成・予約投稿</li>
-                        <li><i class="fa-solid fa-circle-check"></i> クチコミ誘導アンケートQR即時発行</li>
-                        <li><i class="fa-solid fa-circle-check"></i> 周辺競合店舗のMEO順位モニタリング</li>
-                        <li><i class="fa-solid fa-circle-check"></i> LINE予約管理との連携機能（オプション）</li>
+                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>アンケート<small>1つまで</small></span></li>
+                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>クーポン<small>1つまで</small></span></li>
+                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>AIによる文章づくり<small>1か月に25回まで</small></span></li>
+                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>ダッシュボード<small>一部の数字が見られます</small></span></li>
+                        <li class="no"><i class="fa-solid fa-circle-xmark" aria-hidden="true"></i><span>会員証・スタンプカード、2つ目以降のアンケート・クーポンは、MapOnでご利用いただけます</span></li>
                     </ul>
-                    <a href="#" class="hero-cta" style="width:100%; text-align:center;">今すぐ申し込む</a>
+                    <a href="/signup-light" class="btn btn-light" id="planLight"><i class="fa-solid fa-gift" aria-hidden="true"></i> MapOn Lightを無料で始める</a>
+                    <p class="line-note">お申し込みには、<a href="https://sub.msm-fund.com/line/open/wPBzQBgRMj2L?mtid=bF2CR6ch0ym0" target="_blank" rel="noopener" data-line>公式LINE</a>の友だち登録が必要です。</p>
+                </div>
+                <div class="plan pro reveal d1">
+                    <span class="ribbon"><i class="fa-solid fa-crown" aria-hidden="true"></i> すべての機能</span>
+                    <h3>MapOn</h3>
+                    <p class="for">運用代行プランをご契約のお客様に</p>
+                    <div class="price"><span class="ask">料金はお問い合わせください</span><small>お店の状況に合わせて、ご案内します</small></div>
+                    <ul>
+                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>アンケート・クーポン<small>複数作成できます</small></span></li>
+                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>会員証・ショップカード<small>スタンプと特典で、再来店のきっかけに</small></span></li>
+                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>AIによる文章づくり<small>1か月に300回まで</small></span></li>
+                        <li><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>ダッシュボード(すべての数字)</span></li>
+                                            </ul>
+                    <a href="https://sub.msm-fund.com/line/open/wPBzQBgRMj2L?mtid=bF2CR6ch0ym0" target="_blank" rel="noopener" class="btn btn-main" id="planPro" data-line><i class="fa-brands fa-line" aria-hidden="true"></i> MapOnについて相談する</a>
+                    <p class="line-note">公式LINEで、担当者がご案内します。</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- フッター -->
+    <!-- 6. 安心しておつかいいただくために -->
+    <section class="trust" id="trust">
+        <div class="container">
+            <div class="sec-head reveal">
+                <span class="eyebrow" style="background:#CCFBF1;color:#0F766E">SAFETY</span>
+                <h2 class="sec-title">安心して<span class="t-teal">お使いいただく</span>ために<small>MapOnは、お客様の本当のご意見を大切にするツールです。</small></h2>
+            </div>
+            <div class="t-grid">
+                <div class="t-card reveal"><div class="ic"><i class="fa-solid fa-gift" aria-hidden="true"></i></div><h3>特典は<br>アンケートへのお礼</h3><p>クーポンなどの特典は、アンケートにご回答いただいたことへのお礼です。口コミを投稿したかどうか、内容、評価の高低で、特典は変わりません。</p></div>
+                <div class="t-card reveal d1"><div class="ic"><i class="fa-solid fa-user-pen" aria-hidden="true"></i></div><h3>投稿は<br>お客様ご自身で</h3><p>AIが作るのは、お客様の回答をもとにした文章案です。内容を確認して、直して、投稿するかどうかは、お客様ご自身が決めます。お店が代わりに投稿することはありません。</p></div>
+                <div class="t-card reveal d2"><div class="ic"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i></div><h3>Googleの<br>ルールを守って</h3><p>MapOnは、Googleのガイドラインに反する方法で、口コミを増やすことを目的としていません。特典と引き換えの依頼や、投稿の強要は、ご利用の規約で禁止しています。</p></div>
+            </div>
+            <div class="trust-box reveal">
+                <b>ご利用にあたって</b><br>
+                ・AIが作った文章は参考です。内容の正確性などを保証するものではありません。<br>
+                ・効果には個人差があり、口コミの数や集客の結果を保証するものではありません。<br>
+                ・くわしくは、<button type="button" class="link-btn" data-terms="light">MapOn Light 利用規約</button>・<button type="button" class="link-btn" data-terms="neo">MapOn 利用規約</button>をご覧ください。
+            </div>
+        </div>
+    </section>
+
+    <!-- 最後の呼びかけ -->
+    <section class="final">
+        <div class="container">
+            <h2 class="reveal">まずは無料で、<br>お店の「声」を集めてみませんか?</h2>
+            <p class="reveal d1">MapOn Lightは無料です。いつでも解約できます。</p>
+            <a href="/signup-light" class="btn btn-light reveal d2" id="finalLight"><i class="fa-solid fa-gift" aria-hidden="true"></i> MapOn Lightを無料で始める</a>
+        </div>
+    </section>
+    </main>
+
+    <!-- 7. フッター -->
     <footer>
         <div class="container">
-            <p>&copy; 2026 株式会社MSM MapOn All Rights Reserved.</p>
+            <div class="foot-in">
+                <div class="foot-brand">株式会社MSM<small>MapOn(マップオン)</small></div>
+                <nav class="foot-links" aria-label="フッター">
+                    <a href="https://www.msm-fund.com/privacypolicy" target="_blank" rel="noopener" id="footPrivacy">プライバシーポリシー</a>
+                    <button type="button" data-terms="light">MapOn Light 利用規約</button>
+                    <button type="button" data-terms="neo">MapOn 利用規約</button>
+                </nav>
+            </div>
+            <p class="copy">&copy; 2026 株式会社MSM MapOn All Rights Reserved.</p>
         </div>
     </footer>
 
+    <script>
+        // スクロールで、ふわっと出る
+        (function () {
+            var items = document.querySelectorAll('.reveal');
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduce || !('IntersectionObserver' in window)) { items.forEach(function (el) { el.classList.add('in'); }); return; }
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+            }, { threshold: 0.14, rootMargin: '0px 0px -6% 0px' });
+            items.forEach(function (el) { io.observe(el); });
+            // 画面が動かないとき(印刷・スクロールなし)に備えて、少し待っても出ないものは出す
+            setTimeout(function () { items.forEach(function (el) { var r = el.getBoundingClientRect(); if (r.top < window.innerHeight) el.classList.add('in'); }); }, 1200);
+        })();
+
+        // スマホの画面の「AIの文章」を、1文字ずつ書く(くり返す)
+        (function () {
+            var el = document.getElementById('typeTarget');
+            if (!el) return;
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduce) return;
+            var full = el.getAttribute('data-text') || '';
+            var caret = '<span class="caret"></span>';
+            var i = 0, timer;
+            function step() {
+                if (i <= full.length) { el.innerHTML = full.slice(0, i).replace(/</g, '&lt;') + caret; i++; timer = setTimeout(step, 70); }
+                else { el.innerHTML = full.replace(/</g, '&lt;'); timer = setTimeout(function () { i = 0; step(); }, 4200); }
+            }
+            setTimeout(step, 1600);
+        })();
+    </script>
+    <script type="module">
+        // 利用規約(ポップアップ)を開く
+        import { openTermsPopup } from './terms.js';
+        document.querySelectorAll('[data-terms]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) { e.preventDefault(); openTermsPopup(btn.getAttribute('data-terms')); });
+        });
+    </script>
 </body>
 </html>
