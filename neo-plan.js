@@ -1,6 +1,6 @@
 // neo-plan.js
 // MapOn Light(無料プラン)の表示:左のメニューの「Light」表示・鍵・AIメーター、使えない機能のポップアップ、アップグレードのボタン。
-// Light の制限そのもの(AIは月50回・アンケートとクーポンは1つまで・会員証なし)は、データベースが断る(追加SQL_21)。
+// Light の制限そのもの(AIは月25回・アンケートとクーポンは1つまで・会員証なし)は、データベースが断る(追加SQL_21・追加SQL_23)。
 // ここは、店舗に分かりやすく知らせるための表示だけ。有料(MapOn)の店舗では、何も表示しない。
 
 import { supabase } from './supabase-config.js';
@@ -8,6 +8,9 @@ import { el } from './survey-lib.js';
 
 /** 店舗が Light か(clients.tier。追加SQL_21 の前は、列がないので有料と同じ扱い) */
 export const isLight = (client) => client?.tier === 'light';
+
+/** Light の AIの文章の月の上限(実際の上限はデータベースが決める。ここは、回数を読み込む前の表示用) */
+export const LIGHT_AI_LIMIT = 25;
 
 // 「アップグレードするにはこちらから」の行き先。決まるまでは空(押しても何も起きない)。
 export const UPGRADE_URL = '';
@@ -104,14 +107,14 @@ export async function decorateSidebar(client) {
     if ((!settings && !members) || document.getElementById('planMeter')) return;
     const meter = el('div', { class: 'plan-meter', id: 'planMeter' },
         el('div', { class: 'l', text: '今月のAIの文章' }),
-        el('div', { class: 'n', id: 'planMeterCount' }, '-', el('small', { text: '/ 50回' })),
+        el('div', { class: 'n', id: 'planMeterCount' }, '-', el('small', { text: `/ ${LIGHT_AI_LIMIT}回` })),
         el('div', { class: 'bar' }, el('i', { id: 'planMeterBar', style: { width: '0%' } })),
         upgradeButton('アップグレード', { id: 'planMeterUpgrade' }));
     if (members) members.after(meter); else settings.before(meter);   // メニューのすぐ下(「設定」は、これまでどおり一番下)
     try {
         const { data, error } = await supabase.rpc('neo_dashboard', { p_client_id: String(client.id), p_days: 7 });
         if (error || !data?.ai) return;
-        const used = Number(data.ai.month) || 0, limit = Number(data.ai.limit) || 50;
+        const used = Number(data.ai.month) || 0, limit = Number(data.ai.limit) || LIGHT_AI_LIMIT;
         document.getElementById('planMeterCount').replaceChildren(String(used), el('small', { text: `/ ${limit}回` }));
         const bar = document.getElementById('planMeterBar');
         bar.style.width = `${Math.min(100, Math.round(used / limit * 100))}%`;

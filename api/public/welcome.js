@@ -21,7 +21,7 @@ const NAME_PENDING = '(店舗名未入力)';
 
 export const SUBJECT = '【MapOn】お申し込みありがとうございます(ログインURLのご案内)';
 /** MapOn Light のお迎えメールに足す1文 */
-export const LIGHT_NOTE = 'ご登録いただいたのは、無料の「MapOn Light」です。アンケート(1つ)・Google口コミへのご案内・AIの口コミ文章(月50回)・クーポン(1つ)をお使いいただけます。会員証・ショップカードは、有料のMapOnでお使いいただけます。';
+export const LIGHT_NOTE = 'ご登録いただいたのは、無料の「MapOn Light」です。アンケート(1つ)・Google口コミへのご案内・AIの口コミ文章(月25回)・クーポン(1つ)をお使いいただけます。会員証・ショップカードは、有料のMapOnでお使いいただけます。';
 
 /** 呼び出し元が、このサイト自身であること(ほかのサイトのページから呼ばせない) */
 export function sameOrigin(req) {

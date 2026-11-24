@@ -172,7 +172,7 @@ function urlCard(onIssued) {
             el('div', { class: 'row' }, el('div', { class: 'inv-placeholder grow', text: 'リンクは、発行するたびに、新しく作られます' }), issueBtn),
             el('p', { class: 'muted', style: { marginTop: '4px', fontSize: '12px', lineHeight: '1.7' },
                 text: '運用代行のプランに入った店舗に、1件ずつ発行して、メールかLINEで送ってください。申し込みが完了すると、そのリンクは使えなくなります(開いただけでは、使用済みになりません)。登録したメールアドレスには、ログインURLの案内メールが自動で届きます。' })),
-        urlRow('MapOn Light(誰でも使える公開のURL)', '/signup-light', 'AIの文章は月50回、アンケートとクーポンは1つまで、会員証は使えません。悪用対策(ボット判定)ができて、受付を開くまでは、このURLで申し込んでもアカウントは作られません。'),
+        urlRow('MapOn Light(誰でも使える公開のURL)', '/signup-light', 'AIの文章は月25回、アンケートとクーポンは1つまで、会員証は使えません。悪用対策(ボット判定)ができて、受付を開くまでは、このURLで申し込んでもアカウントは作られません。'),
         urlRow('ログインページ', '/login', '申し込み後は、このページから登録したメールアドレスとパスワードでログインすると、店舗管理画面が開きます。(店舗名がない登録だけ、初回に店舗名の入力があります)'));
 }
 
@@ -450,7 +450,7 @@ function openTierDialog(c, toTier, onChanged) {
                 el('dt', { text: 'アンケート' }), el('dd', { 'data-count': 'surveys', text: surveyText })),
             el('div', { class: 'del-dangerbox' },
                 el('div', { text: '・削除すると、元に戻せません(SupabaseのFreeプランは、バックアップがありません)。' }),
-                el('div', { text: '・AIの文章の上限は、月50回になります。誰が・いつ・何を消したかは、記録に残ります。' })),
+                el('div', { text: '・AIの文章の上限は、月25回になります。誰が・いつ・何を消したかは、記録に残ります。' })),
             el('div', { class: 'field' },
                 el('label', { for: 'tierConfirm', text: named ? '確認のため、店舗名を入力してください' : '確認のため、登録のメールアドレスを入力してください' }),
                 el('p', { class: 'muted', style: { margin: '0 0 6px', fontSize: '12px' } }, '入力するもの:', el('b', { text: expect })),
