@@ -78,6 +78,12 @@
         .card-invite { background: #EEF4FF; border: 1.5px solid #B9CDF3; border-radius: 16px; padding: 16px; text-align: left; margin-top: 16px; }
         .card-invite h3 { font-size: 16px; margin-bottom: 4px; }
     </style>
+    <style id="mobileInputFix">
+        /* iPhone では、入力欄の文字が16px未満だと、押した瞬間に画面が自動で拡大され、上の入力欄が見えなくなる。スマホでは16px以上にする */
+        @media (max-width: 768px), (pointer: coarse) {
+            input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):not([type=submit]):not([type=button]):not([type=image]):not([type=hidden]), select, textarea { font-size: 16px !important; }
+        }
+    </style>
 </head>
 <body>
     <div class="wrap">

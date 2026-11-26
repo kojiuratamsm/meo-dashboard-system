@@ -86,6 +86,12 @@
         .master-banner[hidden] { display: none; }
         .master-banner { background: #FFFAF0; color: #C05621; border-radius: 12px; padding: 12px 16px; font-size: 13px; margin-bottom: 18px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
     </style>
+    <style id="mobileInputFix">
+        /* iPhone では、入力欄の文字が16px未満だと、押した瞬間に画面が自動で拡大され、上の入力欄が見えなくなる。スマホでは16px以上にする */
+        @media (max-width: 768px), (pointer: coarse) {
+            input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):not([type=submit]):not([type=button]):not([type=image]):not([type=hidden]), select, textarea { font-size: 16px !important; }
+        }
+    </style>
 </head>
 <body>
     <nav class="sidebar">
