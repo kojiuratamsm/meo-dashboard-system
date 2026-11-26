@@ -24,6 +24,7 @@ import { placeWordMessage, keywordMessage, buildAiSettings, keywordOptions, hasF
     KEYWORD_INDUSTRIES, keywordIndustry, guessKeywordIndustry, keywordQuestion, keywordQuestionIndex } from './ai-settings-lib.js';
 import { isLight, showLockPopup, lightLimitKind, lockedMembersPage, PLAN_CSS } from './neo-plan.js';
 import { needsReviewSetup, showReviewSetupGate } from './neo-gate.js';
+import { installTableHints } from './neo-mobile.js';
 
 let app = null;               // 描画先
 let client = null;            // 対象の店舗(契約者)の clients 行
@@ -161,7 +162,7 @@ async function renderList() {
         tbody.replaceChildren(...list.map(s => {
             const st = statBy[s.id];
             return el('tr', {},
-                el('td', {}, el('a', { href: `#/edit/${s.id}`, style: { color: 'var(--primary-blue)', fontWeight: '700', textDecoration: 'none' }, text: s.title })),
+                el('td', { class: 'wrap' }, el('a', { href: `#/edit/${s.id}`, style: { color: 'var(--primary-blue)', fontWeight: '700', textDecoration: 'none' }, text: s.title })),
                 el('td', {}, el('span', { class: 'badge ' + (s.is_published ? 'on' : 'off'), text: s.is_published ? '公開中' : '非公開' })),
                 el('td', { text: st ? `${st.response_count}件` : '0件' }),
                 el('td', { text: st?.avg_star ? Number(st.avg_star).toFixed(2) : '-' }),
@@ -842,5 +843,6 @@ export function startNeoApp({ root, client: targetClient, isMasterView: master =
     lastHash = location.hash;
     route();
     // MapOn Light:Google口コミ投稿ページのURLが入るまで、何も操作できない(URLを保存すると、いまの画面を読み直す)
+    installTableHints();
     if (needsReviewSetup(client, isMasterView)) showReviewSetupGate(client, { onDone: () => route() });
 }

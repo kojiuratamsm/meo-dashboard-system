@@ -186,8 +186,8 @@ export async function renderCoupons({ app, client, openModal }) {
         const rows = coupons.map(c => {
             const st = stats[c.id] || { issued_count: 0, used_count: 0 };
             return el('tr', {},
-                el('td', { style: { fontWeight: '700' }, text: c.name }),
-                el('td', { text: couponSummary(c) }),
+                el('td', { class: 'wrap', style: { fontWeight: '700' }, text: c.name }),
+                el('td', { class: 'wrap', text: couponSummary(c) }),
                 el('td', { text: `${st.issued_count} / ${c.issue_limit ?? '上限なし'}` }),
                 el('td', { text: String(st.used_count) }),
                 el('td', { text: couponValidity(c) }),

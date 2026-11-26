@@ -35,7 +35,10 @@ const CSS = `
 @media (max-width: 480px) { #reviewGate .url-guide > summary { font-size: 14px; padding: 14px 10px; gap: 8px; } }
 #reviewGate .gate-done { text-align: center; padding: 14px 0 6px; }
 #reviewGate .gate-done .ok { width: 60px; height: 60px; border-radius: 50%; background: #1E7E34; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 14px; }
+#reviewGate h2 { text-wrap: balance; }
+#reviewGate .gate-hint { overflow-wrap: anywhere; }
 @media (max-width: 480px) { #reviewGate .gate { padding: 22px 16px 16px; } #reviewGate h2 { font-size: 18px; } }
+@media (max-width: 360px) { #reviewGate h2 { font-size: 16px; } }
 `;
 
 const LOCKED = ['.sidebar', '#app', '#masterBanner'];

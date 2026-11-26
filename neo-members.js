@@ -433,7 +433,7 @@ export async function renderMembers({ app, client, openModal }) {
             const hit = members.filter(m => !k || m.name.toLowerCase().includes(k) || memberNo(m.member_no).toLowerCase().includes(k) || m.phone_last4 === k);
             body.replaceChildren(...(hit.length ? hit.map(m => el('tr', {},
                 el('td', { style: { fontWeight: '700' }, text: memberNo(m.member_no) }),
-                el('td', { text: `${m.name} 様` }),
+                el('td', { class: 'wrap', text: `${m.name} 様` }),
                 el('td', { text: `***-****-${m.phone_last4}` }),
                 el('td', {}, `${m.stamps} / ${goal}個` + (m.cards_completed ? `(満了${m.cards_completed}枚)` : ''), rankChip(m)),
                 el('td', { text: jst(m.last_stamp_at) }),

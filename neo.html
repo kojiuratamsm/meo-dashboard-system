@@ -75,6 +75,10 @@
             .main-content { padding: 16px; }
             .card { padding: 16px; }
             .q-options, .q-warn { margin-left: 0; }
+            .table th, .table td { white-space: nowrap; }
+            .table td.wrap { white-space: normal; min-width: 180px; }
+            .table-wrap { background: linear-gradient(to right, var(--card-bg) 30%, rgba(255,255,255,0)), linear-gradient(to right, rgba(255,255,255,0), var(--card-bg) 70%) 100% 0, radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.16), rgba(0,0,0,0)), radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.16), rgba(0,0,0,0)) 100% 0; background-repeat: no-repeat; background-color: var(--card-bg); background-size: 40px 100%, 40px 100%, 12px 100%, 12px 100%; background-attachment: local, local, scroll, scroll; }
+            .table-wrap.scrolls::before { content: '← 横にスクロールできます →'; display: block; text-align: right; font-size: 11px; color: #718096; padding: 0 2px 6px; }
         }
     </style>
     <style>

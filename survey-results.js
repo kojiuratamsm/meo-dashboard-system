@@ -22,7 +22,10 @@ export const RESULTS_CSS = `
 .sr-table { border-collapse: collapse; width: 100%; font-size: 13px; }
 .sr-table th, .sr-table td { padding: 10px 12px; border-bottom: 1px solid #EDF2F7; text-align: left; vertical-align: top; }
 .sr-table th { background: #F8FAFC; color: #4A5568; white-space: nowrap; position: sticky; top: 0; }
-.sr-table td { max-width: 320px; white-space: pre-wrap; word-break: break-word; }
+.sr-table td { max-width: 320px; min-width: 96px; white-space: pre-wrap; word-break: break-word; }
+.sr-table-wrap.scrolls::before { content: '← 横にスクロールできます →'; display: block; text-align: right; font-size: 11px; color: #718096; padding: 6px 10px 0; }
+.sr-table td:first-child { white-space: nowrap; min-width: 0; }
+.sr-table-wrap { background: linear-gradient(to right, #fff 30%, rgba(255,255,255,0)), linear-gradient(to right, rgba(255,255,255,0), #fff 70%) 100% 0, radial-gradient(farthest-side at 0 50%, rgba(0,0,0,.16), rgba(0,0,0,0)), radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,.16), rgba(0,0,0,0)) 100% 0; background-repeat: no-repeat; background-color: #fff; background-size: 40px 100%, 40px 100%, 12px 100%, 12px 100%; background-attachment: local, local, scroll, scroll; }
 .sr-empty { padding: 30px; text-align: center; color: #A0AEC0; }
 `;
 
@@ -127,7 +130,7 @@ export async function renderResults(container, { supabase, survey }) {
             ...survey.questions.map(q => el('td', { text: formatAnswer(q, r.answers?.[q.id]) })),
             el('td', { text: REVIEW_ACTION_LABEL[r.review_action] || '未操作' })));
         const note = rows.length >= MAX_ROWS ? el('p', { style: { fontSize: '12px', color: '#C05621', marginTop: '8px' }, text: `表示は最新${MAX_ROWS}件までです。期間を絞ってください。` }) : null;
-        tableArea.replaceChildren(el('div', { class: 'sr-table-wrap' }, el('table', { class: 'sr-table' }, el('thead', {}, head), el('tbody', {}, body))), note);
+        tableArea.replaceChildren(...[el('div', { class: 'sr-table-wrap' }, el('table', { class: 'sr-table' }, el('thead', {}, head), el('tbody', {}, body))), note].filter(Boolean));
     }
 
     await load();
