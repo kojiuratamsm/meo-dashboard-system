@@ -110,7 +110,7 @@ ${light ? `<p style="margin:24px 0 0;padding:12px 14px;background:#f0fdfa;border
     return { subject: SUBJECT, text, html };
 }
 
-async function supa(path, token, init = {}) {
+export async function supa(path, token, init = {}) {
     const res = await fetch(`${SUPABASE_URL}${path}`, {
         ...init,
         headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...(init.headers || {}) }

@@ -360,6 +360,25 @@
             }
         }
 
+        // 運営(MSM)へ、「申し込みがあったこと」を通知するようにサーバーに頼む(ChatWork とメール)。
+        // 送れなくても、申し込み自体は完了している。画面には何も出さない。待つのは最大10秒。
+        async function requestSignupNotice(accessToken) {
+            try {
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 10000);
+                await fetch('/api/public/notify-signup', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+                    body: '{}',
+                    keepalive: true,
+                    signal: ctrl.signal
+                });
+                clearTimeout(timer);
+            } catch (e) {
+                console.warn('申し込みの通知に失敗:', e);
+            }
+        }
+
         window.registerClient = async function() {
             const ownerNode = document.getElementById('ownerName');
             const storeNode = document.getElementById('storeName');
@@ -462,7 +481,11 @@
             // 登録してすぐログインできる設定(Confirm email がオフ)では、ログインの情報が返ってくる。
             // その情報で本人だと確かめてから、サーバーがお迎えメールを送る。
             const accessToken = authData && authData.session && authData.session.access_token;
-            if (accessToken) await requestWelcomeMail(accessToken);
+            if (accessToken) {
+                const notice = requestSignupNotice(accessToken);   // 運営への通知(お迎えメールと同時に頼む)
+                await requestWelcomeMail(accessToken);
+                await notice;
+            }
         }
     </script>
 </body>
